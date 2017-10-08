@@ -26,7 +26,7 @@ datascript may not be an ideal fit (e.g. with reframe, to avoid recomputing ever
 Say I have a bunch of data about dressmaking patterns.
 
 ```
-(def patterns
+(def pattern-data
   #{{:id 1
      :source :instituto-di-moda
      :difficulty :medium
@@ -63,20 +63,33 @@ I can set up a compound, using `(empty-compound <index-defs>)`
 (require [compound.core :as c])
 (require [compound.indexes.multi])
 
-(def p
+(def patterns
   (c/empty-compound #{#:compound.index{:type :compound.index.types/primary
-                                     :conflict-behaviour :compound.conflict-behaviours/upsert
-                                     :key-fn :id
-                                     :id :id}
+                                       :conflict-behaviour :compound.conflict-behaviours/upsert
+                                       :key-fn :id
+                                       :id :id}
 
-                   #:compound.index{:type :compound.index.types/multi
-                                    :key-fn :source
-                                    :id :source}
+                    #:compound.index{:type :compound.index.types/multi
+                                     :key-fn :source
+                                     :id :source}
 
-                   #:compound.index{:type :compound.index.types/multi
-                                    :key-fn :difficulty
-                                    :id :difficulty}}))
+                    #:compound.index{:type :compound.index.types/multi
+                                     :key-fn :difficulty
+                                     :id :difficulty}}))
 
+```
+
+Add items as follows.
+
+`(c/add p pattern-data)`
+
+And remove (by primary key) like this.
+
+`(-> (c/add p pattern-data) (c/remove [1 2]))`
+
+The result of that last operation is shown below.
+
+```
 #:compound{:index-defs
            {:id
             #:compound.index{:type :compound.index.types/primary,
@@ -86,108 +99,68 @@ I can set up a compound, using `(empty-compound <index-defs>)`
                              :id :id},
             :difficulty
             #:compound.index{:type :compound.index.types/multi,
-                             :conflict-behaviour
-                             :compound.conflict-behaviours/upsert,
                              :key-fn :difficulty,
                              :id :difficulty},
             :source
             #:compound.index{:type :compound.index.types/multi,
-                             :conflict-behaviour
-                             :compound.conflict-behaviours/upsert,
                              :key-fn :source,
                              :id :source}},
-           :indexes {:id {}, :difficulty {}, :source {}},
+           :indexes
+           {:difficulty
+            {:hard
+             #{{:id 5,
+                :source :natalie-bray,
+                :pattern :winter-coat,
+                :difficulty :hard}},
+             :medium
+             #{{:id 4,
+                :source :winifred-aldrich,
+                :difficulty :medium,
+                :pattern :dress-princess-seam}},
+             :easy
+             #{{:id 3,
+                :source :instituto-di-moda,
+                :difficulty :easy,
+                :pattern :bodice-dartless}}},
+            :source
+            {:natalie-bray
+             #{{:id 5,
+                :source :natalie-bray,
+                :pattern :winter-coat,
+                :difficulty :hard}},
+             :instituto-di-moda
+             #{{:id 3,
+                :source :instituto-di-moda,
+                :difficulty :easy,
+                :pattern :bodice-dartless}},
+             :winifred-aldrich
+             #{{:id 4,
+                :source :winifred-aldrich,
+                :difficulty :medium,
+                :pattern :dress-princess-seam}}},
+            :id
+            {5
+             {:id 5,
+              :source :natalie-bray,
+              :pattern :winter-coat,
+              :difficulty :hard},
+             4
+             {:id 4,
+              :source :winifred-aldrich,
+              :difficulty :medium,
+              :pattern :dress-princess-seam},
+             3
+             {:id 3,
+              :source :instituto-di-moda,
+              :difficulty :easy,
+              :pattern :bodice-dartless}}},
            :primary-index-id :id}
-```
-
-Then, add items as follows.
 
 ```
-(-> (c/add p patterns)
-    (c/indexes))
 
-{:difficulty
- {:medium
-  #{{:id 1,
-     :source :instituto-di-moda,
-     :difficulty :medium,
-     :pattern :bodice-basic}
-    {:id 4,
-     :source :winifred-aldrich,
-     :difficulty :medium,
-     :appropriate-materials #{:silk :cotton},
-     :pattern :dress-princess-seam}},
-  :easy
-  #{{:id 3,
-     :source :instituto-di-moda,
-     :difficulty :easy,
-     :pattern :bodice-dartless}
-    {:id 2,
-     :source :instituto-di-moda,
-     :difficulty :easy,
-     :pattern :shirt-basic}},
-  :hard
-  #{{:id 5,
-     :source :natalie-bray,
-     :pattern :winter-coat,
-     :difficulty :hard,
-     :appropriate-materials #{:wool}}}},
- :source
- {:instituto-di-moda
-  #{{:id 1,
-     :source :instituto-di-moda,
-     :difficulty :medium,
-     :pattern :bodice-basic}
-    {:id 3,
-     :source :instituto-di-moda,
-     :difficulty :easy,
-     :pattern :bodice-dartless}
-    {:id 2,
-     :source :instituto-di-moda,
-     :difficulty :easy,
-     :pattern :shirt-basic}},
-  :winifred-aldrich
-  #{{:id 4,
-     :source :winifred-aldrich,
-     :difficulty :medium,
-     :appropriate-materials #{:silk :cotton},
-     :pattern :dress-princess-seam}},
-  :natalie-bray
-  #{{:id 5,
-     :source :natalie-bray,
-     :pattern :winter-coat,
-     :difficulty :hard,
-     :appropriate-materials #{:wool}}}},
- :id
- {1
-  {:id 1,
-   :source :instituto-di-moda,
-   :difficulty :medium,
-   :pattern :bodice-basic},
-  4
-  {:id 4,
-   :source :winifred-aldrich,
-   :difficulty :medium,
-   :appropriate-materials #{:silk :cotton},
-   :pattern :dress-princess-seam},
-  3
-  {:id 3,
-   :source :instituto-di-moda,
-   :difficulty :easy,
-   :pattern :bodice-dartless},
-  5
-  {:id 5,
-   :source :natalie-bray,
-   :pattern :winter-coat,
-   :difficulty :hard,
-   :appropriate-materials #{:wool}},
-  2
-  {:id 2,
-   :source :instituto-di-moda,
-   :difficulty :easy,
-   :pattern :shirt-basic}}}
+## Built in indexes
 
-```
+## Extending with additional custom indexes
 
 ## License
 
