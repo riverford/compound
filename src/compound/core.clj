@@ -45,13 +45,38 @@
           new-secondary-indexes (reduce-kv (fn [m k v]
                                              (assoc! m k (p/-on-remove v removed)))
                                            (transient {}) secondary-indexes)]
-      (->Compound (persistent! (assoc! new-secondary-indexes primary-index-id new-primary-index)) primary-index-id)))
+      (->Compound (persistent! (assoc! new-secondary-indexes primary-index-id new-primary-index)) primary-index-id))))
 
-  p/IQuery
-  (-query [compound q] (query compound q)))
+(defn make-compound
+  [index-defs]
+  (let [[primary-index-def & more] (filter #(= (:compound.index/type %) :compound.index.types/primary) index-defs)
+        {primary-index-id :compound.index/id} primary-index-def]
+    (assert (nil? more) "Compound must not define more than one primary index")
+    (assert (not (nil? primary-index-def)) "Compound must define a primary index")
+    (let [indexes-by-id (reduce (fn [m index-def]
+                                  (let [{:keys [:compound.index/id]} index-def]
+                                    (assoc m id (p/make-index index-def))))
+                                {}
+                                index-defs)]
+      (->Compound indexes-by-id primary-index-id))))
 
-(p/make-index {:type :compound.indexes/primary
-               :key-fn :a
-               :id :a})
+;; public api
 
-(ip/->IndexPrimary {} {})
+(defn query [compound index q]
+  (-query compound index q))
+
+(defn add-items [compound items]
+  (-add-items compound items))
+
+(defn remove-by-keys [compound index ks]
+  (-remove-by-keys compound index ks))
+
+(defn remove-by-query [compound index q]
+  (let [refs ()])
+  (-remove-by-keys compound index ks))
+
+(defn update-by-query [compound index q f]
+  (let [changed-items (map f (query compound index q))]
+    (-> (remove-by-query compound index q)
+        (add-items changed-items))))
+(make-ompound)

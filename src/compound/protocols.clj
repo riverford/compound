@@ -2,9 +2,8 @@
 
 ;; Primary index used for storing data by a primary key
 (defprotocol IIndexPrimary
-  (-get-by-key [this ks])
-  (-remove-by-keys [this ks])
-  (-add-items [this items]))
+  (-add-items [this items])
+  (-remove-by-keys [this ks]))
 
 ;; Secondary indexes are called when data
 ;; is added to our removed from the primary index,

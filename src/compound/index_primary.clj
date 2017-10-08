@@ -4,6 +4,20 @@
 
 (defrecord IndexPrimary [index index-def])
 
+(defmulti query (fn [this [op & args]] op))
+
+(defmethod query :get-by-key
+  [this q]
+  (let [[op k] q
+        {:keys [index]} this]
+    (get index k)))
+
+(defmethod query :get-by-keys
+  [this primary q]
+  (let [{:keys [index]} this
+        [op ks] q]
+    (map #(get index %) ks)))
+
 (extend-type IndexPrimary
   p/IIndexPrimary
   (-get-by-key [this k]
@@ -29,7 +43,10 @@
                                           (assoc! removed k item)]))
                                      [(transient index) (transient {})]
                                      ks)]
-      [(->IndexPrimary (persistent! new-index) index-def) (persistent! removed)])))
+      [(->IndexPrimary (persistent! new-index) index-def) (persistent! removed)]))
+  p/IQuery
+  (-query [this q]
+    (query this q)))
 
 (s/def :compound.index-defs/primary
   (s/keys :req-un [:compound.indexes/key-fn
@@ -39,9 +56,7 @@
 (defmethod p/make-index :compound.indexes/primary
   [index-def]
   (s/assert :compound.index-defs/primary index-def)
-  (println index-def)
   (->IndexPrimary {} index-def))
-
 
 (comment
   (def idx (IndexPrimary. {} {:id :a :key-fn :a}))
