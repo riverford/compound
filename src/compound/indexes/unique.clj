@@ -2,7 +2,7 @@
   (:require [compound.core :as c]
             [clojure.spec.alpha :as s]))
 
-(defmethod c/index-def->spec :compound.index.types/unique
+(defmethod c/index-def-spec :compound.index.types/unique
   [_]
   (s/keys :req [:compound.index/key-fn :compound.index/id :compound.index/type]))
 

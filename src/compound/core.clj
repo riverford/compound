@@ -28,11 +28,11 @@
 
 (defmulti index-def->behaviour :compound.index/type)
 
-(defmulti index-def->spec :compound.index/type)
+(defmulti index-def-spec :compound.index/type)
 
 (def index-def->behaviour-memoized (memoize index-def->behaviour))
 
-(defmethod index-def->spec :compound.index.types/primary
+(defmethod index-def-spec :compound.index.types/primary
   [_]
   (s/keys :req [:compound.index/key-fn :compound.index/id :compound.index/type :compound.index/conflict-behaviour]))
 

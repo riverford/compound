@@ -3,7 +3,7 @@
             [compound.core :as c]))
 
 (s/def :compound/index-def
-  (s/multi-spec c/index-def->spec :compound.index/type))
+  (s/multi-spec c/index-def-spec :compound.index/type))
 
 (s/def :compound.index/conflict-behaviour
   #{:compound.conflict-behaviours/upsert :compound.conflict-behaviours/throw})
