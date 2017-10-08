@@ -2,12 +2,11 @@
 
 Compound is a micro structure for data used in reagent (and re-frame etc) applications.
 
-It is nowhere close to as expressive or powerful as datascript, but it provides a bit more than storing data in a map (indexed by one thing), especially if you have relational data that has more than one access pattern, and want to avoid linear scans.
+It is nowhere close to as expressive or powerful as datascript, but it provides a little extra functionality over storing data in a plain map (indexed by one thing)
+. It is useful if you have relational data that has more than one access pattern, and want to avoid linear scans, but for some reason
+datascript may not be an ideal fit (e.g. with reframe, to avoid recomputing every query whenever the database changes)
 
 ```
-
-Expressive power
-
 
   less expressive                        more expressive
 
@@ -21,7 +20,6 @@ Expressive power
 
 ```
 
-This is clearly demonstrated by the above chart.
 
 ## Usage
 
