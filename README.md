@@ -1,4 +1,4 @@
-![Compound](https://raw.githubusercontent.com/danielneal/compound/master/compound2.png)
+![Compound](https://raw.githubusercontent.com/danielneal/compound/master/compound3.png)
 
 Compound is a micro structure for data used in reagent (and re-frame etc) applications.
 
