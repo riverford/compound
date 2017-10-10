@@ -30,8 +30,6 @@
 
 (defmulti index-def-spec :compound.index/type)
 
-(def index-def->behaviour-memoized (memoize index-def->behaviour))
-
 (defmethod index-def-spec :compound.index.types/primary
   [_]
   (s/keys :req [:compound.index/key-fn :compound.index/id :compound.index/type :compound.index/conflict-behaviour]))
@@ -58,7 +56,7 @@
                                                   items)
         [added removed] [(persistent! added) (persistent! removed)]
         new-secondary-indexes (reduce-kv (fn update-secondary-indexes [indexes index-id index]
-                                           (let [{:compound.index.behaviour/keys [add remove]} (index-def->behaviour-memoized (index-def compound index-id))]
+                                           (let [{:compound.index.behaviour/keys [add remove]} (index-def->behaviour (index-def compound index-id))]
                                              (assoc! indexes index-id (-> (add index added)
                                                                           (remove removed)))))
                                          (transient {})
@@ -77,7 +75,7 @@
                                             ks)
         removed (persistent! removed)
         new-secondary-indexes (reduce-kv (fn [m index-id index]
-                                           (let [{:compound.index.behaviour/keys [remove]} (index-def->behaviour-memoized (index-def compound index-id))]
+                                           (let [{:compound.index.behaviour/keys [remove]} (index-def->behaviour (index-def compound index-id))]
                                              (assoc! m index-id (remove index removed))))
                                          (transient {})
                                          (secondary-indexes compound))
@@ -97,7 +95,7 @@
         secondary-index-defs (dissoc index-defs-by-id primary-index-id)]
     {:compound/index-defs index-defs-by-id
      :compound/indexes (reduce-kv (fn make-indexes [indexes index-id index-def]
-                                    (let [{:compound.index.behaviour/keys [empty]} (index-def->behaviour-memoized index-def)]
+                                    (let [{:compound.index.behaviour/keys [empty]} (index-def->behaviour index-def)]
                                       (assoc indexes index-id empty)))
                                   {primary-index-id {}}
                                   secondary-index-defs)

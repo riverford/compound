@@ -1,4 +1,6 @@
-(ns compound.indexes.many-to-many)
+(ns compound.indexes.many-to-many
+  (:require [compound.core :as c]
+            [clojure.spec.alpha :as s]))
 
 ;; Many to many index
 
@@ -18,7 +20,7 @@
                                                                (let [ks (key-fn item)
                                                                      kvs (reduce (fn [kvs k]
                                                                                    (let [existing-items (get index k #{})]
-                                                                                     (conj kvs [k (conj existing-items item)])))
+                                                                                     (conj kvs k (conj existing-items item))))
                                                                                  []
                                                                                  ks)]
                                                                  (apply assoc! index kvs)))
@@ -30,7 +32,7 @@
                                                                   (let [ks (key-fn item)
                                                                         kvs (reduce (fn [kvs k]
                                                                                       (let [existing-items (get index k #{})]
-                                                                                        (conj kvs [k (disj existing-items item)])))
+                                                                                        (conj kvs k (disj existing-items item))))
                                                                                     []
                                                                                     ks)]
                                                                     (apply assoc! index kvs)))
