@@ -56,9 +56,9 @@ Say I have a bunch of data about dressmaking patterns.
      :difficulty :hard}})
 
 ```
-And I want to access them (in various bits of the ui), by source, by difficulty, by pattern.
+And I want to access them (in various bits of the ui), by source, by difficulty, by id and appropriate material.
 
-I can set up a compound, using `(empty-compound <index-defs>)`
+First, set up an empty compound with the required index definitions. 
 
 ```clojure
 (require [compound.core :as c])
@@ -85,7 +85,7 @@ I can set up a compound, using `(empty-compound <index-defs>)`
 
 ```
 
-Add and remove items as follows.
+Then add and remove items as follows.
 
 ```clojure
 (-> (c/add patterns pattern-data) ;; add the items
