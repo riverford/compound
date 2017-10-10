@@ -231,7 +231,7 @@ To extend, implement the following multimethods.
  
 `index-def->behaviour` should return a map with the following keys
 
- * `:empty` - a constant to initialize the empty index, 
+ * `:empty` - a constant to initialize the empty index
  * `:add` - a function to add items to the index, called when items are added to the primary index 
  * `:remove` - a function to remove items from the index, called when items are removed from the primary index
 
