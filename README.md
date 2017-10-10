@@ -80,7 +80,7 @@ Add and remove items as follows.
 
 ```
 (-> (c/add p pattern-data) ;; add the items
-    (c/remove [1 2]))` ;; remove using the primary key
+    (c/remove [1 2])) ;; remove using the primary key
 
 #:compound{:index-defs
            {:id
@@ -152,11 +152,11 @@ Add and remove items as follows.
 
 ## Built in indexes
 
-## One to One
+### One to One
 
-## One to Many
+### One to Many
 
-## Many to Many
+### Many to Many
 
 
 ## Extending with additional custom indexes
