@@ -79,7 +79,7 @@ First, set up an empty compound with the required index definitions.
                                        :key-fn :difficulty
                                        :id :difficulty}
                                        
-                      #:compound.index{:type :compound.index.types/one-to-many
+                      #:compound.index{:type :compound.index.types/many-to-many
                                        :key-fn :appropriate-materials
                                        :id :appropriate-materials}}))
 
@@ -226,6 +226,8 @@ Then add and remove items as follows.
 
 ### [One to One](https://github.com/danielneal/compound/blob/master/src/compound/indexes/one_to_one.clj)
 
+Looks like 
+
 Use when `(key-fn item)` returns a single key for each item.
 Stores the item against the `(key-fn item)`; throws if `(key-fn item)` returns a duplicate key to a previous item. 
 
@@ -256,6 +258,7 @@ To extend, implement the following multimethods.
  * `:remove` - a function to remove items from the index, called when items are removed from the primary index
 
 See the [built-in indexes](https://github.com/danielneal/compound/tree/master/src/compound/indexes) for examples. 
+
 
 ## License
 

@@ -6,26 +6,22 @@
             [compound.core :as c]))
 
 (deftest empty
-  (is (= #:compound{:index-defs
-                    {:id
-                     #:compound.index{:id :id,
-                                      :conflict-behaviour
-                                      :compound.conflict-behaviours/upsert,
-                                      :key-fn :id,
-                                      :type :compound.index.types/primary},
-                     :name
-                     #:compound.index{:id :name
-                                      :key-fn :name,
-                                      :type :compound.index.types/one-to-one}},
-                    :indexes {:id {}, :name {}},
-                    :primary-index-id :id}
-         (c/empty-compound #{#:compound.index{:id :id
-                                              :conflict-behaviour :compound.conflict-behaviours/upsert
-                                              :key-fn :id
-                                              :type :compound.index.types/primary}
-                             #:compound.index{:id :name
-                                              :key-fn :name
-                                              :type :compound.index.types/one-to-one}}))))
+  (let [compound (c/empty-compound #{#:compound.index{:id :id
+                                                      :conflict-behaviour :compound.conflict-behaviours/upsert
+                                                      :key-fn :id
+                                                      :type :compound.index.types/primary}
+                                     #:compound.index{:id :name
+                                                      :key-fn :name
+                                                      :type :compound.index.types/one-to-one}})]
+    (is (= (c/index-defs compound)  #{#:compound.index{:id :id
+                                                       :conflict-behaviour :compound.conflict-behaviours/upsert
+                                                       :key-fn :id
+                                                       :type :compound.index.types/primary}
+                                      #:compound.index{:id :name
+                                                       :key-fn :name
+                                                       :type :compound.index.types/one-to-one}}))
+    (is (= (c/indexes compound) {:id {}, :name {}}))
+    (is (= (c/primary-index-id compound) :id))))
 
 (deftest adding
   (is (= {:name
