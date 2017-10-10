@@ -66,13 +66,13 @@ I can set up a compound, using `(empty-compound <index-defs>)`
                                        :key-fn :id
                                        :id :id}
 
-                     #:compound.index{:type :compound.index.types/one-to-many
-                                      :key-fn :source
-                                      :id :source}
+                      #:compound.index{:type :compound.index.types/one-to-many
+                                       :key-fn :source
+                                       :id :source}
 
-                     #:compound.index{:type :compound.index.types/one-to-many
-                                      :key-fn :difficulty
-                                      :id :difficulty}}))
+                      #:compound.index{:type :compound.index.types/one-to-many
+                                       :key-fn :difficulty
+                                       :id :difficulty}}))
 
 ```
 
