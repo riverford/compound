@@ -2,11 +2,6 @@
   (:require [compound.core :as c]
             [clojure.spec.alpha :as s]))
 
-;; Many to many index
-
-;; Use when (key-fn index) returns multiple values, and the index will
-;; store the item against each of them.
-
 (defmethod c/index-def-spec :compound.index.types/many-to-many
   [_]
   (s/keys :req [:compound.index/key-fn :compound.index/id :compound.index/type]))

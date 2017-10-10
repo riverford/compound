@@ -2,15 +2,6 @@
   (:require [compound.core :as c]
             [clojure.spec.alpha :as s]))
 
-;; One to one index
-
-;; Use when (key-fn item) returns a single key for each item, but
-;; there may be duplicate
-
-;; Stores a set of items against (key-fn item); if (key-fn item)
-;; returns a duplicate, add to the set of items stored against
-;; (key-fn item)
-
 (defmethod c/index-def-spec :compound.index.types/one-to-many
   [_]
   (s/keys :req [:compound.index/key-fn :compound.index/id :compound.index/type]))

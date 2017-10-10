@@ -28,26 +28,31 @@ Say I have a bunch of data about dressmaking patterns.
   #{{:id 1
      :source :instituto-di-moda
      :difficulty :medium
+     :appropriate-materials #{:cotton :linen}
      :pattern :bodice-basic}
 
     {:id 2
      :source :instituto-di-moda
      :difficulty :easy
+     :appropriate-materials #{:cotton}
      :pattern :shirt-basic}
 
     {:id 3
      :source :instituto-di-moda
      :difficulty :easy
+     :appropriate-materials #{:cotton :linen}
      :pattern :bodice-dartless}
 
     {:id 4
      :source :winifred-aldrich
      :difficulty :medium
+     :appropriate-materials #{:silk :cotton}
      :pattern :dress-princess-seam}
 
     {:id 5
      :source :winifred-aldrich
      :pattern :winter-coat
+     :appropriate-materials #{:wool}
      :difficulty :hard}})
 
 ```
@@ -58,6 +63,7 @@ I can set up a compound, using `(empty-compound <index-defs>)`
 ```
 (require [compound.core :as c])
 (require [compound.indexes.one-to-many])
+(require [compound.indexes.many-to-many])
 
 (def patterns
   (c/empty-compound #{#:compound.index{:type :compound.index.types/primary
@@ -71,15 +77,19 @@ I can set up a compound, using `(empty-compound <index-defs>)`
 
                       #:compound.index{:type :compound.index.types/one-to-many
                                        :key-fn :difficulty
-                                       :id :difficulty}}))
+                                       :id :difficulty}
+                                       
+                      #:compound.index{:type :compound.index.types/one-to-many
+                                       :key-fn :appropriate-materials
+                                       :id :appropriate-materials}}))
 
 ```
 
 Add and remove items as follows.
 
 ```
-(-> (c/add p pattern-data) ;; add the items
-    (c/remove [1 2])) ;; remove using the primary key
+(-> (c/add patterns pattern-data) ;; add the items
+    (c/remove [1])) ;; remove using the primary key
 
 #:compound{:index-defs
            {:id
@@ -95,67 +105,139 @@ Add and remove items as follows.
             :source
             #:compound.index{:type :compound.index.types/one-to-many,
                              :key-fn :source,
-                             :id :source}},
+                             :id :source},
+            :appropriate-materials
+            #:compound.index{:type :compound.index.types/many-to-many,
+                             :key-fn :appropriate-materials,
+                             :id :appropriate-materials}},
            :indexes
            {:difficulty
             {:hard
              #{{:id 5,
-                :source :natalie-bray,
+                :source :winifred-aldrich,
                 :pattern :winter-coat,
+                :appropriate-materials #{:wool},
                 :difficulty :hard}},
              :medium
              #{{:id 4,
                 :source :winifred-aldrich,
                 :difficulty :medium,
+                :appropriate-materials #{:silk :cotton},
                 :pattern :dress-princess-seam}},
              :easy
-             #{{:id 3,
+             #{{:id 2,
                 :source :instituto-di-moda,
                 :difficulty :easy,
+                :appropriate-materials #{:cotton},
+                :pattern :shirt-basic}
+               {:id 3,
+                :source :instituto-di-moda,
+                :difficulty :easy,
+                :appropriate-materials #{:cotton :linen},
                 :pattern :bodice-dartless}}},
             :source
-            {:natalie-bray
+            {:winifred-aldrich
              #{{:id 5,
-                :source :natalie-bray,
+                :source :winifred-aldrich,
                 :pattern :winter-coat,
-                :difficulty :hard}},
+                :appropriate-materials #{:wool},
+                :difficulty :hard}
+               {:id 4,
+                :source :winifred-aldrich,
+                :difficulty :medium,
+                :appropriate-materials #{:silk :cotton},
+                :pattern :dress-princess-seam}},
              :instituto-di-moda
-             #{{:id 3,
+             #{{:id 2,
                 :source :instituto-di-moda,
                 :difficulty :easy,
-                :pattern :bodice-dartless}},
-             :winifred-aldrich
+                :appropriate-materials #{:cotton},
+                :pattern :shirt-basic}
+               {:id 3,
+                :source :instituto-di-moda,
+                :difficulty :easy,
+                :appropriate-materials #{:cotton :linen},
+                :pattern :bodice-dartless}}},
+            :appropriate-materials
+            {:wool
+             #{{:id 5,
+                :source :winifred-aldrich,
+                :pattern :winter-coat,
+                :appropriate-materials #{:wool},
+                :difficulty :hard}},
+             :cotton
              #{{:id 4,
                 :source :winifred-aldrich,
                 :difficulty :medium,
+                :appropriate-materials #{:silk :cotton},
+                :pattern :dress-princess-seam}
+               {:id 2,
+                :source :instituto-di-moda,
+                :difficulty :easy,
+                :appropriate-materials #{:cotton},
+                :pattern :shirt-basic}
+               {:id 3,
+                :source :instituto-di-moda,
+                :difficulty :easy,
+                :appropriate-materials #{:cotton :linen},
+                :pattern :bodice-dartless}},
+             :linen
+             #{{:id 3,
+                :source :instituto-di-moda,
+                :difficulty :easy,
+                :appropriate-materials #{:cotton :linen},
+                :pattern :bodice-dartless}},
+             :silk
+             #{{:id 4,
+                :source :winifred-aldrich,
+                :difficulty :medium,
+                :appropriate-materials #{:silk :cotton},
                 :pattern :dress-princess-seam}}},
             :id
             {5
              {:id 5,
-              :source :natalie-bray,
-              :pattern :winter-coat,
-              :difficulty :hard},
-             4
-             {:id 4,
               :source :winifred-aldrich,
-              :difficulty :medium,
-              :pattern :dress-princess-seam},
+              :pattern :winter-coat,
+              :appropriate-materials #{:wool},
+              :difficulty :hard},
              3
              {:id 3,
               :source :instituto-di-moda,
               :difficulty :easy,
-              :pattern :bodice-dartless}}},
+              :appropriate-materials #{:cotton :linen},
+              :pattern :bodice-dartless},
+             4
+             {:id 4,
+              :source :winifred-aldrich,
+              :difficulty :medium,
+              :appropriate-materials #{:silk :cotton},
+              :pattern :dress-princess-seam},
+             2
+             {:id 2,
+              :source :instituto-di-moda,
+              :difficulty :easy,
+              :appropriate-materials #{:cotton},
+              :pattern :shirt-basic}}},
            :primary-index-id :id}
 
 ```
 
 ## Built in indexes
 
-### One to One
+### [One to One](https://github.com/danielneal/compound/blob/master/src/compound/indexes/one_to_one.clj)
 
-### One to Many
+Use when `(key-fn item)` returns a single key for each item.
+Stores the item against the `(key-fn item)`; throws if `(key-fn item)` returns a duplicate key to a previous item. 
 
-### Many to Many
+### [One to Many](https://github.com/danielneal/compound/blob/master/src/compound/indexes/one_to_many.clj)
+
+Use when `(key-fn item)` returns a single key for each item, but duplicates are permitted.
+Stores a set of items against `(key-fn item)`; if `(key-fn item)` returns a duplicate, add to the set of items stored against `(key-fn item)`
+
+
+### [Many to Many](https://github.com/danielneal/compound/blob/master/src/compound/indexes/many_to_many.clj)
+
+Use when `(key-fn index)` returns multiple values, and the index will store the item against each of them.
 
 
 ## Extending with additional custom indexes
