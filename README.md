@@ -44,14 +44,12 @@ Say I have a bunch of data about dressmaking patterns.
     {:id 4
      :source :winifred-aldrich
      :difficulty :medium
-     :appropriate-materials #{:cotton :silk}
      :pattern :dress-princess-seam}
 
     {:id 5
-     :source :natalie-bray
+     :source :winifred-aldrich
      :pattern :winter-coat
-     :difficulty :hard
-     :appropriate-materials #{:wool}}})
+     :difficulty :hard}})
 
 ```
 And I want to access them (in various bits of the ui), by source, by difficulty, by pattern.
@@ -68,27 +66,22 @@ I can set up a compound, using `(empty-compound <index-defs>)`
                                        :key-fn :id
                                        :id :id}
 
-                    #:compound.index{:type :compound.index.types/multi
-                                     :key-fn :source
-                                     :id :source}
+                     #:compound.index{:type :compound.index.types/multi
+                                      :key-fn :source
+                                      :id :source}
 
-                    #:compound.index{:type :compound.index.types/multi
-                                     :key-fn :difficulty
-                                     :id :difficulty}}))
-
-```
-
-Add items as follows.
-
-`(c/add p pattern-data)`
-
-And remove (by primary key) like this.
-
-`(-> (c/add p pattern-data) (c/remove [1 2]))`
-
-The result of that last operation is shown below.
+                     #:compound.index{:type :compound.index.types/multi
+                                      :key-fn :difficulty
+                                      :id :difficulty}}))
 
 ```
+
+Add and remove items as follows.
+
+```
+(-> (c/add p pattern-data) ;; add the items
+    (c/remove [1 2]))` ;; remove using the primary key
+
 #:compound{:index-defs
            {:id
             #:compound.index{:type :compound.index.types/primary,

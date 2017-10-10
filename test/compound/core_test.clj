@@ -1,7 +1,7 @@
 (ns compound.core-test
   (:require [clojure.test :refer :all]
-            [compound.indexes.multi]
-            [compound.indexes.unique]
+            [compound.indexes.one-to-one]
+            [compound.indexes.one-to-many]
             [compound.core :as c]))
 
 (deftest empty
@@ -15,7 +15,7 @@
                      :name
                      #:compound.index{:id :name
                                       :key-fn :name,
-                                      :type :compound.index.types/unique}},
+                                      :type :compound.index.types/one-to-one}},
                     :indexes {:id {}, :name {}},
                     :primary-index-id :id}
          (c/empty-compound #{#:compound.index{:id :id
@@ -24,7 +24,7 @@
                                               :type :compound.index.types/primary}
                              #:compound.index{:id :name
                                               :key-fn :name
-                                              :type :compound.index.types/unique}}))))
+                                              :type :compound.index.types/one-to-one}}))))
 
 (deftest adding
   (is (= {:name
@@ -41,7 +41,7 @@
                                                   :type :compound.index.types/primary}
                                  #:compound.index{:id :name
                                                   :key-fn :name
-                                                  :type :compound.index.types/unique}})
+                                                  :type :compound.index.types/one-to-one}})
              (c/add [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
              (get :compound/indexes)))))
 
@@ -56,7 +56,7 @@
                                                   :type :compound.index.types/primary}
                                  #:compound.index{:id :name
                                                   :key-fn :name
-                                                  :type :compound.index.types/unique}})
+                                                  :type :compound.index.types/one-to-one}})
              (c/add [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
              (c/remove [1 2])
              (get :compound/indexes)))))
@@ -76,7 +76,7 @@
                                                   :type :compound.index.types/primary}
                                  #:compound.index{:id :name
                                                   :key-fn :name
-                                                  :type :compound.index.types/unique}})
+                                                  :type :compound.index.types/one-to-one}})
              (c/add [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 3 :name "Red Squirrel"}])
              (get :compound/indexes))))
   (is (= {:name
@@ -93,7 +93,7 @@
                                                   :type :compound.index.types/primary}
                                  #:compound.index{:id :name
                                                   :key-fn :name
-                                                  :type :compound.index.types/unique}})
+                                                  :type :compound.index.types/one-to-one}})
              (c/add [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 3 :name "Green Squirrel"}])
              (get :compound/indexes))))
   (is (= {:name
@@ -110,7 +110,7 @@
                                                   :type :compound.index.types/primary}
                                  #:compound.index{:id :name
                                                   :key-fn :name
-                                                  :type :compound.index.types/unique}})
+                                                  :type :compound.index.types/one-to-one}})
              (c/add [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
              (c/add [{:id 3 :name "Blue Squirrel"}])
              (get :compound/indexes)))))
@@ -122,7 +122,7 @@
                                                                                    :type :compound.index.types/primary}
                                                                   #:compound.index{:id :name
                                                                                    :key-fn :name
-                                                                                   :type :compound.index.types/unique}})
+                                                                                   :type :compound.index.types/one-to-one}})
                                               (c/add [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 3 :name "Red Squirrel"}])
                                               (get :compound/indexes))))
   (is (thrown? clojure.lang.ExceptionInfo (-> (c/empty-compound #{#:compound.index{:id :id
@@ -131,6 +131,6 @@
                                                                                    :type :compound.index.types/primary}
                                                                   #:compound.index{:id :name
                                                                                    :key-fn :name
-                                                                                   :type :compound.index.types/unique}})
+                                                                                   :type :compound.index.types/one-to-one}})
                                               (c/add [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 4 :name "Squirrel"}])
                                               (get :compound/indexes)))))
