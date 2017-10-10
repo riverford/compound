@@ -58,7 +58,7 @@ I can set up a compound, using `(empty-compound <index-defs>)`
 
 ```
 (require [compound.core :as c])
-(require [compound.indexes.multi])
+(require [compound.indexes.one-to-many])
 
 (def patterns
   (c/empty-compound #{#:compound.index{:type :compound.index.types/primary
@@ -66,11 +66,11 @@ I can set up a compound, using `(empty-compound <index-defs>)`
                                        :key-fn :id
                                        :id :id}
 
-                     #:compound.index{:type :compound.index.types/multi
+                     #:compound.index{:type :compound.index.types/one-to-many
                                       :key-fn :source
                                       :id :source}
 
-                     #:compound.index{:type :compound.index.types/multi
+                     #:compound.index{:type :compound.index.types/one-to-many
                                       :key-fn :difficulty
                                       :id :difficulty}}))
 
@@ -90,11 +90,11 @@ Add and remove items as follows.
                              :key-fn :id,
                              :id :id},
             :difficulty
-            #:compound.index{:type :compound.index.types/multi,
+            #:compound.index{:type :compound.index.types/one-to-many,
                              :key-fn :difficulty,
                              :id :difficulty},
             :source
-            #:compound.index{:type :compound.index.types/multi,
+            #:compound.index{:type :compound.index.types/one-to-many,
                              :key-fn :source,
                              :id :source}},
            :indexes
@@ -151,6 +151,13 @@ Add and remove items as follows.
 ```
 
 ## Built in indexes
+
+## One to One
+
+## One to Many
+
+## Many to Many
+
 
 ## Extending with additional custom indexes
 
