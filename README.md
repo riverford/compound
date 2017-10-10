@@ -88,9 +88,10 @@ First, set up an empty compound with the required index definitions.
 Then add and remove items as follows.
 
 ```clojure
-(-> (c/add patterns pattern-data) ;; add the items
-    (c/remove [1] ;; remove using the primary key
-    (c/indexes)) ;; just get the index data out (note compounds are just maps, but there are some util functions for extracting common bits out)
+
+(-> (c/add patterns pattern-data) ; add the items
+    (c/remove [1]                 ; remove using the primary key
+    (c/indexes))                  ; get the index data out 
 
 #:compound{:difficulty
             {:hard
