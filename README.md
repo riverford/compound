@@ -206,8 +206,6 @@ Then add and remove items as follows.
 
 ### [One to One](https://github.com/danielneal/compound/blob/master/src/compound/indexes/one_to_one.clj)
 
-Looks like 
-
 Use when `(key-fn item)` returns a single key for each item.
 Stores the item against the `(key-fn item)`; throws if `(key-fn item)` returns a duplicate key to a previous item. 
 
