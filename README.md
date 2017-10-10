@@ -89,29 +89,10 @@ Then add and remove items as follows.
 
 ```clojure
 (-> (c/add patterns pattern-data) ;; add the items
-    (c/remove [1])) ;; remove using the primary key
+    (c/remove [1] ;; remove using the primary key
+    (c/indexes)) ;; just get the index data out (note compounds are just maps, but there are some util functions for extracting common bits out)
 
-#:compound{:index-defs
-           {:id
-            #:compound.index{:type :compound.index.types/primary,
-                             :conflict-behaviour
-                             :compound.conflict-behaviours/upsert,
-                             :key-fn :id,
-                             :id :id},
-            :difficulty
-            #:compound.index{:type :compound.index.types/one-to-many,
-                             :key-fn :difficulty,
-                             :id :difficulty},
-            :source
-            #:compound.index{:type :compound.index.types/one-to-many,
-                             :key-fn :source,
-                             :id :source},
-            :appropriate-materials
-            #:compound.index{:type :compound.index.types/many-to-many,
-                             :key-fn :appropriate-materials,
-                             :id :appropriate-materials}},
-           :indexes
-           {:difficulty
+#:compound{:difficulty
             {:hard
              #{{:id 5,
                 :source :winifred-aldrich,
@@ -135,7 +116,7 @@ Then add and remove items as follows.
                 :difficulty :easy,
                 :appropriate-materials #{:cotton :linen},
                 :pattern :bodice-dartless}}},
-            :source
+           :source
             {:winifred-aldrich
              #{{:id 5,
                 :source :winifred-aldrich,
@@ -158,7 +139,7 @@ Then add and remove items as follows.
                 :difficulty :easy,
                 :appropriate-materials #{:cotton :linen},
                 :pattern :bodice-dartless}}},
-            :appropriate-materials
+           :appropriate-materials
             {:wool
              #{{:id 5,
                 :source :winifred-aldrich,
@@ -217,8 +198,7 @@ Then add and remove items as follows.
               :source :instituto-di-moda,
               :difficulty :easy,
               :appropriate-materials #{:cotton},
-              :pattern :shirt-basic}}},
-           :primary-index-id :id}
+              :pattern :shirt-basic}}}
 
 ```
 
