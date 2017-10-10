@@ -222,7 +222,7 @@ Then add and remove items as follows.
 
 ```
 
-## Built in indexes
+## Built-in indexes
 
 ### [One to One](https://github.com/danielneal/compound/blob/master/src/compound/indexes/one_to_one.clj)
 
@@ -240,6 +240,22 @@ Use when `(key-fn item)` returns multiple values, and the index will store the i
 
 
 ## Extending with additional custom indexes
+
+Compound can be extended with additional indexes, for example if you know of a data structure that provides optimized 
+access for the access pattern that you will use (e.g. one of https://github.com/michalmarczyk excellent data structures)
+
+To extend, implement the following multimethods.
+
+ * `index-def-spec` - the spec for the index definition
+ * `index-def->behaviour`, for the index behaviour
+ 
+`index-def->behaviour` should return a map with the following keys
+
+ * `:empty` - a constant to initialize the empty index, 
+ * `:add` - a function to add items to the index, called when items are added to the primary index 
+ * `:remove` - a function to remove items from the index, called when items are removed from the primary index
+
+See the [built-in indexes](https://github.com/danielneal/compound/tree/master/src/compound/indexes) for examples. 
 
 ## License
 
