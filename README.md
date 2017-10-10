@@ -23,7 +23,7 @@ It is nowhere close to as expressive or powerful as datascript, but it provides 
 
 Say I have a bunch of data about dressmaking patterns.
 
-```
+```clojure
 (def pattern-data
   #{{:id 1
      :source :instituto-di-moda
@@ -60,7 +60,7 @@ And I want to access them (in various bits of the ui), by source, by difficulty,
 
 I can set up a compound, using `(empty-compound <index-defs>)`
 
-```
+```clojure
 (require [compound.core :as c])
 (require [compound.indexes.one-to-many])
 (require [compound.indexes.many-to-many])
@@ -87,7 +87,7 @@ I can set up a compound, using `(empty-compound <index-defs>)`
 
 Add and remove items as follows.
 
-```
+```clojure
 (-> (c/add patterns pattern-data) ;; add the items
     (c/remove [1])) ;; remove using the primary key
 
@@ -233,7 +233,6 @@ Stores the item against the `(key-fn item)`; throws if `(key-fn item)` returns a
 
 Use when `(key-fn item)` returns a single key for each item, but duplicates are permitted.
 Stores a set of items against `(key-fn item)`; if `(key-fn item)` returns a duplicate, add to the set of items stored against `(key-fn item)`
-
 
 ### [Many to Many](https://github.com/danielneal/compound/blob/master/src/compound/indexes/many_to_many.clj)
 
