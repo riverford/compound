@@ -237,7 +237,7 @@ Stores a set of items against `(key-fn item)`; if `(key-fn item)` returns a dupl
 
 ### [Many to Many](https://github.com/danielneal/compound/blob/master/src/compound/indexes/many_to_many.clj)
 
-Use when `(key-fn index)` returns multiple values, and the index will store the item against each of them.
+Use when `(key-fn item)` returns multiple values, and the index will store the item against each of them.
 
 
 ## Extending with additional custom indexes
