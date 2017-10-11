@@ -186,3 +186,26 @@
                                                   :type :compound.index.types/many-to-many}})
              (c/add-items [{:id 1 :name "Bob" :aliases #{:robert :bobby}} {:id 2 :name "Terry" :aliases #{:terence :t-man}} {:id 3 :name "Squirrel" :aliases #{:terence}}])
              (c/indexes)))))
+
+
+(deftest clear
+  (let [compound (-> (c/empty-compound #{#:compound.index{:id :id
+                                                          :conflict-behaviour :compound.conflict-behaviours/upsert
+                                                          :key-fn :id
+                                                          :type :compound.index.types/primary}
+                                         #:compound.index{:id :name
+                                                          :key-fn :name
+                                                          :type :compound.index.types/one-to-one}})
+                     (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}]))]
+    (is (= (c/index-defs compound)  {:name
+                                     #:compound.index{:id :name,
+                                                      :key-fn :name,
+                                                      :type :compound.index.types/one-to-one},
+                                     :id
+                                     #:compound.index{:id :id,
+                                                      :conflict-behaviour :compound.conflict-behaviours/upsert,
+                                                      :key-fn :id,
+                                                      :type :compound.index.types/primary}}))
+    (is (= (c/indexes compound) {:id {}, :name {}}))
+    (is (= (c/primary-index-id compound) :id))))
+
