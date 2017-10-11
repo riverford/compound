@@ -63,7 +63,7 @@
         [added removed] [(persistent! added) (persistent! removed)]
         new-secondary-indexes (reduce-kv (fn update-secondary-indexes [indexes index-id index]
                                            (let [{:compound.index.behaviour/keys [add remove]} (index-behaviour compound index-id)]
-                                             (assoc! indexes index-id (-> (add index dded)
+                                             (assoc! indexes index-id (-> (add index added)
                                                                           (remove removed)))))
                                          (transient {})
                                          (secondary-indexes compound))
