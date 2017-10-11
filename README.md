@@ -2,7 +2,7 @@
 
 Compound is a micro structure for data used in reagent (and re-frame etc) applications.
 
-It is nowhere close to as expressive or powerful as datascript, but it provides a little extra functionality over storing data in a map indexed by one thing (whilst still being just a map). It is useful if you have relational data that has more than one access pattern, and want to avoid repeated linear scans, but for some reason datascript is not an ideal fit (e.g. with reframe, to avoid recomputing every query whenever the database changes)
+It is nowhere close to as expressive or powerful as datascript, but it provides a little extra functionality over storing data in a map indexed by one thing (whilst still being just a map). It is useful if you have relational data that has more than one access pattern, and want to avoid repeated linear scans, but for some reason datascript is not an ideal fit (e.g. with reframe, to avoid recomputing every query whenever the database changes). 
 
 ```
 
@@ -200,8 +200,6 @@ Then add and remove items as follows.
               :appropriate-materials #{:cotton},
               :pattern :shirt-basic}}}
 
-```
-
 ## Built-in indexes
 
 ### [One to One](https://github.com/danielneal/compound/blob/master/src/compound/indexes/one_to_one.clj)
@@ -237,6 +235,9 @@ To extend, implement the following multimethods.
 
 See the [built-in indexes](https://github.com/danielneal/compound/tree/master/src/compound/indexes) for examples. 
 
+## Influences 
+
+It is influenced by Christophe Grand's [indexed set](https://github.com/cgrand/indexed-set). 
 
 ## License
 
