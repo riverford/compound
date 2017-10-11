@@ -1,9 +1,10 @@
 (ns compound.spec
-  (:require [clojure.spec.alpha :as s]
-            [compound.core :as c]))
+  (:require [clojure.spec.alpha :as s]))
+
+(defmulti index-def-spec :compound.index/type)
 
 (s/def :compound/index-def
-  (s/multi-spec c/index-def-spec :compound.index/type))
+  (s/multi-spec index-def-spec :compound.index/type))
 
 (s/def :compound.index/conflict-behaviour
   #{:compound.conflict-behaviours/upsert :compound.conflict-behaviours/throw})

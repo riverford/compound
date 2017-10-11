@@ -1,6 +1,6 @@
 (ns compound.core
   (:require [clojure.set :as set]
-            [compound.spec]
+            [compound.spec :as cs]
             [clojure.spec.alpha :as s]))
 
 (defn indexes [compound]
@@ -35,9 +35,7 @@
 
 (defmulti index-def->behaviour :compound.index/type)
 
-(defmulti index-def-spec :compound.index/type)
-
-(defmethod index-def-spec :compound.index.types/primary
+(defmethod cs/index-def-spec :compound.index.types/primary
   [_]
   (s/keys :req [:compound.index/key-fn :compound.index/id :compound.index/type :compound.index/conflict-behaviour]))
 

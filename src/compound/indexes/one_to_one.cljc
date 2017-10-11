@@ -1,8 +1,9 @@
 (ns compound.indexes.one-to-one
   (:require [compound.core :as c]
+            [compound.spec :as cs]
             [clojure.spec.alpha :as s]))
 
-(defmethod c/index-def-spec :compound.index.types/one-to-one
+(defmethod cs/index-def-spec :compound.index.types/one-to-one
   [_]
   (s/keys :req [:compound.index/key-fn :compound.index/id :compound.index/type]))
 

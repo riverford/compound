@@ -13,13 +13,15 @@
                                      #:compound.index{:id :name
                                                       :key-fn :name
                                                       :type :compound.index.types/one-to-one}})]
-    (is (= (c/index-defs compound)  #{#:compound.index{:id :id
-                                                       :conflict-behaviour :compound.conflict-behaviours/upsert
-                                                       :key-fn :id
-                                                       :type :compound.index.types/primary}
-                                      #:compound.index{:id :name
-                                                       :key-fn :name
-                                                       :type :compound.index.types/one-to-one}}))
+    (is (= (c/index-defs compound)  {:name
+                                     #:compound.index{:id :name,
+                                                      :key-fn :name,
+                                                      :type :compound.index.types/one-to-one},
+                                     :id
+                                     #:compound.index{:id :id,
+                                                      :conflict-behaviour :compound.conflict-behaviours/upsert,
+                                                      :key-fn :id,
+                                                      :type :compound.index.types/primary}}))
     (is (= (c/indexes compound) {:id {}, :name {}}))
     (is (= (c/primary-index-id compound) :id))))
 

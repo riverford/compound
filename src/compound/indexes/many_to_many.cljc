@@ -1,8 +1,9 @@
 (ns compound.indexes.many-to-many
   (:require [compound.core :as c]
+            [compound.spec :as cs]
             [clojure.spec.alpha :as s]))
 
-(defmethod c/index-def-spec :compound.index.types/many-to-many
+(defmethod cs/index-def-spec :compound.index.types/many-to-many
   [_]
   (s/keys :req [:compound.index/key-fn :compound.index/id :compound.index/type]))
 
