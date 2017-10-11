@@ -27,9 +27,6 @@
 (defn primary-index-def [compound]
   (index-def compound (primary-index-id compound)))
 
-(defn primary-key-fn [compound]
-  (get (primary-index-def compound :compound.index/key-fn)))
-
 (defn primary-index [compound]
   (index compound (primary-index-id compound)))
 
