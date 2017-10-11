@@ -40,7 +40,7 @@
   [_]
   (s/keys :req [:compound.index/key-fn :compound.index/id :compound.index/type :compound.index/conflict-behaviour]))
 
-(defn add [compound items]
+(defn add-items [compound items]
   (let [{:compound.index/keys [id key-fn conflict-behaviour]} (primary-index-def compound)
         [new-primary-index added removed] (reduce (fn add-items-to-primary-index
                                                     [[index added removed] item]
@@ -63,14 +63,14 @@
         [added removed] [(persistent! added) (persistent! removed)]
         new-secondary-indexes (reduce-kv (fn update-secondary-indexes [indexes index-id index]
                                            (let [{:compound.index.behaviour/keys [add remove]} (index-behaviour compound index-id)]
-                                             (assoc! indexes index-id (-> (add index added)
+                                             (assoc! indexes index-id (-> (add index dded)
                                                                           (remove removed)))))
                                          (transient {})
                                          (secondary-indexes compound))
         new-indexes (assoc! new-secondary-indexes (primary-index-id compound) (persistent! new-primary-index))]
     (assoc compound :compound/indexes (persistent! new-indexes))))
 
-(defn remove [compound ks]
+(defn remove-keys [compound ks]
   (let [{:compound.index/keys [id key-fn]} (primary-index-def compound)
         [new-primary-index removed] (reduce (fn remove-items-from-primary-index
                                               [[index removed] k]
@@ -88,11 +88,11 @@
         new-indexes (assoc! new-secondary-indexes (primary-index-id compound) (persistent! new-primary-index))]
     (assoc compound :compound/indexes (persistent! new-indexes))))
 
-(defn update [compound k f & args]
+(defn update-item [compound k f & args]
   (let [new-item (apply f (get (primary-index compound) k) args)]
     (-> compound
-        (remove [k])
-        (add [new-item]))))
+        (remove-keys [k])
+        (add-items [new-item]))))
 
 (defn empty-compound [index-defs]
   (s/assert :compound/index-defs index-defs)

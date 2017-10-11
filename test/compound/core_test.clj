@@ -39,7 +39,7 @@
                                  #:compound.index{:id :name
                                                   :key-fn :name
                                                   :type :compound.index.types/one-to-one}})
-             (c/add [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
+             (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
              (c/indexes)))))
 
 (deftest removing
@@ -54,8 +54,8 @@
                                  #:compound.index{:id :name
                                                   :key-fn :name
                                                   :type :compound.index.types/one-to-one}})
-             (c/add [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
-             (c/remove [1 2])
+             (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
+             (c/remove-keys [1 2])
              (c/indexes)))))
 
 (deftest updating
@@ -74,8 +74,8 @@
                                  #:compound.index{:id :name
                                                   :key-fn :name
                                                   :type :compound.index.types/one-to-one}})
-             (c/add [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
-             (c/update 1 assoc :name "Gerald")
+             (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
+             (c/update-item 1 assoc :name "Gerald")
              (c/indexes)))))
 
 (deftest upserting
@@ -94,7 +94,7 @@
                                  #:compound.index{:id :name
                                                   :key-fn :name
                                                   :type :compound.index.types/one-to-one}})
-             (c/add [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 3 :name "Red Squirrel"}])
+             (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 3 :name "Red Squirrel"}])
              (c/indexes))))
   
   (is (= {:name
@@ -112,7 +112,7 @@
                                  #:compound.index{:id :name
                                                   :key-fn :name
                                                   :type :compound.index.types/one-to-one}})
-             (c/add [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 3 :name "Green Squirrel"}])
+             (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 3 :name "Green Squirrel"}])
              (c/indexes))))
   
   (is (= {:name
@@ -130,8 +130,8 @@
                                  #:compound.index{:id :name
                                                   :key-fn :name
                                                   :type :compound.index.types/one-to-one}})
-             (c/add [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
-             (c/add [{:id 3 :name "Blue Squirrel"}])
+             (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
+             (c/add-items [{:id 3 :name "Blue Squirrel"}])
              (c/indexes)))))
 
 (deftest conflict
@@ -142,7 +142,7 @@
                                                                   #:compound.index{:id :name
                                                                                    :key-fn :name
                                                                                    :type :compound.index.types/one-to-one}})
-                                              (c/add [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 3 :name "Red Squirrel"}])
+                                              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 3 :name "Red Squirrel"}])
                                               (get :compound/indexes))))
   (is (thrown? clojure.lang.ExceptionInfo (-> (c/empty-compound #{#:compound.index{:id :id
                                                                                    :conflict-behaviour :compound.conflict-behaviours/upsert
@@ -151,7 +151,7 @@
                                                                   #:compound.index{:id :name
                                                                                    :key-fn :name
                                                                                    :type :compound.index.types/one-to-one}})
-                                              (c/add [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 4 :name "Squirrel"}])
+                                              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 4 :name "Squirrel"}])
                                               (get :compound/indexes)))))
 
 
@@ -182,5 +182,5 @@
                                  #:compound.index{:id :alias
                                                   :key-fn :aliases
                                                   :type :compound.index.types/many-to-many}})
-             (c/add [{:id 1 :name "Bob" :aliases #{:robert :bobby}} {:id 2 :name "Terry" :aliases #{:terence :t-man}} {:id 3 :name "Squirrel" :aliases #{:terence}}])
+             (c/add-items [{:id 1 :name "Bob" :aliases #{:robert :bobby}} {:id 2 :name "Terry" :aliases #{:terence :t-man}} {:id 3 :name "Squirrel" :aliases #{:terence}}])
              (c/indexes)))))
