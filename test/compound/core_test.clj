@@ -3,7 +3,12 @@
             [compound.indexes.one-to-one]
             [compound.indexes.one-to-many]
             [compound.indexes.many-to-many]
-            [compound.core :as c]))
+            [compound.core :as c]
+            [clojure.spec.test.alpha :as st]
+            [clojure.spec.alpha :as s]))
+
+(st/instrument)
+(s/check-asserts true)
 
 (deftest empty-compound
   (let [compound (c/empty-compound #{#:compound.index{:id :id
@@ -13,15 +18,15 @@
                                      #:compound.index{:id :name
                                                       :key-fn :name
                                                       :type :compound.index.types/one-to-one}})]
-    (is (= (c/index-defs compound)  {:name
-                                     #:compound.index{:id :name,
-                                                      :key-fn :name,
-                                                      :type :compound.index.types/one-to-one},
-                                     :id
-                                     #:compound.index{:id :id,
-                                                      :conflict-behaviour :compound.conflict-behaviours/replace,
-                                                      :key-fn :id,
-                                                      :type :compound.index.types/primary}}))
+    (is (= (c/index-defs-by-id compound)  {:name
+                                           #:compound.index{:id :name,
+                                                            :key-fn :name,
+                                                            :type :compound.index.types/one-to-one},
+                                           :id
+                                           #:compound.index{:id :id,
+                                                            :conflict-behaviour :compound.conflict-behaviours/replace,
+                                                            :key-fn :id,
+                                                            :type :compound.index.types/primary}}))
     (is (= (c/indexes compound) {:id {}, :name {}}))
     (is (= (c/primary-index-id compound) :id))))
 
@@ -198,15 +203,15 @@
                                                           :type :compound.index.types/one-to-one}})
                      (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
                      (c/clear))]
-    (is (= (c/index-defs compound) {:name
-                                    #:compound.index{:id :name,
-                                                     :key-fn :name,
-                                                     :type :compound.index.types/one-to-one},
-                                    :id
-                                    #:compound.index{:id :id,
-                                                     :conflict-behaviour :compound.conflict-behaviours/replace,
-                                                     :key-fn :id,
-                                                     :type :compound.index.types/primary}}))
+    (is (= (c/index-defs-by-id compound) {:name
+                                          #:compound.index{:id :name,
+                                                           :key-fn :name,
+                                                           :type :compound.index.types/one-to-one},
+                                          :id
+                                          #:compound.index{:id :id,
+                                                           :conflict-behaviour :compound.conflict-behaviours/replace,
+                                                           :key-fn :id,
+                                                           :type :compound.index.types/primary}}))
     (is (= (c/indexes compound) {:id {}, :name {}}))
     (is (= (c/primary-index-id compound) :id))))
 
@@ -228,6 +233,3 @@
                                                   :type :compound.index.types/one-to-one}})
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrek"} {:id 3 :color :red}])
              (c/indexes)))))
-
-
-(run-all-tests)

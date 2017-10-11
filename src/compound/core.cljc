@@ -12,17 +12,17 @@
 (defn primary-index-id [compound]
   (get compound :compound/primary-index-id))
 
-(defn index-defs [compound]
-  (get compound :compound/index-defs))
+(defn index-defs-by-id [compound]
+  (get compound :compound/index-defs-by-id))
 
-(defn index-behaviours [compound]
-  (get compound :compound/index-behaviours))
+(defn index-behaviours-by-id [compound]
+  (get compound :compound/index-behaviours-by-id))
 
 (defn index-behaviour [compound id]
-  (get (index-behaviours compound) id))
+  (get (index-behaviours-by-id compound) id))
 
 (defn index-def [compound id]
-  (get (index-defs compound) id))
+  (get (index-defs-by-id compound) id))
 
 (defn primary-index-def [compound]
   (index-def compound (primary-index-id compound)))
@@ -115,12 +115,12 @@
         primary-index-def (first (get index-defs-by-type :compound.index.types/primary))
         primary-index-id (get primary-index-def :compound.index/id)
         secondary-index-defs (dissoc index-defs-by-id primary-index-id)
-        index-behaviours (reduce-kv (fn make-behaviours [behaviours index-id index-def]
-                                      (assoc behaviours index-id (index-def->behaviour index-def))) {} secondary-index-defs)]
-    #:compound{:index-defs index-defs-by-id
-               :index-behaviours index-behaviours
+        index-behaviours-by-id (reduce-kv (fn make-behaviours [behaviours index-id index-def]
+                                            (assoc behaviours index-id (index-def->behaviour index-def))) {} secondary-index-defs)]
+    #:compound{:index-defs-by-id index-defs-by-id
+               :index-behaviours-by-id index-behaviours-by-id
                :indexes (reduce-kv (fn make-indexes [indexes index-id index-def]
-                                     (let [{:compound.index.behaviour/keys [empty]} (get index-behaviours index-id)]
+                                     (let [{:compound.index.behaviour/keys [empty]} (get index-behaviours-by-id index-id)]
                                       (assoc indexes index-id empty)))
                                   {primary-index-id {}}
                                   secondary-index-defs)
@@ -130,11 +130,11 @@
 
 (defn clear [compound]
   (let [primary-index-id (primary-index-id compound)
-        secondary-index-defs (dissoc (index-defs compound) primary-index-id)
-        index-behaviours (index-behaviours compound)]
+        index-defs-by-id (dissoc (index-defs-by-id compound) primary-index-id)
+        index-behaviours-by-id (index-behaviours-by-id compound)]
     (assoc compound :compound/indexes
            (reduce-kv (fn make-indexes [indexes index-id index-def]
-                        (let [{:compound.index.behaviour/keys [empty]} (get index-behaviours index-id)]
+                        (let [{:compound.index.behaviour/keys [empty]} (get index-behaviours-by-id index-id)]
                           (assoc indexes index-id empty)))
                       {primary-index-id {}}
-                      secondary-index-defs))))
+                      index-defs-by-id))))
