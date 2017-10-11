@@ -1,4 +1,4 @@
-(defproject danielneal/compound "0.1.0"
+(defproject danielneal/compound "0.1.0-SNAPSHOT"
   :description "A micro structure for reagent data"
   :url "https://github.com/danielneal/compound"
   :license {:name "Eclipse Public License"
