@@ -1,5 +1,6 @@
 (ns compound.core
   (:require [clojure.set :as set]
+            [compound.spec]
             [clojure.spec.alpha :as s]))
 
 (defn indexes [compound]
