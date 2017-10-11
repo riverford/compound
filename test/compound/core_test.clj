@@ -58,6 +58,26 @@
              (c/remove [1 2])
              (c/indexes)))))
 
+(deftest updating
+  (is (= {:name
+          {"Terry" {:id 2, :name "Terry"},
+           "Squirrel" {:id 3, :name "Squirrel"},
+           "Gerald" {:id 1, :name "Gerald"}},
+          :id
+          {3 {:id 3, :name "Squirrel"},
+           2 {:id 2, :name "Terry"},
+           1 {:id 1, :name "Gerald"}}}
+         (-> (c/empty-compound #{#:compound.index{:id :id
+                                                  :conflict-behaviour :compound.conflict-behaviours/upsert
+                                                  :key-fn :id
+                                                  :type :compound.index.types/primary}
+                                 #:compound.index{:id :name
+                                                  :key-fn :name
+                                                  :type :compound.index.types/one-to-one}})
+             (c/add [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
+             (c/update 1 assoc :name "Gerald")
+             (c/indexes)))))
+
 (deftest upserting
   (is (= {:name
           {"Terry" {:id 2, :name "Terry"},

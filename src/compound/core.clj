@@ -88,6 +88,12 @@
         new-indexes (assoc! new-secondary-indexes (primary-index-id compound) (persistent! new-primary-index))]
     (assoc compound :compound/indexes (persistent! new-indexes))))
 
+(defn update [compound k f & args]
+  (let [new-item (apply f (get (primary-index compound) k) args)]
+    (-> compound
+        (remove [k])
+        (add [new-item]))))
+
 (defn empty-compound [index-defs]
   (s/assert :compound/index-defs index-defs)
   (let [{:keys [index-defs-by-id index-defs-by-type]} (reduce (fn [m index-def]
@@ -109,3 +115,5 @@
                                   {primary-index-id {}}
                                   secondary-index-defs)
      :compound/primary-index-id primary-index-id}))
+
+
