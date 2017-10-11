@@ -53,11 +53,19 @@
                                                         (and existing (= conflict-behaviour :compound.conflict-behaviours/throw))
                                                         (throw (ex-info "Duplicate key " {:k k, :index id, :item item}))
 
-                                                        (and existing (= conflict-behaviour :compound.conflict-behaviours/upsert))
+                                                        (and existing (= conflict-behaviour :compound.conflict-behaviours/replace))
                                                         [(assoc! index k item)
-                                                         (conj! added item)
+                                                         (-> (disj! added existing)
+                                                             (conj! item))
                                                          (conj! removed existing)]
-
+                                                        
+                                                        (and existing (= conflict-behaviour :compound.conflict-behaviours/merge))
+                                                        (let [new-item (merge existing item)]
+                                                          [(assoc! index k new-item)
+                                                           (-> (disj! added existing)
+                                                               (conj! new-item))
+                                                           (conj! removed existing)])
+                                                        
                                                         :else [(assoc! index k item)
                                                                (conj! added item)
                                                                removed])))
@@ -66,8 +74,8 @@
         [added removed] [(persistent! added) (persistent! removed)]
         new-secondary-indexes (reduce-kv (fn update-secondary-indexes [indexes index-id index]
                                            (let [{:compound.index.behaviour/keys [add remove]} (index-behaviour compound index-id)]
-                                             (assoc! indexes index-id (-> (add index added)
-                                                                          (remove removed)))))
+                                             (assoc! indexes index-id (-> (remove index removed)
+                                                                          (add added)))))
                                          (transient {})
                                          (secondary-indexes compound))
         new-indexes (assoc! new-secondary-indexes (primary-index-id compound) (persistent! new-primary-index))]
@@ -124,7 +132,8 @@
 
 
 (defn clear [compound]
-  (let [secondary-index-defs (dissoc (index-defs compound (primary-index-id compound)))
+  (let [primary-index-id (primary-index-id compound)
+        secondary-index-defs (dissoc (index-defs compound) primary-index-id)
         index-behaviours (index-behaviours compound)]
     (assoc compound :compound/indexes
            (reduce-kv (fn make-indexes [indexes index-id index-def]

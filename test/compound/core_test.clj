@@ -5,9 +5,9 @@
             [compound.indexes.many-to-many]
             [compound.core :as c]))
 
-(deftest empty
+(deftest empty-compound
   (let [compound (c/empty-compound #{#:compound.index{:id :id
-                                                      :conflict-behaviour :compound.conflict-behaviours/upsert
+                                                      :conflict-behaviour :compound.conflict-behaviours/replace
                                                       :key-fn :id
                                                       :type :compound.index.types/primary}
                                      #:compound.index{:id :name
@@ -19,7 +19,7 @@
                                                       :type :compound.index.types/one-to-one},
                                      :id
                                      #:compound.index{:id :id,
-                                                      :conflict-behaviour :compound.conflict-behaviours/upsert,
+                                                      :conflict-behaviour :compound.conflict-behaviours/replace,
                                                       :key-fn :id,
                                                       :type :compound.index.types/primary}}))
     (is (= (c/indexes compound) {:id {}, :name {}}))
@@ -35,7 +35,7 @@
            2 {:id 2, :name "Terry"},
            3 {:id 3, :name "Squirrel"}}}
          (-> (c/empty-compound #{#:compound.index{:id :id
-                                                  :conflict-behaviour :compound.conflict-behaviours/upsert
+                                                  :conflict-behaviour :compound.conflict-behaviours/replace
                                                   :key-fn :id
                                                   :type :compound.index.types/primary}
                                  #:compound.index{:id :name
@@ -50,7 +50,7 @@
           :id
           {3 {:id 3, :name "Squirrel"}}}
          (-> (c/empty-compound #{#:compound.index{:id :id
-                                                  :conflict-behaviour :compound.conflict-behaviours/upsert
+                                                  :conflict-behaviour :compound.conflict-behaviours/replace
                                                   :key-fn :id
                                                   :type :compound.index.types/primary}
                                  #:compound.index{:id :name
@@ -70,7 +70,7 @@
            2 {:id 2, :name "Terry"},
            1 {:id 1, :name "Gerald"}}}
          (-> (c/empty-compound #{#:compound.index{:id :id
-                                                  :conflict-behaviour :compound.conflict-behaviours/upsert
+                                                  :conflict-behaviour :compound.conflict-behaviours/replace
                                                   :key-fn :id
                                                   :type :compound.index.types/primary}
                                  #:compound.index{:id :name
@@ -80,7 +80,7 @@
              (c/update-item 1 assoc :name "Gerald")
              (c/indexes)))))
 
-(deftest upserting
+(deftest replacing
   (is (= {:name
           {"Terry" {:id 2, :name "Terry"},
            "Red Squirrel" {:id 3, :name "Red Squirrel"},
@@ -90,7 +90,7 @@
            2 {:id 2, :name "Terry"},
            3 {:id 3, :name "Red Squirrel"}}},
          (-> (c/empty-compound #{#:compound.index{:id :id
-                                                  :conflict-behaviour :compound.conflict-behaviours/upsert
+                                                  :conflict-behaviour :compound.conflict-behaviours/replace
                                                   :key-fn :id
                                                   :type :compound.index.types/primary}
                                  #:compound.index{:id :name
@@ -108,7 +108,7 @@
            2 {:id 2, :name "Terry"},
            3 {:id 3, :name "Green Squirrel"}}},
          (-> (c/empty-compound #{#:compound.index{:id :id
-                                                  :conflict-behaviour :compound.conflict-behaviours/upsert
+                                                  :conflict-behaviour :compound.conflict-behaviours/replace
                                                   :key-fn :id
                                                   :type :compound.index.types/primary}
                                  #:compound.index{:id :name
@@ -126,7 +126,7 @@
            2 {:id 2, :name "Terry"},
            3 {:id 3, :name "Blue Squirrel"}}},
          (-> (c/empty-compound #{#:compound.index{:id :id
-                                                  :conflict-behaviour :compound.conflict-behaviours/upsert
+                                                  :conflict-behaviour :compound.conflict-behaviours/replace
                                                   :key-fn :id
                                                   :type :compound.index.types/primary}
                                  #:compound.index{:id :name
@@ -147,7 +147,7 @@
                                               (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 3 :name "Red Squirrel"}])
                                               (get :compound/indexes))))
   (is (thrown? clojure.lang.ExceptionInfo (-> (c/empty-compound #{#:compound.index{:id :id
-                                                                                   :conflict-behaviour :compound.conflict-behaviours/upsert
+                                                                                   :conflict-behaviour :compound.conflict-behaviours/replace
                                                                                    :key-fn :id
                                                                                    :type :compound.index.types/primary}
                                                                   #:compound.index{:id :name
@@ -175,7 +175,7 @@
            2 {:id 2, :name "Terry", :aliases #{:terence :t-man}},
            3 {:id 3, :name "Squirrel", :aliases #{:terence}}}}
          (-> (c/empty-compound #{#:compound.index{:id :id
-                                                  :conflict-behaviour :compound.conflict-behaviours/upsert
+                                                  :conflict-behaviour :compound.conflict-behaviours/replace
                                                   :key-fn :id
                                                   :type :compound.index.types/primary}
                                  #:compound.index{:id :name
@@ -188,24 +188,46 @@
              (c/indexes)))))
 
 
-(deftest clear
+(deftest clearing
   (let [compound (-> (c/empty-compound #{#:compound.index{:id :id
-                                                          :conflict-behaviour :compound.conflict-behaviours/upsert
+                                                          :conflict-behaviour :compound.conflict-behaviours/replace
                                                           :key-fn :id
                                                           :type :compound.index.types/primary}
                                          #:compound.index{:id :name
                                                           :key-fn :name
                                                           :type :compound.index.types/one-to-one}})
-                     (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}]))]
-    (is (= (c/index-defs compound)  {:name
-                                     #:compound.index{:id :name,
-                                                      :key-fn :name,
-                                                      :type :compound.index.types/one-to-one},
-                                     :id
-                                     #:compound.index{:id :id,
-                                                      :conflict-behaviour :compound.conflict-behaviours/upsert,
-                                                      :key-fn :id,
-                                                      :type :compound.index.types/primary}}))
+                     (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
+                     (c/clear))]
+    (is (= (c/index-defs compound) {:name
+                                    #:compound.index{:id :name,
+                                                     :key-fn :name,
+                                                     :type :compound.index.types/one-to-one},
+                                    :id
+                                    #:compound.index{:id :id,
+                                                     :conflict-behaviour :compound.conflict-behaviours/replace,
+                                                     :key-fn :id,
+                                                     :type :compound.index.types/primary}}))
     (is (= (c/indexes compound) {:id {}, :name {}}))
     (is (= (c/primary-index-id compound) :id))))
 
+(deftest merging
+  (is (= {:name
+          {"Terry" {:id 2, :name "Terry"},
+           "Squirrek" {:id 3, :name "Squirrek", :color :red},
+           "Bob" {:id 1, :name "Bob"}},
+          :id
+          {1 {:id 1, :name "Bob"},
+           2 {:id 2, :name "Terry"},
+           3 {:id 3, :name "Squirrek", :color :red}}}
+         (-> (c/empty-compound #{#:compound.index{:id :id
+                                                  :conflict-behaviour :compound.conflict-behaviours/merge
+                                                  :key-fn :id
+                                                  :type :compound.index.types/primary}
+                                 #:compound.index{:id :name
+                                                  :key-fn :name
+                                                  :type :compound.index.types/one-to-one}})
+             (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrek"} {:id 3 :color :red}])
+             (c/indexes)))))
+
+
+(run-all-tests)

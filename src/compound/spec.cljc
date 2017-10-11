@@ -7,7 +7,7 @@
   (s/multi-spec index-def-spec :compound.index/type))
 
 (s/def :compound.index/conflict-behaviour
-  #{:compound.conflict-behaviours/upsert :compound.conflict-behaviours/throw})
+  #{:compound.conflict-behaviours/replace :compound.conflict-behaviours/merge :compound.conflict-behaviours/throw})
 
 (s/def :compound/index-defs
   (s/and
