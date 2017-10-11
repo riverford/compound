@@ -1,5 +1,4 @@
-![Compound](https://raw.githubusercontent.com/danielneal/compound/master/compound
-.png)
+![Compound](https://raw.githubusercontent.com/danielneal/compound/master/compound.png)
 
 Compound is a micro structure for data used in reagent (and re-frame etc) applications.
 
@@ -200,6 +199,7 @@ Then add and remove items as follows.
               :difficulty :easy,
               :appropriate-materials #{:cotton},
               :pattern :shirt-basic}}}
+```
 
 ## Built-in indexes
 
