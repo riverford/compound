@@ -1,13 +1,13 @@
-(ns compound.indexes.nested
+(ns compound.indexes.one-to-many-nested
   (:require [compound.core :as c]
             [compound.spec :as cs]
             [clojure.spec.alpha :as s]))
 
-(defmethod cs/index-def-spec :compound.index.types/nested
+(defmethod cs/index-def-spec :compound.index.types/one-to-many-nested
   [_]
   (s/keys :req [:compound.index/key-fn :compound.index/id :compound.index/type]))
 
-(defmethod c/index-def->behaviour :compound.index.types/nested
+(defmethod c/index-def->behaviour :compound.index.types/one-to-many-nested
   [index-def]
   (let [{:compound.index/keys [key-fn]} index-def]
     {:compound.index.behaviour/empty {}

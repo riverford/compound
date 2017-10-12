@@ -3,7 +3,8 @@
             [compound.indexes.one-to-one]
             [compound.indexes.one-to-many]
             [compound.indexes.many-to-many]
-            [compound.indexes.nested]
+            [compound.indexes.one-to-one-nested]
+            [compound.indexes.one-to-many-nested]
             [compound.core :as c]
             [clojure.spec.test.alpha :as st]
             [clojure.spec.alpha :as s]))
@@ -222,7 +223,7 @@
              (c/add-items [{:id 1 :name "Bob" :aliases #{:robert :bobby}} {:id 2 :name "Terry" :aliases #{:terence :t-man}} {:id 3 :name "Squirrel" :aliases #{:terence}}])
              (c/indexes)))))
 
-(deftest nested-index
+(deftest one-to-one-nested-index
   (is (= {:product-delivery-date
           {:potatoes
            {"2012-03-04" #{{:delivery-date "2012-03-04", :product :potatoes}},
@@ -233,13 +234,12 @@
             "2012-03-04" #{{:delivery-date "2012-03-04", :product :bananas}}}},
           :delivery-date-product
           {"2012-03-04"
-           {:potatoes #{{:delivery-date "2012-03-04", :product :potatoes}},
-            :bananas #{{:delivery-date "2012-03-04", :product :bananas}}},
+           {:potatoes {:delivery-date "2012-03-04", :product :potatoes},
+            :bananas {:delivery-date "2012-03-04", :product :bananas}},
            "2012-03-03"
-           {:apples #{{:delivery-date "2012-03-03", :product :apples}},
-            :bananas #{{:delivery-date "2012-03-03", :product :bananas}}},
-           "2012-03-06"
-           {:potatoes #{{:delivery-date "2012-03-06", :product :potatoes}}}},
+           {:apples {:delivery-date "2012-03-03", :product :apples},
+            :bananas {:delivery-date "2012-03-03", :product :bananas}},
+           "2012-03-06" {:potatoes {:delivery-date "2012-03-06", :product :potatoes}}},
           :id
           {["2012-03-03" :bananas] {:delivery-date "2012-03-03", :product :bananas},
            ["2012-03-03" :apples] {:delivery-date "2012-03-03", :product :apples},
@@ -252,10 +252,10 @@
                                                   :type :compound.index.types/primary}
                                  #:compound.index{:id :delivery-date-product
                                                   :key-fn (juxt :delivery-date :product)
-                                                  :type :compound.index.types/nested}
+                                                  :type :compound.index.types/one-to-one-nested}
                                  #:compound.index{:id :product-delivery-date
                                                   :key-fn (juxt :product :delivery-date)
-                                                  :type :compound.index.types/nested}})
+                                                  :type :compound.index.types/one-to-many-nested}})
              (c/add-items [{:delivery-date "2012-03-03" :product :bananas}
                            {:delivery-date "2012-03-03" :product :apples}
                            {:delivery-date "2012-03-04" :product :potatoes}
