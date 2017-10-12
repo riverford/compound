@@ -3,6 +3,7 @@
             [compound.indexes.one-to-one]
             [compound.indexes.one-to-many]
             [compound.indexes.many-to-many]
+            [compound.indexes.nested]
             [compound.core :as c]
             [clojure.spec.test.alpha :as st]
             [clojure.spec.alpha :as s]))
@@ -192,28 +193,75 @@
              (c/add-items [{:id 1 :name "Bob" :aliases #{:robert :bobby}} {:id 2 :name "Terry" :aliases #{:terence :t-man}} {:id 3 :name "Squirrel" :aliases #{:terence}}])
              (c/indexes)))))
 
+(deftest many-to-many-index
+  (is (= {:name
+          {"Terry" {:id 2, :name "Terry", :aliases #{:terence :t-man}},
+           "Squirrel" {:id 3, :name "Squirrel", :aliases #{:terence}},
+           "Bob" {:id 1, :name "Bob", :aliases #{:bobby :robert}}},
+          :alias
+          {:terence
+           #{{:id 2, :name "Terry", :aliases #{:terence :t-man}}
+             {:id 3, :name "Squirrel", :aliases #{:terence}}},
+           :t-man #{{:id 2, :name "Terry", :aliases #{:terence :t-man}}},
+           :bobby #{{:id 1, :name "Bob", :aliases #{:bobby :robert}}},
+           :robert #{{:id 1, :name "Bob", :aliases #{:bobby :robert}}}},
+          :id
+          {1 {:id 1, :name "Bob", :aliases #{:bobby :robert}},
+           2 {:id 2, :name "Terry", :aliases #{:terence :t-man}},
+           3 {:id 3, :name "Squirrel", :aliases #{:terence}}}}
+         (-> (c/empty-compound #{#:compound.index{:id :id
+                                                  :conflict-behaviour :compound.conflict-behaviours/replace
+                                                  :key-fn :id
+                                                  :type :compound.index.types/primary}
+                                 #:compound.index{:id :name
+                                                  :key-fn :name
+                                                  :type :compound.index.types/one-to-one}
+                                 #:compound.index{:id :alias
+                                                  :key-fn :aliases
+                                                  :type :compound.index.types/many-to-many}})
+             (c/add-items [{:id 1 :name "Bob" :aliases #{:robert :bobby}} {:id 2 :name "Terry" :aliases #{:terence :t-man}} {:id 3 :name "Squirrel" :aliases #{:terence}}])
+             (c/indexes)))))
 
-(deftest clearing
-  (let [compound (-> (c/empty-compound #{#:compound.index{:id :id
-                                                          :conflict-behaviour :compound.conflict-behaviours/replace
-                                                          :key-fn :id
-                                                          :type :compound.index.types/primary}
-                                         #:compound.index{:id :name
-                                                          :key-fn :name
-                                                          :type :compound.index.types/one-to-one}})
-                     (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
-                     (c/clear))]
-    (is (= (c/index-defs-by-id compound) {:name
-                                          #:compound.index{:id :name,
-                                                           :key-fn :name,
-                                                           :type :compound.index.types/one-to-one},
-                                          :id
-                                          #:compound.index{:id :id,
-                                                           :conflict-behaviour :compound.conflict-behaviours/replace,
-                                                           :key-fn :id,
-                                                           :type :compound.index.types/primary}}))
-    (is (= (c/indexes compound) {:id {}, :name {}}))
-    (is (= (c/primary-index-id compound) :id))))
+(deftest nested-index
+  (is (= {:product-delivery-date
+          {:potatoes
+           {"2012-03-04" #{{:delivery-date "2012-03-04", :product :potatoes}},
+            "2012-03-06" #{{:delivery-date "2012-03-06", :product :potatoes}}},
+           :apples {"2012-03-03" #{{:delivery-date "2012-03-03", :product :apples}}},
+           :bananas
+           {"2012-03-03" #{{:delivery-date "2012-03-03", :product :bananas}},
+            "2012-03-04" #{{:delivery-date "2012-03-04", :product :bananas}}}},
+          :delivery-date-product
+          {"2012-03-04"
+           {:potatoes #{{:delivery-date "2012-03-04", :product :potatoes}},
+            :bananas #{{:delivery-date "2012-03-04", :product :bananas}}},
+           "2012-03-03"
+           {:apples #{{:delivery-date "2012-03-03", :product :apples}},
+            :bananas #{{:delivery-date "2012-03-03", :product :bananas}}},
+           "2012-03-06"
+           {:potatoes #{{:delivery-date "2012-03-06", :product :potatoes}}}},
+          :id
+          {["2012-03-03" :bananas] {:delivery-date "2012-03-03", :product :bananas},
+           ["2012-03-03" :apples] {:delivery-date "2012-03-03", :product :apples},
+           ["2012-03-04" :potatoes] {:delivery-date "2012-03-04", :product :potatoes},
+           ["2012-03-04" :bananas] {:delivery-date "2012-03-04", :product :bananas},
+           ["2012-03-06" :potatoes] {:delivery-date "2012-03-06", :product :potatoes}}}
+         (-> (c/empty-compound #{#:compound.index{:id :id
+                                                  :conflict-behaviour :compound.conflict-behaviours/replace
+                                                  :key-fn (juxt :delivery-date :product)
+                                                  :type :compound.index.types/primary}
+                                 #:compound.index{:id :delivery-date-product
+                                                  :key-fn (juxt :delivery-date :product)
+                                                  :type :compound.index.types/nested}
+                                 #:compound.index{:id :product-delivery-date
+                                                  :key-fn (juxt :product :delivery-date)
+                                                  :type :compound.index.types/nested}})
+             (c/add-items [{:delivery-date "2012-03-03" :product :bananas}
+                           {:delivery-date "2012-03-03" :product :apples}
+                           {:delivery-date "2012-03-04" :product :potatoes}
+                           {:delivery-date "2012-03-04" :product :bananas}
+                           {:delivery-date "2012-03-06" :product :potatoes}])
+             (c/indexes)))))
 
 (deftest merging
   (is (= {:name

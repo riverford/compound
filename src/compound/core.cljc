@@ -62,7 +62,7 @@
                                                            (-> (disj! added existing)
                                                                (conj! new-item))
                                                            (conj! removed existing)])
-                                                        
+
                                                         :else [(assoc! index k item)
                                                                (conj! added item)
                                                                removed])))
