@@ -281,3 +281,49 @@
                                                   :type :compound.index.types/one-to-one}})
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrek"} {:id 3 :color :red}])
              (c/indexes)))))
+
+(deftest merge-custom
+  (is (= {:product
+          {:potatoes
+           #{{:delivery-date "2012-03-06", :product :potatoes, :quantity-delta 12}},
+           :bananas
+           #{{:delivery-date "2012-03-04", :product :bananas, :quantity-delta 2}
+             {:delivery-date "2012-03-03", :product :bananas, :quantity-delta 1}},
+           :apples
+           #{{:delivery-date "2012-03-03", :product :apples, :quantity-delta 2}}},
+          :delivery-date
+          {"2012-03-06"
+           #{{:delivery-date "2012-03-06", :product :potatoes, :quantity-delta 12}},
+           "2012-03-04"
+           #{{:delivery-date "2012-03-04", :product :bananas, :quantity-delta 2}},
+           "2012-03-03"
+           #{{:delivery-date "2012-03-03", :product :apples, :quantity-delta 2}
+             {:delivery-date "2012-03-03", :product :bananas, :quantity-delta 1}}},
+          :id
+          {["2012-03-03" :bananas]
+           {:delivery-date "2012-03-03", :product :bananas, :quantity-delta 1},
+           ["2012-03-03" :apples]
+           {:delivery-date "2012-03-03", :product :apples, :quantity-delta 2},
+           ["2012-03-04" :bananas]
+           {:delivery-date "2012-03-04", :product :bananas, :quantity-delta 2},
+           ["2012-03-06" :potatoes]
+           {:delivery-date "2012-03-06", :product :potatoes, :quantity-delta 12}}}
+         (-> (c/empty-compound #{#:compound.index{:id :id
+                                                  :conflict-behaviour [:compound.conflict-behaviours/merge-using (fn [a b]
+                                                                                                                   (assoc (merge a b) :quantity-delta
+                                                                                                                          (+ (get a :quantity-delta) (get b :quantity-delta))))] 
+                                                  :key-fn (juxt :delivery-date :product)
+                                                  :type :compound.index.types/primary}
+                                 #:compound.index{:id :product
+                                                  :key-fn :product
+                                                  :type :compound.index.types/one-to-many}
+                                 #:compound.index{:id :delivery-date
+                                                  :key-fn :delivery-date
+                                                  :type :compound.index.types/one-to-many}})
+             (c/add-items [{:delivery-date "2012-03-03" :product :bananas :quantity-delta 1}
+                           {:delivery-date "2012-03-03" :product :apples :quantity-delta 2}
+                           {:delivery-date "2012-03-04" :product :bananas :quantity-delta 3}
+                           {:delivery-date "2012-03-04" :product :bananas :quantity-delta -1}
+                           {:delivery-date "2012-03-06" :product :potatoes :quantity-delta 2}
+                           {:delivery-date "2012-03-06" :product :potatoes :quantity-delta 10}])
+             (c/indexes)))))

@@ -56,13 +56,21 @@
                                                              (conj! item))
                                                          (conj! removed existing)]
                                                         
-                                                        (and existing (= conflict-behaviour :compound.conflict-behaviours/merge))
+                                                        (and existing (or (= conflict-behaviour :compound.conflict-behaviours/merge)))
                                                         (let [new-item (merge existing item)]
                                                           [(assoc! index k new-item)
                                                            (-> (disj! added existing)
                                                                (conj! new-item))
                                                            (conj! removed existing)])
-
+                                                        
+                                                        (and existing (= (first conflict-behaviour) :compound.conflict-behaviours/merge-using))
+                                                        (let [[_ merge-fn] conflict-behaviour
+                                                              new-item (merge-fn existing item)]
+                                                          [(assoc! index k new-item)
+                                                           (-> (disj! added existing)
+                                                               (conj! new-item))
+                                                           (conj! removed existing)])
+                                                        
                                                         :else [(assoc! index k item)
                                                                (conj! added item)
                                                                removed])))
