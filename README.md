@@ -12,9 +12,6 @@
 Compound is a micro structure for data used in reagent (and re-frame etc) applications, 
 based on the idea that [worse is better](https://en.wikipedia.org/wiki/Worse_is_better). 
 
-It is not as expressive as datascript and other in-memory databases, but it does provide extra functionality over storing data in a map indexed by one thing. It is useful if you have data that has more than one access pattern, and want to avoid repeated linear scans, but for some reason datascript is not an ideal fit (e.g. with reframe, to avoid recomputing every query whenever the database changes). 
-
-
 ```
 
   less expressive                        more expressive
@@ -31,9 +28,12 @@ It is not as expressive as datascript and other in-memory databases, but it does
 
 ## Usage
 
-Say I have a bunch of data about dressmaking patterns.
-
 ```clojure
+
+(require [compound.core :as c])
+(require [compound.indexes.one-to-many])
+(require [compound.indexes.many-to-many])
+
 (def pattern-data
   #{{:id 1
      :source :instituto-di-moda
@@ -65,16 +65,6 @@ Say I have a bunch of data about dressmaking patterns.
      :appropriate-materials #{:wool}
      :difficulty :hard}})
 
-```
-And I want to access them (in various bits of the ui), by source, by difficulty, by id and appropriate material.
-
-First, set up an empty compound with the required index definitions. 
-
-```clojure
-(require [compound.core :as c])
-(require [compound.indexes.one-to-many])
-(require [compound.indexes.many-to-many])
-
 (def patterns
   (c/empty-compound #{#:compound.index{:type :compound.index.types/primary
                                        :conflict-behaviour :compound.conflict-behaviours/upsert
@@ -93,15 +83,9 @@ First, set up an empty compound with the required index definitions.
                                        :key-fn :appropriate-materials
                                        :id :appropriate-materials}}))
 
-```
-
-Then add and remove items as follows.
-
-```clojure
-
-(-> (c/add patterns pattern-data) ; add the items
-    (c/remove [1]                 ; remove using the primary key
-    (c/indexes))                  ; get the index data out 
+(-> (c/add-items patterns pattern-data) ; add the items
+    (c/remove-keys [1]                  ; remove using the primary key
+    (c/indexes))                        ; get the index data out 
 
 #:compound{:difficulty
             {:hard
