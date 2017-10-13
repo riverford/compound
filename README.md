@@ -1,12 +1,10 @@
 ![Compound](https://raw.githubusercontent.com/danielneal/compound/master/compound.png)
 
-noun
-ˈkɒmpaʊnd/ 
+**noun** *kɒmpaʊnd*
 
 1. a thing that is composed of two or more separate elements; a mixture.
 
-verb
-kəmˈpaʊnd/
+**verb** *kəmˈpaʊnd*
 
 1. make up (a composite whole); constitute.
 2. make (something bad) worse; 
