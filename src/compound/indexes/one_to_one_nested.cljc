@@ -23,8 +23,8 @@
                                        new-index))
      :compound.index.behaviour/remove (fn [index removed]
                                         (let [new-index (reduce (fn remove-items [index item]
-                                                                  (let [[ks & k] (key-fn item)]
-                                                                    (update-in index ks dissoc k)))
+                                                                  (let [ks (key-fn item)]
+                                                                    (update-in index (butlast ks) dissoc (last ks))))
                                                                 index
                                                                 removed)]
                                           new-index))}))

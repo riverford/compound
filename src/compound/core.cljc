@@ -92,8 +92,11 @@
         [new-primary-index removed] (reduce (fn remove-items-from-primary-index
                                               [[index removed] k]
                                               (let [item (get index k)]
-                                                [(dissoc! index k)
-                                                 (conj! removed item)]))
+                                                (if item
+                                                  [(dissoc! index k)
+                                                   (conj! removed item)]
+                                                  [(dissoc! index k)
+                                                   removed])))
                                             [(transient (primary-index compound)) (transient #{})]
                                             ks)
         removed (persistent! removed)
@@ -133,8 +136,6 @@
                                   {primary-index-id {}}
                                   secondary-index-defs)
                :primary-index-id primary-index-id}))
-
-
 
 (defn clear [compound]
   (let [primary-index-id (primary-index-id compound)

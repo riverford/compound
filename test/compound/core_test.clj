@@ -223,29 +223,28 @@
              (c/add-items [{:id 1 :name "Bob" :aliases #{:robert :bobby}} {:id 2 :name "Terry" :aliases #{:terence :t-man}} {:id 3 :name "Squirrel" :aliases #{:terence}}])
              (c/indexes)))))
 
-(deftest one-to-one-nested-index
-  (is (= {:product-delivery-date
-          {:potatoes
-           {"2012-03-04" #{{:delivery-date "2012-03-04", :product :potatoes}},
-            "2012-03-06" #{{:delivery-date "2012-03-06", :product :potatoes}}},
-           :apples {"2012-03-03" #{{:delivery-date "2012-03-03", :product :apples}}},
-           :bananas
-           {"2012-03-03" #{{:delivery-date "2012-03-03", :product :bananas}},
-            "2012-03-04" #{{:delivery-date "2012-03-04", :product :bananas}}}},
-          :delivery-date-product
+(deftest nested-indexes
+  (is (= {:delivery-date-product
           {"2012-03-04"
            {:potatoes {:delivery-date "2012-03-04", :product :potatoes},
             :bananas {:delivery-date "2012-03-04", :product :bananas}},
            "2012-03-03"
            {:apples {:delivery-date "2012-03-03", :product :apples},
             :bananas {:delivery-date "2012-03-03", :product :bananas}},
-           "2012-03-06" {:potatoes {:delivery-date "2012-03-06", :product :potatoes}}},
+           "2012-03-06" {}},
+          :product-delivery-date
+          {:potatoes
+           {"2012-03-04" #{{:delivery-date "2012-03-04", :product :potatoes}},
+            "2012-03-06" #{}},
+           :apples {"2012-03-03" #{{:delivery-date "2012-03-03", :product :apples}}},
+           :bananas
+           {"2012-03-03" #{{:delivery-date "2012-03-03", :product :bananas}},
+            "2012-03-04" #{{:delivery-date "2012-03-04", :product :bananas}}}},
           :id
           {["2012-03-03" :bananas] {:delivery-date "2012-03-03", :product :bananas},
            ["2012-03-03" :apples] {:delivery-date "2012-03-03", :product :apples},
            ["2012-03-04" :potatoes] {:delivery-date "2012-03-04", :product :potatoes},
-           ["2012-03-04" :bananas] {:delivery-date "2012-03-04", :product :bananas},
-           ["2012-03-06" :potatoes] {:delivery-date "2012-03-06", :product :potatoes}}}
+           ["2012-03-04" :bananas] {:delivery-date "2012-03-04", :product :bananas}}}
          (-> (c/empty-compound #{#:compound.index{:id :id
                                                   :conflict-behaviour :compound.conflict-behaviours/replace
                                                   :key-fn (juxt :delivery-date :product)
@@ -261,6 +260,7 @@
                            {:delivery-date "2012-03-04" :product :potatoes}
                            {:delivery-date "2012-03-04" :product :bananas}
                            {:delivery-date "2012-03-06" :product :potatoes}])
+             (c/remove-keys [["2012-03-06" :potatoes]])
              (c/indexes)))))
 
 (deftest merging
