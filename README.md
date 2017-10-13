@@ -1,8 +1,21 @@
 ![Compound](https://raw.githubusercontent.com/danielneal/compound/master/compound.png)
 
-Compound is a micro structure for data used in reagent (and re-frame etc) applications.
+noun
+ˈkɒmpaʊnd/ 
 
-It is not as expressive as datascript, but it provides extra functionality over storing data in a map indexed by one thing. It is useful if you have data that has more than one access pattern, and want to avoid repeated linear scans, but for some reason datascript is not an ideal fit (e.g. with reframe, to avoid recomputing every query whenever the database changes). 
+1. a thing that is composed of two or more separate elements; a mixture.
+
+verb
+kəmˈpaʊnd/
+
+1. make up (a composite whole); constitute.
+2. make (something bad) worse; 
+
+Compound is a micro structure for data used in reagent (and re-frame etc) applications, 
+based on the idea that [worse is better](https://en.wikipedia.org/wiki/Worse_is_better). 
+
+It is not as expressive as datascript and other in-memory databases, but it does provide extra functionality over storing data in a map indexed by one thing. It is useful if you have data that has more than one access pattern, and want to avoid repeated linear scans, but for some reason datascript is not an ideal fit (e.g. with reframe, to avoid recomputing every query whenever the database changes). 
+
 
 ```
 
@@ -17,6 +30,9 @@ It is not as expressive as datascript, but it provides extra functionality over 
 
 
 ```
+
+compound 
+
 
 ## Usage
 
@@ -204,6 +220,7 @@ Then add and remove items as follows.
 ## Built-in indexes
 
 ### [One to One](https://github.com/danielneal/compound/blob/master/src/compound/indexes/one_to_one.clj)
+
 
 Use when `(key-fn item)` returns a single key for each item.
 Stores the item against the `(key-fn item)`; throws if `(key-fn item)` returns a duplicate key to a previous item. 
