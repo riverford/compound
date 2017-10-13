@@ -29,9 +29,6 @@ It is not as expressive as datascript and other in-memory databases, but it does
 
 ```
 
-compound 
-
-
 ## Usage
 
 Say I have a bunch of data about dressmaking patterns.
