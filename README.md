@@ -14,12 +14,13 @@ based on the idea that [worse is better](https://en.wikipedia.org/wiki/Worse_is_
 
 ```
 
-  less expressive                        more expressive
+  less                    more
+  expressive              expressive
 
-   *-*-----------------------------------------*
-   ^ ^                                         ^
-   | |                                         |
-   | * compound                                *  datascript
+   *-*---------------------*
+   ^ ^                     ^
+   | |                     |
+   | * compound            *  datascript
    |
    * just a map
 
