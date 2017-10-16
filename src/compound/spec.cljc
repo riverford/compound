@@ -1,37 +1,61 @@
 (ns compound.spec
   (:require [clojure.spec.alpha :as s]))
 
-(defmulti index-def-spec :compound.index/type)
-
-(s/def :compound/index-def
-  (s/multi-spec index-def-spec :compound.index/type))
-
-(s/def :compound.index/conflict-behaviour
-  (s/or :simple #{:compound.conflict-behaviours/replace :compound.conflict-behaviours/merge :compound.conflict-behaviours/throw}
-        :custom (s/cat :merge-with #{:compound.conflict-behaviours/merge-using} :merge-fn fn?)))
-
-(s/def :compound/index-defs
-  (s/and
-   (s/coll-of :compound/index-def)
-   ;; only one primary index allowed
-   #(= 1 (count (filter (comp #{:compound.index.types/primary} :compound.index/type) %)))))
-
 (s/def :compound.index/id keyword?)
 
-(s/def :compound.index.behaviour/empty any?)
+;; Primary index definition
+(s/def :compound.primary-index/id :compound.index/id)
 
-(s/def :compound.index.behaviour/add fn?)
+(s/def :compound.primary-index/key-fn ifn?)
 
-(s/def :compound.index.behaviour/remove fn?)
+(s/def :compound.primary-index/conflict-behaviour
+  (s/or :simple #{:compound.primary-index.conflict-behaviours/replace
+                  :compound.primary-index.conflict-behaviours/merge
+                  :compound.primary-index.conflict-behaviours/throw}
+        :custom (s/cat :merge-with #{:compound.primary-index.conflict-behaviours/merge-using} :merge-fn fn?)))
 
-(s/def :compound.index/behaviour
-     (s/keys :req [:compound.index.behaviour/empty :compound.index.behaviour/add :compound.index.behaviour/remove]))
+(s/def :compound/primary-index-def
+  (s/keys :req [:compound.primary-index/id
+                :compound.primary-index/key-fn
+                :compound.primary-index/conflict-behaviour]))
 
-(s/def :compound/index-defs-by-id
-  (s/map-of :compound.index/id :compound/index-def))
+;; Secondary index definitions
+(defmulti secondary-index-def-spec :compound.secondary-index/type)
 
-(s/def :compound/index-behaviours-by-id
-  (s/map-of :compound.index/id :compound.index/behaviour))
+(s/def :compound.secondary-index/id :compound.index/id)
+
+(s/def :compound.secondary-index/type keyword?)
+
+(s/def :compound/secondary-index-def
+  (s/and
+    (s/keys :req [:compound.secondary-index/id :compound.secondary-index/type])
+    (s/multi-spec secondary-index-def-spec :compound.secondary-index/type)))
+
+;; Secondary index behaviour
+(s/def :compound.secondary-index.behaviour/empty any?)
+
+(s/def :compound.secondary-index.behaviour/add fn?)
+
+(s/def :compound.secondary-index.behaviour/remove fn?)
+
+(s/def :compound.secondary-index/behaviour
+  (s/keys :req [:compound.secondary-index.behaviour/empty
+                :compound.secondary-index.behaviour/add
+                :compound.secondary-index.behaviour/remove]))
+
+;; Compound
+
+(s/def :compound/primary-index map?)
+
+(s/def :compound/secondary-index-defs-by-id
+  (s/map-of :compound.secondary-index/id :compound/secondary-index-def))
+
+(s/def :compound/secondary-indexes-by-id (s/map-of keyword? any?))
 
 (s/def :compound/compound
-  (s/keys :req [:compound/indexes :compound/index-defs-by-id :compound/index-behaviours-by-id :compound/primary-index-id]))
+  (s/keys :req [:compound/primary-index-def
+                :compound/primary-index
+                :compound/secondary-index-defs-by-id
+                :compound/secondary-indexes-by-id]))
+
+

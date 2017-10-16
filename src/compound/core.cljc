@@ -3,92 +3,105 @@
             [compound.spec :as cs]
             [clojure.spec.alpha :as s]))
 
-(defn indexes [compound]
-  (get compound :compound/indexes))
+(defmulti secondary-index-def->behaviour :compound.secondary-index/type)
 
-(defn index [compound id]
-  (get-in compound [:compound/indexes id]))
+(def secondary-index-def->behaviour-memoized secondary-index-def->behaviour ;(memoize secondary-index-def->behaviour)
+  )
+(defn secondary-indexes-by-id [compound]
+  (get compound :compound/secondary-indexes-by-id))
+
+(defn secondary-index [compound id]
+  (get-in compound [:compound/secondary-indexes-by-id id]))
+
+(defn secondary-index-defs-by-id [compound]
+  (get compound :compound/secondary-index-defs-by-id))
+
+(defn secondary-index-def [compound id]
+  (get (secondary-index-defs-by-id compound) id))
+
+(defn secondary-index-behaviour [compound id]
+  (secondary-index-def->behaviour-memoized (secondary-index-def compound id)))
+
+(defn primary-index-def [compound]
+  (get compound :compound/primary-index-def))
 
 (defn primary-index-id [compound]
-  (get compound :compound/primary-index-id))
+  (get (primary-index-def compound) :compound.primary-index/id))
+
+(defn primary-index [compound]
+  (get compound :compound/primary-index))
 
 (defn index-defs-by-id [compound]
-  (get compound :compound/index-defs-by-id))
-
-(defn index-behaviours-by-id [compound]
-  (get compound :compound/index-behaviours-by-id))
-
-(defn index-behaviour [compound id]
-  (get (index-behaviours-by-id compound) id))
+  (assoc (secondary-index-defs-by-id compound) (primary-index-id compound) (primary-index-def compound)))
 
 (defn index-def [compound id]
   (get (index-defs-by-id compound) id))
 
-(defn primary-index-def [compound]
-  (index-def compound (primary-index-id compound)))
+(defn indexes-by-id [compound]
+  (assoc (secondary-indexes-by-id compound) (primary-index-id compound) (primary-index compound)))
 
-(defn primary-index [compound]
-  (index compound (primary-index-id compound)))
+(defn index [compound id]
+  (get (indexes-by-id compound) id))
 
-(defn secondary-indexes [compound]
-  (dissoc (indexes compound) (primary-index-id compound)))
-
-(defmulti index-def->behaviour :compound.index/type)
-
-(defmethod cs/index-def-spec :compound.index.types/primary
-  [_]
-  (s/keys :req [:compound.index/key-fn :compound.index/id :compound.index/type :compound.index/conflict-behaviour]))
+(s/fdef add-items
+        :args (s/cat :compound :compound/compound
+                     :items (s/coll-of any?))
+        :ret :compound/compound)
 
 (defn add-items [compound items]
-  (s/assert :compound/compound compound)
-  (let [{:compound.index/keys [id key-fn conflict-behaviour]} (primary-index-def compound)
+  (let [{:compound.primary-index/keys [id key-fn conflict-behaviour]} (primary-index-def compound)
         [new-primary-index added removed] (reduce (fn add-items-to-primary-index
                                                     [[index added removed] item]
                                                     (let [k (key-fn item)
                                                           existing (get index k)]
                                                       (cond
-                                                        (and existing (= conflict-behaviour :compound.conflict-behaviours/throw))
-                                                        (throw (ex-info "Duplicate key " {:k k, :index id, :item item}))
+                                                        (and existing (= conflict-behaviour :compound.primary-index.conflict-behaviours/throw))
+                                                        (throw (ex-info "Duplicate key " {:k k, :index-def (primary-index-def compound), :item item}))
 
-                                                        (and existing (= conflict-behaviour :compound.conflict-behaviours/replace))
+                                                        (and existing (= conflict-behaviour :compound.primary-index.conflict-behaviours/replace))
                                                         [(assoc! index k item)
                                                          (-> (disj! added existing)
                                                              (conj! item))
                                                          (conj! removed existing)]
-                                                        
-                                                        (and existing (or (= conflict-behaviour :compound.conflict-behaviours/merge)))
+
+                                                        (and existing (or (= conflict-behaviour :compound.primary-index.conflict-behaviours/merge)))
                                                         (let [new-item (merge existing item)]
                                                           [(assoc! index k new-item)
                                                            (-> (disj! added existing)
                                                                (conj! new-item))
                                                            (conj! removed existing)])
-                                                        
-                                                        (and existing (= (first conflict-behaviour) :compound.conflict-behaviours/merge-using))
+
+                                                        (and existing (= (first conflict-behaviour) :compound.primary-index.conflict-behaviours/merge-using))
                                                         (let [[_ merge-fn] conflict-behaviour
                                                               new-item (merge-fn existing item)]
                                                           [(assoc! index k new-item)
                                                            (-> (disj! added existing)
                                                                (conj! new-item))
                                                            (conj! removed existing)])
-                                                        
+
                                                         :else [(assoc! index k item)
                                                                (conj! added item)
                                                                removed])))
                                                   [(transient (primary-index compound)) (transient #{}) (transient #{})]
                                                   items)
         [added removed] [(persistent! added) (persistent! removed)]
-        new-secondary-indexes (reduce-kv (fn update-secondary-indexes [indexes index-id index]
-                                           (let [{:compound.index.behaviour/keys [add remove]} (index-behaviour compound index-id)]
-                                             (assoc! indexes index-id (-> (remove index removed)
-                                                                          (add added)))))
-                                         (transient {})
-                                         (secondary-indexes compound))
-        new-indexes (assoc! new-secondary-indexes (primary-index-id compound) (persistent! new-primary-index))]
-    (assoc compound :compound/indexes (persistent! new-indexes))))
+        new-secondary-indexes-by-id (reduce-kv (fn update-indexes [indexes index-id index]
+                                                 (let [{:compound.secondary-index.behaviour/keys [add remove]} (secondary-index-behaviour compound index-id)]
+                                                   (assoc! indexes index-id (-> (remove index removed)
+                                                                                (add added)))))
+                                               (transient {})
+                                               (secondary-indexes-by-id compound))]
+    (assoc compound
+           :compound/primary-index (persistent! new-primary-index)
+           :compound/secondary-indexes-by-id (persistent! new-secondary-indexes-by-id))))
+
+(s/fdef remove-keys
+        :args (s/cat :compound :compound/compound
+                     :keys (s/coll-of any?))
+        :ret :compound/compound)
 
 (defn remove-keys [compound ks]
-  (s/assert :compound/compound compound)
-  (let [{:compound.index/keys [id key-fn]} (primary-index-def compound)
+  (let [{:compound.primary-index/keys [id key-fn]} (primary-index-def compound)
         [new-primary-index removed] (reduce (fn remove-items-from-primary-index
                                               [[index removed] k]
                                               (let [item (get index k)]
@@ -100,50 +113,53 @@
                                             [(transient (primary-index compound)) (transient #{})]
                                             ks)
         removed (persistent! removed)
-        new-secondary-indexes (reduce-kv (fn [m index-id index]
-                                           (let [{:compound.index.behaviour/keys [remove]} (index-behaviour compound index-id)]
-                                             (assoc! m index-id (remove index removed))))
-                                         (transient {})
-                                         (secondary-indexes compound))
-        new-indexes (assoc! new-secondary-indexes (primary-index-id compound) (persistent! new-primary-index))]
-    (assoc compound :compound/indexes (persistent! new-indexes))))
+        new-secondary-indexes-by-id (reduce-kv (fn [m index-id index]
+                                                 (let [{:compound.secondary-index.behaviour/keys [remove]} (secondary-index-behaviour compound index-id)]
+                                                   (assoc! m index-id (remove index removed))))
+                                               (transient {})
+                                               (secondary-indexes-by-id compound))]
+    (assoc compound
+           :compound/primary-index (persistent! new-primary-index)
+           :compound/secondary-indexes-by-id (persistent! new-secondary-indexes-by-id))))
+
+(s/fdef update-item
+        :args (s/cat :compound :compound/compound
+                     :key any?
+                     :f ifn?
+                     :args (s/* any?))
+        :ret :compound/compound)
 
 (defn update-item [compound k f & args]
-  (s/assert :compound/compound compound)
   (let [new-item (apply f (get (primary-index compound) k) args)]
     (-> compound
         (remove-keys [k])
         (add-items [new-item]))))
 
-(defn empty-compound [index-defs]
-  (s/assert :compound/index-defs index-defs)
-  (let [{:keys [index-defs-by-id index-defs-by-type]} (reduce (fn [m index-def]
-                                                                (let [{:compound.index/keys [id type]} index-def]
-                                                                  (-> (assoc-in m [:index-defs-by-id id] index-def)
-                                                                      (update-in [:index-defs-by-type type] (fnil conj #{}) index-def))))
-                                                              {}
-                                                              index-defs)
-        primary-index-def (first (get index-defs-by-type :compound.index.types/primary))
-        primary-index-id (get primary-index-def :compound.index/id)
-        secondary-index-defs (dissoc index-defs-by-id primary-index-id)
-        index-behaviours-by-id (reduce-kv (fn make-behaviours [behaviours index-id index-def]
-                                            (assoc behaviours index-id (index-def->behaviour index-def))) {} secondary-index-defs)]
-    #:compound{:index-defs-by-id index-defs-by-id
-               :index-behaviours-by-id index-behaviours-by-id
-               :indexes (reduce-kv (fn make-indexes [indexes index-id index-def]
-                                     (let [{:compound.index.behaviour/keys [empty]} (get index-behaviours-by-id index-id)]
-                                      (assoc indexes index-id empty)))
-                                  {primary-index-id {}}
-                                  secondary-index-defs)
-               :primary-index-id primary-index-id}))
+(s/fdef empty-compound
+        :args (s/cat :primary-index-def :compound/primary-index-def
+                     :secondary-index-def (s/* :compound/secondary-index-def))
+        :ret :compound/compound)
+
+(defn empty-compound [primary-index-def & secondary-index-defs]
+  ;; index index-defs and initial index values by id
+  (let [{:keys [secondary-index-defs-by-id secondary-indexes-by-id]} (reduce (fn make-secondary-indexes [m index-def]
+                                                                               (let [{:compound.secondary-index/keys [id]} index-def
+                                                                                     {:compound.secondary-index.behaviour/keys [empty]} (secondary-index-def->behaviour-memoized index-def)]
+                                                                                 (-> (assoc-in m [:secondary-index-defs-by-id id] index-def)
+                                                                                     (assoc-in [:secondary-indexes-by-id id] empty))))
+                                                                             {}
+                                                                             secondary-index-defs)]
+    #:compound{:primary-index-def primary-index-def
+               :primary-index {}
+               :secondary-index-defs-by-id secondary-index-defs-by-id
+               :secondary-indexes-by-id secondary-indexes-by-id}))
 
 (defn clear [compound]
-  (let [primary-index-id (primary-index-id compound)
-        index-defs-by-id (dissoc (index-defs-by-id compound) primary-index-id)
-        index-behaviours-by-id (index-behaviours-by-id compound)]
-    (assoc compound :compound/indexes
-           (reduce-kv (fn make-indexes [indexes index-id index-def]
-                        (let [{:compound.index.behaviour/keys [empty]} (get index-behaviours-by-id index-id)]
-                          (assoc indexes index-id empty)))
-                      {primary-index-id {}}
-                      index-defs-by-id))))
+  (assoc compound
+         :compound/primary-index {}
+         :compound/secondary-indexes-by-id (reduce-kv (fn clear-secondary-indexes [indexes index-id index-def]
+                                                        (let [{:compound.secondary-indedx.behaviour/keys [empty]} (secondary-index-def->behaviour-memoized index-def)]
+                                                          (assoc indexes index-id empty)))
+                                                      {}
+                                                      (secondary-indexes-by-id compound))))
+
