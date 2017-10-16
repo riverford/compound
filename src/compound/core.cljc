@@ -163,3 +163,7 @@
                                                       {}
                                                       (secondary-indexes-by-id compound))))
 
+(defn items [compound]
+  (vals (primary-index compound)))
+
+
