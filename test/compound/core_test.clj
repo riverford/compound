@@ -66,6 +66,29 @@
              (c/remove-keys [1 2])
              (c/indexes-by-id)))))
 
+(deftest clearing
+  (is (= #:compound{:primary-index-def
+                    #:compound.primary-index{:id :id,
+                                             :conflict-behaviour
+                                             :compound.primary-index.conflict-behaviours/replace,
+                                             :key-fn :id},
+                    :primary-index {},
+                    :secondary-index-defs-by-id
+                    {:name
+                     {:compound.secondary-index/type
+                      :compound.secondary-index.types/one-to-one,
+                      :compound.secondary-index/id :name,
+                      :compound.secondary-indexes.one-to-one/key-fn :name}},
+                    :secondary-indexes-by-id {:name {}}}
+         (-> (c/empty-compound #:compound.primary-index{:id :id
+                                                        :conflict-behaviour :compound.primary-index.conflict-behaviours/replace
+                                                        :key-fn :id}
+                               #:compound.secondary-index{:type :compound.secondary-index.types/one-to-one
+                                                          :id :name
+                                                          :compound.secondary-indexes.one-to-one/key-fn :name})
+             (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
+             (c/clear)))))
+
 (deftest updating
   (is (= {:name
           {"Terry" {:id 2, :name "Terry"},

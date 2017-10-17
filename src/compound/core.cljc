@@ -158,10 +158,10 @@
   (assoc compound
          :compound/primary-index {}
          :compound/secondary-indexes-by-id (reduce-kv (fn clear-secondary-indexes [indexes index-id index-def]
-                                                        (let [{:compound.secondary-indedx.behaviour/keys [empty]} (secondary-index-def->behaviour-memoized index-def)]
+                                                        (let [{:compound.secondary-index.behaviour/keys [empty]} (secondary-index-def->behaviour-memoized index-def)]
                                                           (assoc indexes index-id empty)))
                                                       {}
-                                                      (secondary-indexes-by-id compound))))
+                                                      (secondary-index-defs-by-id compound))))
 
 (defn items [compound]
   (vals (primary-index compound)))
