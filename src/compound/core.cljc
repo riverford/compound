@@ -5,8 +5,8 @@
 
 (defmulti secondary-index-def->behaviour :compound.secondary-index/type)
 
-(def secondary-index-def->behaviour-memoized (memoize secondary-index-def->behaviour)
-  )
+(def secondary-index-def->behaviour-memoized (memoize secondary-index-def->behaviour))
+
 (defn secondary-indexes-by-id [compound]
   (get compound :compound/secondary-indexes-by-id))
 
