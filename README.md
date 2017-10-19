@@ -7,20 +7,20 @@
 **verb** *kəmˈpaʊnd*
 
 1. make up (a composite whole); constitute.
-2. make (something bad) worse; 
+2. make (something bad) worse. 
 
 Compound is a micro structure for data used in reagent (and re-frame etc) applications, 
 based on the idea that [worse is better](https://en.wikipedia.org/wiki/Worse_is_better). 
 
 ```
 
-  less                           more
-  expressive                     expressive
+  less                               more
+  expressive                         expressive
 
-   *-*----------------------------*
-   ^ ^                            ^
-   | |                            |
-   | * compound                   *  datascript
+   *-*--------------------------------*
+   ^ ^                                ^
+   | |                                |
+   | * compound                       *  datascript
    | 
    * just a map
 
