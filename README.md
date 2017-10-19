@@ -113,7 +113,7 @@ based on the idea that [worse is better](https://en.wikipedia.org/wiki/Worse_is_
 
 ## Built-in indexes
 
-### [One to One](https://github.com/danielneal/compound/blob/master/src/compound/indexes/one_to_one.clj)
+### [One to One](https://github.com/danielneal/compound/blob/master/src/compound/secondary_indexes/one_to_one.clj)
 
 
 Use when `(key-fn item)` returns a single key for each item.
