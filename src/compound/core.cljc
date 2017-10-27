@@ -1,11 +1,8 @@
 (ns compound.core
   (:require [clojure.set :as set]
             [compound.spec :as cs]
-            [clojure.spec.alpha :as s]))
-
-(defmulti secondary-index-def->behaviour :compound.secondary-index/type)
-
-(def secondary-index-def->behaviour-memoized (memoize secondary-index-def->behaviour))
+            [clojure.spec.alpha :as s]
+            [compound.secondary-indexes :as csi]))
 
 (defn secondary-indexes-by-id [compound]
   (get compound :compound/secondary-indexes-by-id))
@@ -18,9 +15,6 @@
 
 (defn secondary-index-def [compound id]
   (get (secondary-index-defs-by-id compound) id))
-
-(defn secondary-index-behaviour [compound id]
-  (secondary-index-def->behaviour-memoized (secondary-index-def compound id)))
 
 (defn primary-index-def [compound]
   (get compound :compound/primary-index-def))
@@ -86,9 +80,9 @@
                                                   items)
         [added removed] [(persistent! added) (persistent! removed)]
         new-secondary-indexes-by-id (reduce-kv (fn update-indexes [indexes index-id index]
-                                                 (let [{:compound.secondary-index.behaviour/keys [add remove]} (secondary-index-behaviour compound index-id)]
-                                                   (assoc! indexes index-id (-> (remove index removed)
-                                                                                (add added)))))
+                                                 (let [index-def (secondary-index-def compound index-id)]
+                                                   (assoc! indexes index-id (-> (csi/remove index index-def removed)
+                                                                                (csi/add index-def added)))))
                                                (transient {})
                                                (secondary-indexes-by-id compound))]
     (assoc compound
@@ -114,8 +108,8 @@
                                             ks)
         removed (persistent! removed)
         new-secondary-indexes-by-id (reduce-kv (fn [m index-id index]
-                                                 (let [{:compound.secondary-index.behaviour/keys [remove]} (secondary-index-behaviour compound index-id)]
-                                                   (assoc! m index-id (remove index removed))))
+                                                 (let [index-def (secondary-index-def compound index-id)]
+                                                   (assoc! m index-id (csi/remove index index-def removed))))
                                                (transient {})
                                                (secondary-indexes-by-id compound))]
     (assoc compound
@@ -143,10 +137,9 @@
 (defn empty-compound [primary-index-def & secondary-index-defs]
   ;; index index-defs and initial index values by id
   (let [{:keys [secondary-index-defs-by-id secondary-indexes-by-id]} (reduce (fn make-secondary-indexes [m index-def]
-                                                                               (let [{:compound.secondary-index/keys [id]} index-def
-                                                                                     {:compound.secondary-index.behaviour/keys [empty]} (secondary-index-def->behaviour-memoized index-def)]
+                                                                               (let [{:compound.secondary-index/keys [id]} index-def]
                                                                                  (-> (assoc-in m [:secondary-index-defs-by-id id] index-def)
-                                                                                     (assoc-in [:secondary-indexes-by-id id] empty))))
+                                                                                     (assoc-in [:secondary-indexes-by-id id] (csi/empty index-def)))))
                                                                              {}
                                                                              secondary-index-defs)]
     #:compound{:primary-index-def primary-index-def
@@ -158,8 +151,7 @@
   (assoc compound
          :compound/primary-index {}
          :compound/secondary-indexes-by-id (reduce-kv (fn clear-secondary-indexes [indexes index-id index-def]
-                                                        (let [{:compound.secondary-index.behaviour/keys [empty]} (secondary-index-def->behaviour-memoized index-def)]
-                                                          (assoc indexes index-id empty)))
+                                                        (assoc indexes index-id (csi/empty index-def)))
                                                       {}
                                                       (secondary-index-defs-by-id compound))))
 
