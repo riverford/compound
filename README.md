@@ -37,36 +37,29 @@ based on the idea that [worse is better](https://en.wikipedia.org/wiki/Worse_is_
 
 
 (def patterns
-  (-> (c/empty-compound #:compound.primary-index{:id :id
-                                                 :conflict-behaviour :compound.primary-index.conflict-behaviours/replace
-                                                 :key-fn :id}
+  (-> (c/compound {:primary-index-def {:key :id
+                                          :on-conflict :compound/replace}
+                      :secondary-index-defs [{:key :source
+                                              :index-type :compound/one-to-many}
+                                             {:key :difficulty
+                                              :index-type :compound/one-to-many}
+                                             {:key :appropriate-materials
+                                              :index-type :compound/many-to-many}]})
+         (c/add-items #{{:id 1 :source :instituto-di-moda :difficulty :medium,
+                         :appropriate-materials #{:cotton :linen} :pattern :bodice-basic}
 
-                        #:compound.secondary-index{:id :source
-                                                   :type :compound.secondary-index.types/one-to-many
-                                                   :compound.secondary-indexes.one-to-many/key-fn :source}
+                        {:id 2 :source :instituto-di-moda :difficulty :easy,
+                         :appropriate-materials #{:cotton} :pattern :shirt-basic}
 
-                        #:compound.secondary-index{:id :difficulty
-                                                   :type :compound.secondary-index.types/one-to-many
-                                                   :compound.secondary-indexes.one-to-many/key-fn :difficulty}
-                    
-                        #:compound.secondary-index{:id :appropriate-materials
-                                                   :type :compound.secondary-index.types/many-to-many
-                                                   :compound.secondary-indexes.many-to-many/key-fn :appropriate-materials})
-                                                   
-      (c/add-items #{{:id 1 :source :instituto-di-moda :difficulty :medium,
-                      :appropriate-materials #{:cotton :linen} :pattern :bodice-basic}
+                        {:id 3 :source :instituto-di-moda, :difficulty :easy
+                         :appropriate-materials #{:cotton :linen} :pattern :bodice-dartless}
 
-                     {:id 2 :source :instituto-di-moda :difficulty :easy,
-                      :appropriate-materials #{:cotton} :pattern :shirt-basic}
+                        {:id 4 :source :winifred-aldrich :difficulty :medium
+                         :appropriate-materials #{:silk :cotton} :pattern :dress-princess-seam}
 
-                     {:id 3 :source :instituto-di-moda, :difficulty :easy
-                      :appropriate-materials #{:cotton :linen} :pattern :bodice-dartless}
-
-                     {:id 4 :source :winifred-aldrich :difficulty :medium
-                      :appropriate-materials #{:silk :cotton} :pattern :dress-princess-seam}
-
-                     {:id 5 :source :winifred-aldrich :pattern :winter-coat
-                      :appropriate-materials #{:wool} :difficulty :hard}})))
+                        {:id 5 :source :winifred-aldrich :pattern :winter-coat
+                         :appropriate-materials #{:wool} :difficulty :hard}})
+         (c/indexes-by-id)))
 
 (get (c/primary-index patterns) 3)
 
