@@ -12,26 +12,16 @@
 (st/instrument)
 (s/check-asserts true)
 
-(deftest empty-compound
-  (is (= #:compound{:primary-index-def
-                    #:compound.primary-index{:id :id,
-                                             :conflict-behaviour
-                                             :compound.primary-index.conflict-behaviours/replace,
-                                             :key-fn :id},
-                    :primary-index {},
-                    :secondary-index-defs-by-id
-                    {:name
-                     {:compound.secondary-index/id :name,
-                      :compound.secondary-index/type
-                      :compound.secondary-index.types/one-to-one,
-                      :compound.secondary-indexes.one-to-one/key-fn :name}},
-                    :secondary-indexes-by-id {:name {}}}
-         (c/empty-compound #:compound.primary-index{:id :id
-                                                    :conflict-behaviour :compound.primary-index.conflict-behaviours/replace
-                                                    :key-fn :id}
-                           #:compound.secondary-index{:id :name
-                                                      :type :compound.secondary-index.types/one-to-one
-                                                      :compound.secondary-indexes.one-to-one/key-fn :name}))))
+
+(deftest creating
+  (is (= {:primary-index-def {:key :id, :on-conflict :compound/replace},
+          :primary-index {},
+          :secondary-index-defs-by-id {:name {:key :name, :index-type :compound/one-to-one}},
+          :secondary-indexes-by-id {:name {}}}
+         (c/compound {:primary-index-def {:key :id
+                                          :on-conflict :compound/replace}
+                      :secondary-index-defs [{:key :name
+                                              :index-type :compound/one-to-one}]}))))
 
 (deftest adding
   (is (= {:name
@@ -42,12 +32,10 @@
           {1 {:id 1, :name "Bob"},
            2 {:id 2, :name "Terry"},
            3 {:id 3, :name "Squirrel"}}}
-         (-> (c/empty-compound #:compound.primary-index{:id :id
-                                                        :conflict-behaviour :compound.primary-index.conflict-behaviours/replace
-                                                        :key-fn :id}
-                               #:compound.secondary-index{:id :name
-                                                          :type :compound.secondary-index.types/one-to-one
-                                                          :compound.secondary-indexes.one-to-one/key-fn :name})
+         (-> (c/compound {:primary-index-def {:key :id
+                                              :on-conflict :compound/replace}
+                          :secondary-index-defs [{:key :name
+                                                  :index-type :compound/one-to-one}]})
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
              (c/indexes-by-id)))))
 
@@ -56,36 +44,23 @@
           {"Squirrel" {:id 3, :name "Squirrel"}},
           :id
           {3 {:id 3, :name "Squirrel"}}}
-         (-> (c/empty-compound #:compound.primary-index{:id :id
-                                                        :conflict-behaviour :compound.primary-index.conflict-behaviours/replace
-                                                        :key-fn :id}
-                               #:compound.secondary-index{:type :compound.secondary-index.types/one-to-one
-                                                          :id :name
-                                                          :compound.secondary-indexes.one-to-one/key-fn :name})
+         (-> (c/compound {:primary-index-def {:key :id
+                                              :on-conflict :compound/replace}
+                          :secondary-index-defs [{:key :name
+                                                  :index-type :compound/one-to-one}]})
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
              (c/remove-keys [1 2])
              (c/indexes-by-id)))))
 
 (deftest clearing
-  (is (= #:compound{:primary-index-def
-                    #:compound.primary-index{:id :id,
-                                             :conflict-behaviour
-                                             :compound.primary-index.conflict-behaviours/replace,
-                                             :key-fn :id},
-                    :primary-index {},
-                    :secondary-index-defs-by-id
-                    {:name
-                     {:compound.secondary-index/type
-                      :compound.secondary-index.types/one-to-one,
-                      :compound.secondary-index/id :name,
-                      :compound.secondary-indexes.one-to-one/key-fn :name}},
-                    :secondary-indexes-by-id {:name {}}}
-         (-> (c/empty-compound #:compound.primary-index{:id :id
-                                                        :conflict-behaviour :compound.primary-index.conflict-behaviours/replace
-                                                        :key-fn :id}
-                               #:compound.secondary-index{:type :compound.secondary-index.types/one-to-one
-                                                          :id :name
-                                                          :compound.secondary-indexes.one-to-one/key-fn :name})
+  (is (= {:primary-index-def {:key :id, :on-conflict :compound/replace},
+          :primary-index {},
+          :secondary-index-defs-by-id {:name {:key :name, :index-type :compound/one-to-one}},
+          :secondary-indexes-by-id {:name {}}}
+         (-> (c/compound {:primary-index-def {:key :id
+                                              :on-conflict :compound/replace}
+                          :secondary-index-defs [{:key :name
+                                                  :index-type :compound/one-to-one}]})
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
              (c/clear)))))
 
@@ -98,12 +73,10 @@
           {3 {:id 3, :name "Squirrel"},
            2 {:id 2, :name "Terry"},
            1 {:id 1, :name "Gerald"}}}
-         (-> (c/empty-compound #:compound.primary-index{:id :id
-                                                        :conflict-behaviour :compound.primary-index.conflict-behaviours/replace
-                                                        :key-fn :id}
-                               #:compound.secondary-index{:id :name
-                                                          :type :compound.secondary-index.types/one-to-one
-                                                          :compound.secondary-indexes.one-to-one/key-fn :name})
+         (-> (c/compound {:primary-index-def {:key :id
+                                              :on-conflict :compound/replace}
+                          :secondary-index-defs [{:key :name
+                                                  :index-type :compound/one-to-one}]})
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
              (c/update-item 1 assoc :name "Gerald")
              (c/indexes-by-id)))))
@@ -117,12 +90,10 @@
           {1 {:id 1, :name "Bob"},
            2 {:id 2, :name "Terry"},
            3 {:id 3, :name "Red Squirrel"}}},
-         (-> (c/empty-compound #:compound.primary-index{:id :id
-                                                        :conflict-behaviour :compound.primary-index.conflict-behaviours/replace
-                                                        :key-fn :id}
-                               #:compound.secondary-index{:id :name
-                                                          :type :compound.secondary-index.types/one-to-one
-                                                          :compound.secondary-indexes.one-to-one/key-fn :name})
+         (-> (c/compound {:primary-index-def {:key :id
+                                              :on-conflict :compound/replace}
+                          :secondary-index-defs [{:key :name
+                                                  :index-type :compound/one-to-one}]})
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 3 :name "Red Squirrel"}])
              (c/indexes-by-id))))
   
@@ -134,12 +105,10 @@
           {1 {:id 1, :name "Bob"},
            2 {:id 2, :name "Terry"},
            3 {:id 3, :name "Green Squirrel"}}},
-         (-> (c/empty-compound #:compound.primary-index{:id :id
-                                                        :conflict-behaviour :compound.primary-index.conflict-behaviours/replace
-                                                        :key-fn :id}
-                               #:compound.secondary-index{:id :name
-                                                          :type :compound.secondary-index.types/one-to-one
-                                                          :compound.secondary-indexes.one-to-one/key-fn :name})
+         (-> (c/compound {:primary-index-def {:key :id
+                                              :on-conflict :compound/replace}
+                          :secondary-index-defs [{:key :name
+                                                  :index-type :compound/one-to-one}]})
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 3 :name "Green Squirrel"}])
              (c/indexes-by-id))))
   
@@ -151,40 +120,32 @@
           {1 {:id 1, :name "Bob"},
            2 {:id 2, :name "Terry"},
            3 {:id 3, :name "Blue Squirrel"}}},
-         (-> (c/empty-compound #:compound.primary-index{:id :id
-                                                        :conflict-behaviour :compound.primary-index.conflict-behaviours/replace
-                                                        :key-fn :id}
-                               #:compound.secondary-index{:id :name
-                                                          :type :compound.secondary-index.types/one-to-one
-                                                          :compound.secondary-indexes.one-to-one/key-fn :name})
+         (-> (c/compound {:primary-index-def {:key :id
+                                              :on-conflict :compound/replace}
+                          :secondary-index-defs [{:key :name
+                                                  :index-type :compound/one-to-one}]})
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
              (c/add-items [{:id 3 :name "Blue Squirrel"}])
              (c/indexes-by-id)))))
 
 (deftest conflict
-  (is (thrown? clojure.lang.ExceptionInfo (-> (c/empty-compound #:compound.primary-index{:id :id
-                                                                                         :conflict-behaviour :compound.primary-index.conflict-behaviours/throw
-                                                                                         :key-fn :id}
-                                                                #:compound.secondary-index{:id :name
-                                                                                           :type :compound.secondary-index.types/one-to-one
-                                                                                           :compound.secondary-indexes.one-to-one/key-fn :name})
-                                              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 3 :name "Red Squirrel"}])
-                                              (get :compound/indexes))))
-  (is (thrown? clojure.lang.ExceptionInfo (-> (c/empty-compound #:compound.primary-index{:id :id
-                                                                                         :conflict-behaviour :compound.primary-index.conflict-behaviours/replace
-                                                                                         :key-fn :id}
-                                                                #:compound.secondary-index{:id :name
-                                                                                           :type :compound.secondary-index.types/one-to-one
-                                                                                           :compound.secondary-indexes.one-to-one/key-fn :name})
-                                              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 4 :name "Squirrel"}])
-                                              (get :compound/indexes)))))
+  (is (thrown? clojure.lang.ExceptionInfo (-> (c/compound {:primary-index-def {:key :id
+                                                                               :on-conflict :compound/throw}
+                                                           :secondary-index-defs [{:key :name
+                                                                                   :index-type :compound/one-to-one}]})
+                                              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 3 :name "Red Squirrel"}]))))
+  (is (thrown? clojure.lang.ExceptionInfo (-> (c/compound {:primary-index-def {:key :id
+                                                                               :on-conflict :compound/replace}
+                                                           :secondary-index-defs [{:key :name
+                                                                                   :index-type :compound/one-to-one}]})
+                                              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 4 :name "Squirrel"}])))))
 
 (deftest many-to-many-index
   (is (= {:name
           {"Terry" {:id 2, :name "Terry", :aliases #{:terence :t-man}},
            "Squirrel" {:id 3, :name "Squirrel", :aliases #{:terence}},
            "Bob" {:id 1, :name "Bob", :aliases #{:bobby :robert}}},
-          :alias
+          :aliases
           {:terence
            #{{:id 2, :name "Terry", :aliases #{:terence :t-man}}
              {:id 3, :name "Squirrel", :aliases #{:terence}}},
@@ -195,48 +156,21 @@
           {1 {:id 1, :name "Bob", :aliases #{:bobby :robert}},
            2 {:id 2, :name "Terry", :aliases #{:terence :t-man}},
            3 {:id 3, :name "Squirrel", :aliases #{:terence}}}}
-         (-> (c/empty-compound #:compound.primary-index{:id :id
-                                                        :conflict-behaviour :compound.primary-index.conflict-behaviours/replace
-                                                        :key-fn :id}
-                               #:compound.secondary-index{:id :name
-                                                          :type :compound.secondary-index.types/one-to-one
-                                                          :compound.secondary-indexes.one-to-one/key-fn :name}
-                               #:compound.secondary-index{:id :alias
-                                                          :type :compound.secondary-index.types/many-to-many
-                                                          :compound.secondary-indexes.many-to-many/key-fn :aliases})
+         (-> (c/compound {:primary-index-def {:key :id
+                                              :on-conflict :compound/throw}
+                          :secondary-index-defs [{:key :name
+                                                  :index-type :compound/one-to-one}
+                                                 {:key :aliases
+                                                  :index-type :compound/many-to-many}]})
              (c/add-items [{:id 1 :name "Bob" :aliases #{:robert :bobby}} {:id 2 :name "Terry" :aliases #{:terence :t-man}} {:id 3 :name "Squirrel" :aliases #{:terence}}])
              (c/indexes-by-id)))))
 
-(deftest many-to-many-index
-  (is (= {:name
-          {"Terry" {:id 2, :name "Terry", :aliases #{:terence :t-man}},
-           "Squirrel" {:id 3, :name "Squirrel", :aliases #{:terence}},
-           "Bob" {:id 1, :name "Bob", :aliases #{:bobby :robert}}},
-          :alias
-          {:terence
-           #{{:id 2, :name "Terry", :aliases #{:terence :t-man}}
-             {:id 3, :name "Squirrel", :aliases #{:terence}}},
-           :t-man #{{:id 2, :name "Terry", :aliases #{:terence :t-man}}},
-           :bobby #{{:id 1, :name "Bob", :aliases #{:bobby :robert}}},
-           :robert #{{:id 1, :name "Bob", :aliases #{:bobby :robert}}}},
-          :id
-          {1 {:id 1, :name "Bob", :aliases #{:bobby :robert}},
-           2 {:id 2, :name "Terry", :aliases #{:terence :t-man}},
-           3 {:id 3, :name "Squirrel", :aliases #{:terence}}}}
-         (-> (c/empty-compound #:compound.primary-index{:id :id
-                                                        :conflict-behaviour :compound.primary-index.conflict-behaviours/replace
-                                                        :key-fn :id}
-                               #:compound.secondary-index{:id :name
-                                                          :type :compound.secondary-index.types/one-to-one
-                                                          :compound.secondary-indexes.one-to-one/key-fn :name}
-                               #:compound.secondary-index{:id :alias
-                                                          :type :compound.secondary-index.types/many-to-many
-                                                          :compound.secondary-indexes.many-to-many/key-fn :aliases})
-             (c/add-items [{:id 1 :name "Bob" :aliases #{:robert :bobby}} {:id 2 :name "Terry" :aliases #{:terence :t-man}} {:id 3 :name "Squirrel" :aliases #{:terence}}])
-             (c/indexes-by-id)))))
+(defmethod c/custom-key-fn ::delivery-date-product
+  [k item]
+  [(:delivery-date item) (:product item)])
 
 (deftest nested-indexes
-  (is (= {:delivery-date-product
+  (is (= {[:delivery-date :product]
           {"2012-03-04"
            {:potatoes {:delivery-date "2012-03-04", :product :potatoes},
             :bananas {:delivery-date "2012-03-04", :product :bananas}},
@@ -244,7 +178,7 @@
            {:apples {:delivery-date "2012-03-03", :product :apples},
             :bananas {:delivery-date "2012-03-03", :product :bananas}},
            "2012-03-06" {}},
-          :product-delivery-date
+          [:product :delivery-date]
           {:potatoes
            {"2012-03-04" #{{:delivery-date "2012-03-04", :product :potatoes}},
             "2012-03-06" #{}},
@@ -252,20 +186,17 @@
            :bananas
            {"2012-03-03" #{{:delivery-date "2012-03-03", :product :bananas}},
             "2012-03-04" #{{:delivery-date "2012-03-04", :product :bananas}}}},
-          :id
+          :compound.core-test/delivery-date-product
           {["2012-03-03" :bananas] {:delivery-date "2012-03-03", :product :bananas},
            ["2012-03-03" :apples] {:delivery-date "2012-03-03", :product :apples},
            ["2012-03-04" :potatoes] {:delivery-date "2012-03-04", :product :potatoes},
            ["2012-03-04" :bananas] {:delivery-date "2012-03-04", :product :bananas}}}
-         (-> (c/empty-compound #:compound.primary-index{:id :id
-                                                        :conflict-behaviour :compound.primary-index.conflict-behaviours/replace
-                                                        :key-fn (juxt :delivery-date :product)}
-                               #:compound.secondary-index{:id :delivery-date-product
-                                                          :type :compound.secondary-index.types/one-to-one-nested
-                                                          :compound.secondary-indexes.one-to-one-nested/key-fn (juxt :delivery-date :product)}
-                               #:compound.secondary-index{:id :product-delivery-date
-                                                          :type :compound.secondary-index.types/one-to-many-nested
-                                                          :compound.secondary-indexes.one-to-many-nested/key-fn (juxt :product :delivery-date)})
+         (-> (c/compound {:primary-index-def {:custom-key ::delivery-date-product
+                                              :on-conflict :compound/replace}
+                          :secondary-index-defs [{:keys [:delivery-date :product]
+                                                  :index-type :compound/one-to-one-nested}
+                                                 {:keys [:product :delivery-date]
+                                                  :index-type :compound/one-to-many-nested}]})
              (c/add-items [{:delivery-date "2012-03-03" :product :bananas}
                            {:delivery-date "2012-03-03" :product :apples}
                            {:delivery-date "2012-03-04" :product :potatoes}
@@ -283,14 +214,17 @@
           {1 {:id 1, :name "Bob"},
            2 {:id 2, :name "Terry"},
            3 {:id 3, :name "Squirrek", :color :red}}}
-         (-> (c/empty-compound #:compound.primary-index{:id :id
-                                                        :conflict-behaviour :compound.primary-index.conflict-behaviours/merge
-                                                        :key-fn :id}
-                               #:compound.secondary-index{:id :name
-                                                          :type :compound.secondary-index.types/one-to-one
-                                                          :compound.secondary-indexes.one-to-one/key-fn :name})
+         (-> (c/compound {:primary-index-def {:key :id
+                                              :on-conflict :compound/merge}
+                          :secondary-index-defs [{:key :name
+                                                  :index-type :compound/one-to-one}]})
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrek"} {:id 3 :color :red}])
              (c/indexes-by-id)))))
+
+(defmethod c/on-conflict-fn ::add-quantities
+  [index-def existing-item new-item]
+  (assoc (merge existing-item new-item) :quantity-delta
+         (+ (get existing-item :quantity-delta) (get new-item :quantity-delta))))
 
 (deftest merge-custom
   (is (= {:product
@@ -309,7 +243,7 @@
            "2012-03-03"
            #{{:delivery-date "2012-03-03", :product :apples, :quantity-delta 2}
              {:delivery-date "2012-03-03", :product :bananas, :quantity-delta 1}}},
-          :id
+          :compound.core-test/delivery-date-product
           {["2012-03-03" :bananas]
            {:delivery-date "2012-03-03", :product :bananas, :quantity-delta 1},
            ["2012-03-03" :apples]
@@ -318,17 +252,12 @@
            {:delivery-date "2012-03-04", :product :bananas, :quantity-delta 2},
            ["2012-03-06" :potatoes]
            {:delivery-date "2012-03-06", :product :potatoes, :quantity-delta 12}}}
-         (-> (c/empty-compound #:compound.primary-index{:id :id
-                                                        :conflict-behaviour [:compound.primary-index.conflict-behaviours/merge-using (fn [a b]
-                                                                                                                                       (assoc (merge a b) :quantity-delta
-                                                                                                                                              (+ (get a :quantity-delta) (get b :quantity-delta))))] 
-                                                        :key-fn (juxt :delivery-date :product)}
-                               #:compound.secondary-index{:id :product
-                                                          :type :compound.secondary-index.types/one-to-many
-                                                          :compound.secondary-indexes.one-to-many/key-fn :product}
-                               #:compound.secondary-index{:id :delivery-date
-                                                          :type :compound.secondary-index.types/one-to-many
-                                                          :compound.secondary-indexes.one-to-many/key-fn :delivery-date})
+         (-> (c/compound {:primary-index-def {:custom-key ::delivery-date-product
+                                              :on-conflict ::add-quantities}
+                          :secondary-index-defs [{:key :product
+                                                  :index-type :compound/one-to-many}
+                                                 {:key :delivery-date
+                                                  :index-type :compound/one-to-many}]})
              (c/add-items [{:delivery-date "2012-03-03" :product :bananas :quantity-delta 1}
                            {:delivery-date "2012-03-03" :product :apples :quantity-delta 2}
                            {:delivery-date "2012-03-04" :product :bananas :quantity-delta 3}

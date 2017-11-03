@@ -1,6 +1,22 @@
-(ns compound.secondary-indexes)
+(ns compound.secondary-indexes
+  (:require [clojure.spec.alpha :as s]))
 
-(defmulti empty (fn [index-def] (:compound.secondary-index/type index-def)))
-(defmulti add (fn [index index-def added] (:compound.secondary-index/type index-def)))
-(defmulti remove (fn [index index-def removed] (:compound.secondary-index/type index-def)))
+(defmulti empty :index-type)
+
+(defmulti id :index-type)
+
+(defmulti spec :index-type)
+
+(defmulti add
+  (fn [index index-def added] (:index-type index-def)))
+
+(defmulti remove
+  (fn [index index-def removed] (:index-type index-def)))
+
+(s/def ::index-type keyword?)
+
+(s/def ::secondary-index-def
+  (s/and
+    (s/keys :req-un [::index-type])
+    (s/multi-spec spec :index-type)))
 

@@ -1,22 +1,31 @@
 (ns compound.secondary-indexes.many-to-many
   (:require [compound.core :as c]
-            [compound.spec :as cs]
             [compound.secondary-indexes :as csi]
             [clojure.spec.alpha :as s]))
 
-(s/def ::key-fn ifn?)
+(s/def ::key keyword?)
+(s/def ::custom-key keyword?)
+(s/def ::id any?)
 
-(defmethod cs/secondary-index-def-spec :compound.secondary-index.types/many-to-many
+(defmethod csi/spec :compound/many-to-many
   [_]
-  (s/keys :req [::key-fn]))
+  (s/keys :req-un [(or ::key ::custom-key)]
+          :opt-un [::id]))
 
-(defmethod csi/empty :compound.secondary-index.types/many-to-many
+(defmethod csi/empty :compound/many-to-many
   [index-def]
   {})
 
-(defmethod csi/add :compound.secondary-index.types/many-to-many
+(defmethod csi/id :compound/many-to-many
+  [index-def]
+  (or (:id index-def)
+      (:custom-key index-def)
+      (:key index-def)))
+
+(defmethod csi/add :compound/many-to-many
   [index index-def added]
-  (let [{::keys [key-fn]} index-def
+  (let [{:keys [key custom-key]} index-def
+        key-fn (or key (partial c/custom-key-fn custom-key))
         new-index (reduce (fn add-items [index item]
                             (let [ks (key-fn item)
                                   kvs (reduce (fn [kvs k]
@@ -29,9 +38,10 @@
                           added)]
     (persistent! new-index)))
 
-(defmethod csi/remove :compound.secondary-index.types/many-to-many
+(defmethod csi/remove :compound/many-to-many
   [index index-def removed]
-  (let [{::keys [key-fn]} index-def
+  (let [{:keys [key custom-key]} index-def
+        key-fn (or key (partial c/custom-key-fn custom-key))
         new-index (reduce (fn remove-items [index item]
                             (let [ks (key-fn item)
                                   kvs (reduce (fn [kvs k]
