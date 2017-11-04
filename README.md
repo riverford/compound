@@ -12,20 +12,12 @@
 Compound is a micro structure for data used in reagent (and re-frame etc) applications, 
 based on the idea that [worse is better](https://en.wikipedia.org/wiki/Worse_is_better). 
 
-```
+It maintains a plain map of indexes. This makes accessing your data more flexible than a map indexed just
+by the primary key (a common approach in reframe applications to keep subscriptions fast). 
 
-  less                               more
-  expressive                         expressive
+You can have as many indexes as you like. Some index types are built in, but adding extra ones is straight forward. 
 
-   *-*--------------------------------*
-   ^ ^                                ^
-   | |                                |
-   | * compound                       *  datascript
-   | 
-   * just a map
-
-
-```
+There is no query engine. 
 
 ## Usage
 
@@ -37,29 +29,47 @@ based on the idea that [worse is better](https://en.wikipedia.org/wiki/Worse_is_
 
 
 (def patterns
-  (-> (c/compound {:primary-index-def {:key :id
-                                          :on-conflict :compound/replace}
-                      :secondary-index-defs [{:key :source
-                                              :index-type :compound/one-to-many}
-                                             {:key :difficulty
-                                              :index-type :compound/one-to-many}
-                                             {:key :appropriate-materials
-                                              :index-type :compound/many-to-many}]})
-         (c/add-items #{{:id 1 :source :instituto-di-moda :difficulty :medium,
-                         :appropriate-materials #{:cotton :linen} :pattern :bodice-basic}
+  (-> (c/compound 
+         {:primary-index-def 
+            {:key :id
+             :on-conflict :compound/replace}
+          :secondary-index-defs 
+            [{:key :source
+              :index-type :compound/one-to-many}
+             {:key :difficulty
+              :index-type :compound/one-to-many}
+             {:key :appropriate-materials
+              :index-type :compound/many-to-many}]})
+       (c/add-items 
+         #{{:id 1 
+            :source :instituto-di-moda 
+            :difficulty :medium,
+            :appropriate-materials #{:cotton :linen} 
+            :pattern :bodice-basic}
 
-                        {:id 2 :source :instituto-di-moda :difficulty :easy,
-                         :appropriate-materials #{:cotton} :pattern :shirt-basic}
+           {:id 2 
+            :source :instituto-di-moda
+            :difficulty :easy,
+            :appropriate-materials #{:cotton} 
+            :pattern :shirt-basic}
 
-                        {:id 3 :source :instituto-di-moda, :difficulty :easy
-                         :appropriate-materials #{:cotton :linen} :pattern :bodice-dartless}
+           {:id 3 :source 
+            :instituto-di-moda, 
+            :difficulty :easy
+            :appropriate-materials #{:cotton :linen} 
+            :pattern :bodice-dartless}
 
-                        {:id 4 :source :winifred-aldrich :difficulty :medium
-                         :appropriate-materials #{:silk :cotton} :pattern :dress-princess-seam}
+           {:id 4 
+            :source :winifred-aldrich 
+            :difficulty :medium
+            :appropriate-materials #{:silk :cotton} 
+            :pattern :dress-princess-seam}
 
-                        {:id 5 :source :winifred-aldrich :pattern :winter-coat
-                         :appropriate-materials #{:wool} :difficulty :hard}})
-         (c/indexes-by-id)))
+           {:id 5 
+            :source :winifred-aldrich 
+            :pattern :winter-coat
+            :appropriate-materials #{:wool}
+            :difficulty :hard}})))
 
 (get (c/primary-index patterns) 3)
 
