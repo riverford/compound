@@ -33,6 +33,7 @@ There is no query engine.
          {:primary-index-def 
             {:key :id
              :on-conflict :compound/replace}
+             
           :secondary-index-defs 
             [{:key :source
               :index-type :compound/one-to-many}
@@ -40,6 +41,7 @@ There is no query engine.
               :index-type :compound/one-to-many}
              {:key :appropriate-materials
               :index-type :compound/many-to-many}]})
+              
        (c/add-items 
          #{{:id 1 
             :source :instituto-di-moda 
@@ -57,19 +59,7 @@ There is no query engine.
             :instituto-di-moda, 
             :difficulty :easy
             :appropriate-materials #{:cotton :linen} 
-            :pattern :bodice-dartless}
-
-           {:id 4 
-            :source :winifred-aldrich 
-            :difficulty :medium
-            :appropriate-materials #{:silk :cotton} 
-            :pattern :dress-princess-seam}
-
-           {:id 5 
-            :source :winifred-aldrich 
-            :pattern :winter-coat
-            :appropriate-materials #{:wool}
-            :difficulty :hard}})))
+            :pattern :bodice-dartless}})))
 
 (get (c/primary-index patterns) 3)
 
