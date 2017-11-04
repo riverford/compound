@@ -12,8 +12,9 @@
 Compound is a micro structure for data used in reagent (and re-frame etc) applications, 
 based on the idea that [worse is better](https://en.wikipedia.org/wiki/Worse_is_better). 
 
-It maintains a plain map of indexes. This makes accessing your data more flexible than a map indexed just
-by the primary key (a common approach in reframe applications to keep subscriptions fast). 
+It maintains a plain hash-map of indexes for your data. This has two benefits: 
+ 1. Accessing your data in multiple ways (e.g. by name _and_ id) is easier than if you have a map just indexed by primary key (a common approach in reframe applications to keep subscriptions fast). 
+ 2. The plain map indexes are easily inspectable in tools like re-frisk or re-frame-trace.
 
 You can have as many indexes as you like. Some index types are built in, but adding extra ones is straight forward. 
 
