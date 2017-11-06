@@ -1,5 +1,6 @@
 (ns compound.secondary-indexes
-  (:require [clojure.spec.alpha :as s]))
+  (:require [clojure.spec.alpha :as s])
+  (:refer-clojure :exclude [empty remove]))
 
 (defmulti empty :index-type)
 

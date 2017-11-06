@@ -381,9 +381,9 @@ result here may be familiar."
                     {:id 3 :name "tomatoes" :category "Pretend fruit"}])
       (c/primary-index)) =>
 
-  {"S002" #{{:id 2, :name "grapes", :category "Small round fruit"}},
-   "L001" #{{:id 1, :name "bananas", :category "Long fruit"}},
-   "P003" #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}})
+  {"S002" {:id 2, :name "grapes", :category "Small round fruit"},
+   "L001" {:id 1, :name "bananas", :category "Long fruit"},
+   "P003" {:id 3, :name "tomatoes", :category "Pretend fruit"}})
 
 "The built-in secondary indexes can have a custom keys too. It works the same way."
 

@@ -236,6 +236,7 @@
   [compound index-def]
   (let [index-def (merge secondary-index-defaults index-def)
         id (csi/id index-def)]
+    (s/assert ::csi/secondary-index-def index-def)
     (if (secondary-index compound id)
       (throw (ex-info (str "Cannot add secondary index - index with id " id " already exists")
                       {:id id :index-def index-def :compound compound}))
@@ -252,7 +253,7 @@
       (update :secondary-indexes-by-id dissoc id)))
 
 (s/def ::secondary-index-defs
-  (s/coll-of ::csi/secondary-index-def))
+  (s/coll-of map?)) ;; can't check at this stage
 
 (s/fdef compound
         :args (s/cat :opts (s/keys :req-un [::primary-index-def]
@@ -263,9 +264,11 @@
   {:on-conflict :compound/replace})
 
 (defn compound [opts]
-  (let [{:keys [primary-index-def secondary-index-defs]} opts]
+  (let [{:keys [primary-index-def secondary-index-defs]} opts
+        primary-index-def (merge primary-index-defaults primary-index-def)]
+    (s/assert ::primary-index-def primary-index-def)
     (reduce add-secondary-index
-            {:primary-index-def (merge primary-index-defaults primary-index-def)
+            {:primary-index-def primary-index-def
              :primary-index {}
              :secondary-indexes-by-id {}
              :secondary-index-defs-by-id {}}
