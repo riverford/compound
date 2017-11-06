@@ -1,8 +1,10 @@
 (ns compound.core
   (:require [clojure.set :as set]
             [clojure.spec.alpha :as s]
+            [compound.custom-key :as cu]
             [compound.secondary-indexes :as csi]
             [compound.secondary-indexes.many-to-many]
+            [compound.secondary-indexes.many-to-one]
             [compound.secondary-indexes.one-to-many]
             [compound.secondary-indexes.one-to-many-nested]
             [compound.secondary-indexes.one-to-one]
@@ -80,17 +82,6 @@
   (get (indexes-by-id compound) id))
 
 ;; ------------------------------
-;;   Custom key-fns
-;; ------------------------------
-
-(defmulti custom-key-fn
-  (fn [k item] k))
-
-(defmethod custom-key-fn :default
-  [k item]
-  (throw (ex-info (str "Implementation of custom key-fn for " k " not found") {:k k, :item item})))
-
-;; ------------------------------
 ;;   Custom conflict behaviour
 ;; ------------------------------
 
@@ -108,7 +99,7 @@
 (defmethod on-conflict-fn :compound/throw
   [index-def existing-item new-item]
   (let [{:keys [key custom-key]} index-def
-        key-fn (or key (partial custom-key-fn custom-key))]
+        key-fn (or key (partial cu/custom-key-fn custom-key))]
     (throw (ex-info (str "Duplicate key " (key-fn new-item) " in primary index") {:existing-item existing-item, :new-item new-item}))))
 
 (defmethod on-conflict-fn :compound/merge
@@ -116,7 +107,7 @@
   (merge existing-item new-item))
 
 ;; ------------------------------
-;;   Implementation
+;; Core implementation
 ;; ------------------------------
 
 (s/fdef add-items
@@ -129,7 +120,7 @@
    If the key exists, handle the conflict as specified in the primary index definition. "
   [compound items]
   (let [{:keys [id key custom-key conflict-behaviour]} (primary-index-def compound)
-        key-fn (or key (partial custom-key-fn custom-key))
+        key-fn (or key (partial cu/custom-key-fn custom-key))
         [new-primary-index added removed] (reduce (fn add-items-to-primary-index
                                                     [[index added removed] item]
                                                     (let [k (key-fn item)
@@ -165,7 +156,7 @@
   "Remove items from the compound with the given primary keys"
   [compound ks]
   (let [{:keys [id key custom-key]} (primary-index-def compound)
-        key-fn (or key (partial custom-key-fn custom-key))
+        key-fn (or key (partial cu/custom-key-fn custom-key))
         [new-primary-index removed] (reduce (fn remove-items-from-primary-index
                                               [[index removed] k]
                                               (let [item (get index k)]
@@ -192,6 +183,11 @@
                      :f ifn?
                      :args (s/* any?))
         :ret ::compound)
+
+
+;; ------------------------------
+;; Additional public functions
+;; ------------------------------
 
 (defn update-item
   "Update the item with the given primary key, cascading updates to the secondary indexes"
@@ -227,18 +223,26 @@
   [compound]
   (vals (primary-index compound)))
 
+;; ------------------------------
+;;   Constructor
+;; ------------------------------
+
+(def secondary-index-defaults
+  {:index-type :compound/one-to-many})
+
 (defn add-secondary-index
   "Adds an additional secondary index to an existing compound.
    Throws if there is there is a conflict on the index id."
   [compound index-def]
-  (let [id (csi/id index-def)
-        secondary-index (csi/add (csi/empty index-def) index-def (items compound))]
+  (let [index-def (merge secondary-index-defaults index-def)
+        id (csi/id index-def)]
     (if (secondary-index compound id)
       (throw (ex-info (str "Cannot add secondary index - index with id " id " already exists")
                       {:id id :index-def index-def :compound compound}))
-      (-> compound
-          (update :secondary-index-defs-by-id assoc id index-def)
-          (update :secondary-indexes-by-id assoc id secondary-index)))))
+      (let [new-secondary-index (csi/add (csi/empty index-def) index-def (items compound))]
+        (-> compound
+            (update :secondary-index-defs-by-id assoc id index-def)
+            (update :secondary-indexes-by-id assoc id new-secondary-index))))))
 
 (defn remove-secondary-index
   "Remove the secondary index with the provided id from the compound"
@@ -246,10 +250,6 @@
   (-> compound
       (update :secondary-index-defs-by-id dissoc id)
       (update :secondary-indexes-by-id dissoc id)))
-
-;; ------------------------------
-;;   Constructor
-;; ------------------------------
 
 (s/def ::secondary-index-defs
   (s/coll-of ::csi/secondary-index-def))
@@ -259,9 +259,14 @@
                                    :opt-un [::secondary-index-defs]))
         :ret ::compound)
 
+(def primary-index-defaults
+  {:on-conflict :compound/replace})
+
 (defn compound [opts]
   (let [{:keys [primary-index-def secondary-index-defs]} opts]
     (reduce add-secondary-index
-            {:primary-index-def primary-index-def
-             :primary-index {}}
+            {:primary-index-def (merge primary-index-defaults primary-index-def)
+             :primary-index {}
+             :secondary-indexes-by-id {}
+             :secondary-index-defs-by-id {}}
             secondary-index-defs)))

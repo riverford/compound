@@ -1,5 +1,5 @@
 (ns compound.secondary-indexes.one-to-one-nested
-  (:require [compound.core :as c]
+  (:require [compound.custom-key :as cu]
             [compound.secondary-indexes :as csi]
             [clojure.spec.alpha :as s]
             [clojure.string :as string]))
@@ -26,7 +26,7 @@
 (defmethod csi/add :compound/one-to-one-nested
   [index index-def added]
   (let [{:keys [keys custom-key]} index-def
-        key-fn (if keys (apply juxt keys) (partial c/custom-key-fn custom-key))
+        key-fn (if keys (apply juxt keys) (partial cu/custom-key-fn custom-key))
         new-index (reduce (fn add-items [index item]
                             (let [ks (key-fn item)
                                   existing-item (get-in index ks)]
@@ -40,7 +40,7 @@
 (defmethod csi/remove :compound/one-to-one-nested
   [index index-def removed]
   (let [{:keys [keys custom-key]} index-def
-        key-fn (if keys (apply juxt keys) (partial c/custom-key-fn custom-key))
+        key-fn (if keys (apply juxt keys) (partial cu/custom-key-fn custom-key))
         new-index (reduce (fn remove-items [index item]
                             (let [ks (key-fn item)]
                               (update-in index (butlast ks) dissoc (last ks))))

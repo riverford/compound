@@ -63,23 +63,7 @@ There is no query engine.
 
 ## Documentation
 
-Further examples and documentation are found [here]()
-
-
-## Extending with additional secondary indexes
-
-Compound can be extended with additional indexes, for example if you know of a data structure that provides optimized 
-access for the access pattern that you will use (e.g. one of https://github.com/michalmarczyk excellent data structures)
-
-To extend, implement the following multimethods from the `compound.secondary-indexes` namespace. 
-
- * `spec` - the spec for the index definition
- * `empty` - the initial value of the index
- * `id` - to get a unique id from the index definition
- * `add` - to add items to the index, called after items are added to the primary index
- * `remove` - to remove items from the index, called when items are removed from the primary index
- 
-See the [built-in indexes](https://github.com/danielneal/compound/tree/master/src/compound/indexes) for examples. 
+Detailed documentation and examples and documentation are found [here](/docs/docs.html)
 
 ## Influences 
 

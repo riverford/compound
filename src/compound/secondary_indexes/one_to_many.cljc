@@ -1,5 +1,5 @@
 (ns compound.secondary-indexes.one-to-many
-  (:require [compound.core :as c]
+  (:require [compound.custom-key :as cu]
             [compound.secondary-indexes :as csi]
             [clojure.spec.alpha :as s]))
 
@@ -25,7 +25,7 @@
 (defmethod csi/add :compound/one-to-many
   [index index-def added]
   (let [{:keys [key custom-key]} index-def
-        key-fn (or key (partial c/custom-key-fn custom-key))
+        key-fn (or key (partial cu/custom-key-fn custom-key))
         new-index (reduce (fn add-items [index item]
                             (let [k (key-fn item)
                                   existing-items (get index k #{})]
@@ -38,11 +38,14 @@
 (defmethod csi/remove :compound/one-to-many
   [index index-def removed]
   (let [{:keys [key custom-key]} index-def
-        key-fn (or key (partial c/custom-key-fn custom-key))
+        key-fn (or key (partial cu/custom-key-fn custom-key))
         new-index (reduce (fn remove-items [index item]
                             (let [k (key-fn item)
-                                  existing-items (get index k #{})]
-                              (assoc! index k (disj existing-items item))))
+                                  existing-items (get index k #{})
+                                  new-items (disj existing-items item)]
+                              (if (empty? new-items)
+                                (dissoc! index k)
+                                (assoc! index new-items))))
                           (transient index)
                           removed)]
     (persistent! new-index)))
