@@ -402,9 +402,13 @@ result here may be familiar."
 
 [[:section {:title "Custom conflict behaviour" :tag "custom-conflict"}]]
 
+"If the provided conflict behaviours aren't sufficient, override the `compound.core/on-conflict-fn` multimethod, to tell compound what to do when two items with the same key are found."
+
 (defmethod c/on-conflict-fn :add-quantities
   [_ a b]
   (merge a b {:quantity (+ (get a :quantity) (get b :quantity))}))
+
+"Using custom conflict behaviour to add quantities, we can do this:"
 
 (fact
   (-> (c/compound {:primary-index-def {:key :id

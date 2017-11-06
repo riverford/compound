@@ -286,13 +286,13 @@
  :id
  {1 {:id 1, :name &quot;bananas&quot;},
   2 {:id 2, :name &quot;grapes&quot;},
-  3 {:id 3, :name &quot;tomatoes&quot;, :colour &quot;red&quot;}}}</code></pre></div><div><span id="custom"></span><h3>4.4 &nbsp;&nbsp; Custom</h3></div><div><p>Custom conflict behaviour can also be defined. This is covered in the next section.</p></div><div><span id="Extension"></span><h2><b>5 &nbsp;&nbsp; Extension</b></h2></div><div><span id="custom-keys"></span><h3>5.1 &nbsp;&nbsp; Custom keys</h3></div><div><p>We want to index our fruit by an SKU, which is a string composite of the first letter of the category (capitalized) and the id padded with 3 zeroes (not really, but just imagine)</p></div><div class="code"><pre><code class="clojure">(require '[compound.custom-key :as cu])
+  3 {:id 3, :name &quot;tomatoes&quot;, :colour &quot;red&quot;}}}</code></pre></div><div><span id="custom"></span><h3>4.4 &nbsp;&nbsp; Custom</h3></div><div><p>Custom conflict behaviour can also be defined. This is covered in the next section.</p></div><div><span id="Extension"></span><h2><b>5 &nbsp;&nbsp; Extension</b></h2></div><div><span id="custom-keys"></span><h3>5.1 &nbsp;&nbsp; Custom keys</h3></div><div><p>We want to index our fruit by an SKU, which is a string composite of the first letter of the category (capitalized) and the id padded with 3 zeroes (not really, but just imagine)</p></div><div><p>To do this, first implement the <code>compound.custom-key/custom-key-fn</code> multimethod to tell compound how to form the key from the item.</p></div><div class="code"><pre><code class="clojure">(require '[compound.custom-key :as cu])
 (require '[clojure.string :as string])
 
 (defmethod cu/custom-key-fn :sku
   [_ item]
   (let [{:keys [category id]} item]
-    (str (string/upper-case (first category)) (format &quot;%03d&quot; id))))</code></pre></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:custom-key :sku
+    (str (string/upper-case (first category)) (format &quot;%03d&quot; id))))</code></pre></div><div><p>And then reference it in the index definition, using <code>:custom-key</code></p></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:custom-key :sku
                                      :on-conflict :compound/merge}})
     (c/add-items [{:id 1 :name &quot;bananas&quot; :category &quot;Long fruit&quot;}
                   {:id 2 :name &quot;grapes&quot; :category &quot;Small round fruit&quot;}
@@ -301,7 +301,7 @@
 
 {&quot;S002&quot; #{{:id 2, :name &quot;grapes&quot;, :category &quot;Small round fruit&quot;}},
  &quot;L001&quot; #{{:id 1, :name &quot;bananas&quot;, :category &quot;Long fruit&quot;}},
- &quot;P003&quot; #{{:id 3, :name &quot;tomatoes&quot;, :category &quot;Pretend fruit&quot;}}}</code></pre></div><div><p>Built in Secondary indexes can have a custom keys too. It works the same way.</p></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:key :id
+ &quot;P003&quot; #{{:id 3, :name &quot;tomatoes&quot;, :category &quot;Pretend fruit&quot;}}}</code></pre></div><div><p>The built-in secondary indexes can have a custom keys too. It works the same way.</p></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:key :id
                                      :on-conflict :compound/merge}
                  :secondary-index-defs [{:custom-key :sku}]})
     (c/add-items [{:id 1 :name &quot;bananas&quot; :category &quot;Long fruit&quot;}
@@ -311,9 +311,9 @@
 
 {&quot;S002&quot; #{{:id 2, :name &quot;grapes&quot;, :category &quot;Small round fruit&quot;}},
  &quot;L001&quot; #{{:id 1, :name &quot;bananas&quot;, :category &quot;Long fruit&quot;}},
- &quot;P003&quot; #{{:id 3, :name &quot;tomatoes&quot;, :category &quot;Pretend fruit&quot;}}}</code></pre></div><div><span id="custom-conflict"></span><h3>5.2 &nbsp;&nbsp; Custom conflict behaviour</h3></div><div class="code"><pre><code class="clojure">(defmethod c/on-conflict-fn :add-quantities
+ &quot;P003&quot; #{{:id 3, :name &quot;tomatoes&quot;, :category &quot;Pretend fruit&quot;}}}</code></pre></div><div><span id="custom-conflict"></span><h3>5.2 &nbsp;&nbsp; Custom conflict behaviour</h3></div><div><p>If the provided conflict behaviours aren't sufficient, override the <code>compound.core/on-conflict-fn</code> multimethod, to tell compound what to do when two items with the same key are found.</p></div><div class="code"><pre><code class="clojure">(defmethod c/on-conflict-fn :add-quantities
   [_ a b]
-  (merge a b {:quantity (+ (get a :quantity) (get b :quantity))}))</code></pre></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:key :id
+  (merge a b {:quantity (+ (get a :quantity) (get b :quantity))}))</code></pre></div><div><p>Using custom conflict behaviour to add quantities, we can do this:</p></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:key :id
                                      :on-conflict :add-quantities}})
     (c/add-items [{:id 1 :name &quot;bananas&quot; :category &quot;Long fruit&quot; :quantity 1}
                   {:id 1 :name &quot;bananas&quot; :category &quot;Long fruit&quot; :quantity 3}
