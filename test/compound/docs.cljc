@@ -353,7 +353,7 @@ result here may be familiar."
 
 [[:section {:title "Custom"}]]
 
-"Custom conflict behaviour can also be defined. This is covered in {{custom-conflict}}"
+"Custom conflict behaviour can also be defined. This is covered in the next section."
 
 [[:chapter {:title "Extension" :tag "Extension"}]]
 
