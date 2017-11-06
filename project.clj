@@ -1,6 +1,6 @@
-(defproject danielneal/compound "0.3.0-SNAPSHOT"
+(defproject riverford/compound "0.3.0-SNAPSHOT"
   :description "A micro structure for reagent data"
-  :url "https://github.com/danielneal/compound"
+  :url "https://github.com/riverford/compound"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0-beta1"]

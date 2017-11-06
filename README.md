@@ -1,4 +1,4 @@
-![Compound](https://raw.githubusercontent.com/danielneal/compound/master/compound.png)
+![Compound](https://raw.githubusercontent.com/riverford/compound/master/compound.png)
 
 **noun** *kɒmpaʊnd*
 
@@ -62,7 +62,7 @@ There is no query engine.
 ```
 ## More examples and documentation
 
-Detailed documentation and examples and documentation are found on [github pages](https://danielneal.github.io/compound)
+Detailed documentation and examples and documentation are found on [github pages](https://riverford.github.io/compound)
 
 ## Influences 
 
@@ -70,7 +70,7 @@ It is influenced by Christophe Grand's [indexed set](https://github.com/cgrand/i
 
 ## License
 
-Copyright © 2017 Daniel Neal
+Copyright © 2017 Riverford Organic Farmers
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
