@@ -11,7 +11,7 @@
             :template {:author "Daniel Neal"
                        :email "danielneal@riverford.co.uk"
                        :defaults {:logo-white "compound.png"}}
-            :files {"docs" {:input "test/compound/index.cljc"
+            :files {"index" {:input "test/compound/docs.cljc"
                             :site "compound"
                             :title "core"
                             :subtitle "api docs"}}}

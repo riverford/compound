@@ -60,10 +60,9 @@ There is no query engine.
 ;;    :difficulty :easy}}
 
 ```
+## More examples and documentation
 
-## Documentation
-
-Detailed documentation and examples and documentation are found [here](https://danielneal.github.io/compound/docs.html)
+Detailed documentation and examples and documentation are found on [github pages](https://danielneal.github.io/compound)
 
 ## Influences 
 
