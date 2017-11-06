@@ -24,7 +24,6 @@ We should probably set up somewhere to store all the information about it."
    :secondary-indexes-by-id {},
    :secondary-index-defs-by-id {}})
 
-
 [[:chapter {:title "Operating on the compound"}]]
 
 
@@ -288,7 +287,7 @@ result here may be familiar."
 
 [[:chapter {:title "Handling conflict"}]]
 
-"Sometimes we need more control over what happens when we add an item with a key that already exists to the compound. Compound provides some built in behaviour and an extension point for customisation."
+"Sometimes we need more control over what happens when we add an item with a key that already exists. Compound some built in behaviour and an extension point for customisation."
 
 [[:section {:title "Replace"}]]
 
@@ -354,30 +353,164 @@ result here may be familiar."
 
 [[:section {:title "Custom"}]]
 
-"Custom merge behaviour can also be defined. This is covered in the next section"
+"Custom conflict behaviour can also be defined. This is covered in {{custom-conflict}}"
 
-[[:chapter {:title "Extension"}]]
+[[:chapter {:title "Extension" :tag "Extension"}]]
 
 [[:section {:title "Custom keys"}]]
-[[:section {:title "Custom merge behaviour"}]]
+
+"We want to index our fruit by an SKU, which is a string composite of the first letter of the category (capitalized) and the id padded with 3 zeroes (not really, but just imagine)"
+
+(require '[compound.custom-key :as cu])
+(require '[clojure.string :as string])
+
+(defmethod cu/custom-key-fn :sku
+  [_ item]
+  (let [{:keys [category id]} item]
+    (str (string/upper-case (first category)) (format "%03d" id))))
+
+(fact
+  (-> (c/compound {:primary-index-def {:custom-key :sku
+                                       :on-conflict :compound/merge}})
+      (c/add-items [{:id 1 :name "bananas" :category "Long fruit"}
+                    {:id 2 :name "grapes" :category "Small round fruit"}
+                    {:id 3 :name "tomatoes" :category "Pretend fruit"}])
+      (c/primary-index)) =>
+
+  {"S002" #{{:id 2, :name "grapes", :category "Small round fruit"}},
+   "L001" #{{:id 1, :name "bananas", :category "Long fruit"}},
+   "P003" #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}})
+
+"Built in Secondary indexes can have a custom keys too. It works the same way."
+
+(fact
+  (-> (c/compound {:primary-index-def {:key :id
+                                       :on-conflict :compound/merge}
+                   :secondary-index-defs [{:custom-key :sku}]})
+      (c/add-items [{:id 1 :name "bananas" :category "Long fruit"}
+                    {:id 2 :name "grapes" :category "Small round fruit"}
+                    {:id 3 :name "tomatoes" :category "Pretend fruit"}])
+      (c/index :sku)) =>
+
+  {"S002" #{{:id 2, :name "grapes", :category "Small round fruit"}},
+   "L001" #{{:id 1, :name "bananas", :category "Long fruit"}},
+   "P003" #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}})
+
+[[:section {:title "Custom conflict behaviour" :tag "custom-conflict"}]]
+
+(defmethod c/on-conflict-fn :add-quantities
+  [_ a b]
+  (merge a b {:quantity (+ (get a :quantity) (get b :quantity))}))
+
+(fact
+  (-> (c/compound {:primary-index-def {:key :id
+                                       :on-conflict :add-quantities}})
+      (c/add-items [{:id 1 :name "bananas" :category "Long fruit" :quantity 1}
+                    {:id 1 :name "bananas" :category "Long fruit" :quantity 3}
+                    {:id 2 :name "grapes" :category "Small round fruit" :quantity 4}
+                    {:id 2 :name "grapes" :category "Small round fruit" :quantity 10}])
+      (c/index :id)) =>
+
+  {1 {:id 1, :name "bananas", :category "Long fruit", :quantity 4},
+   2 {:id 2, :name "grapes", :category "Small round fruit", :quantity 14}})
+
 [[:section {:title "Custom indexes"}]]
 
-"Compound can be extended with additional indexes, for example if you know of a data structure that provides optimized access for the access pattern that you will use (e.g. one of https://github.com/michalmarczyk excellent data structures)"
+"Compound can be extended with completely custom indexes, for example if you know of a data structure that provides optimized access for the access pattern that you will use e.g. one of [Michal Marczyk's](https://github.com/michalmarczyk) excellent data structures"
 
-"To extend, implement the following multimethods from the `compound.secondary-indexes` namespace." 
+"To extend, implement the following multimethods from the `compound.secondary-indexes` namespace."
 
-"
-* `spec` - the spec for the index definition
-* `empty` - the initial value of the index
+"* `empty` - the initial value of the index
 * `id` - to get a unique id from the index definition
 * `add` - to add items to the index, called after items are added to the primary index
 * `remove` - to remove items from the index, called when items are removed from the primary index
-" 
 
-[[{:hidden? true}]]
+* `spec` - the spec for the index definition (optional, but helps with testing)"
+
+"Let's implement a custom index that indexes *all* attributes of a map"
+
+(require '[compound.secondary-indexes :as csi])
+(require '[clojure.spec.alpha :as s])
+
+"Simple spec - we'll be taking maps apart so only need an optional id, otherwise default to an id of `:all`"
+
+(s/def ::id keyword?)
+
+(defmethod csi/spec :all
+  [_]
+  (s/keys :opt-un [::id]))
+
+"The id for the index is the provided id, or `:all`"
+
+(defmethod csi/id :all
+  [index-def]
+  (or (get index-def :id) :all))
+
+"The index will start empty as a plain map"
+
+(defmethod csi/empty :all
+  [index-def]
+  {})
+
+"When items are added to primary index, store them in the index against every attribute"
+
+(defmethod csi/add :all
+  [index index-def added]
+  (reduce
+    (fn add-item [index item]
+      (reduce-kv (fn add-attribute [index k v]
+                   (update-in index [k v] (fnil conj #{}) item))
+                 index
+                 item))
+    index
+    added))
+
+"When items are removed from the primary index, remove them against every attribute"
+
+(defmethod csi/remove :all
+  [index index-def removed]
+  (reduce
+    (fn remove-item [index item]
+      (reduce-kv (fn remove-attribute [index k v]
+                   (let [existing-items (get-in index [k v])
+                         new-items (disj existing-items item)]
+                     (if (empty? new-items)
+                       (update index k dissoc v)
+                       (assoc-in index [k v] new-items))))
+                 index
+                 item))
+    index
+    removed))
+
+"Now we're ready to rock and roll. "
+
+(fact
+  (-> (c/compound {:primary-index-def {:key :id
+                                       :on-conflict :compound/replace}
+                   :secondary-index-defs [{:index-type :all}]})
+      (c/add-items [{:id 1 :name "bananas"
+                     :category "Long fruit"
+                     :quantity 1
+                     :ripe? true}
+                    {:id 2
+                     :name "grapes"
+                     :category "Small round fruit"
+                     :quantity 4
+                     :variety :pinot-grigio}
+                    {:id 3
+                     :name "oranges"
+                     :category "Medium round fruit"
+                     :ripe? true
+                     :quantity 4}])
+      (c/remove-keys [1])
+      (c/index :all)
+      (get-in [:ripe? true])) =>
+
+  #{{:id 3,
+     :name "oranges",
+     :category "Medium round fruit",
+     :ripe? true,
+     :quantity 4}})
 
 (comment
-
-  (publish/load-settings)
-  (publish/copy-assets)
   (publish/publish-all))
