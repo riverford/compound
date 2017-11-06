@@ -63,7 +63,7 @@ There is no query engine.
 
 ## Documentation
 
-Detailed documentation and examples and documentation are found [here](https://rawgit.com/danielneal/compound/master/docs/docs.html)
+Detailed documentation and examples and documentation are found [here](https://danielneal.github.io/compound/docs.html)
 
 ## Influences 
 

@@ -1,10 +1,11 @@
-(ns compound.core-test
+(ns compound.test
   (:require [clojure.test :refer :all]
             [compound.secondary-indexes.one-to-one]
             [compound.secondary-indexes.one-to-many]
             [compound.secondary-indexes.many-to-many]
             [compound.secondary-indexes.one-to-one-nested]
             [compound.secondary-indexes.one-to-many-nested]
+            [compound.custom-key :as cu]
             [compound.core :as c]
             [clojure.spec.test.alpha :as st]
             [clojure.spec.alpha :as s]))
@@ -164,7 +165,7 @@
              (c/add-items [{:id 1 :name "Bob" :aliases #{:robert :bobby}} {:id 2 :name "Terry" :aliases #{:terence :t-man}} {:id 3 :name "Squirrel" :aliases #{:terence}}])
              (c/indexes-by-id)))))
 
-(defmethod c/custom-key-fn ::delivery-date-product
+(defmethod cu/custom-key-fn ::delivery-date-product
   [k item]
   [(:delivery-date item) (:product item)])
 
@@ -185,7 +186,7 @@
            :bananas
            {"2012-03-03" #{{:delivery-date "2012-03-03", :product :bananas}},
             "2012-03-04" #{{:delivery-date "2012-03-04", :product :bananas}}}},
-          :compound.core-test/delivery-date-product
+          :compound.test/delivery-date-product
           {["2012-03-03" :bananas] {:delivery-date "2012-03-03", :product :bananas},
            ["2012-03-03" :apples] {:delivery-date "2012-03-03", :product :apples},
            ["2012-03-04" :potatoes] {:delivery-date "2012-03-04", :product :potatoes},
@@ -227,22 +228,22 @@
 
 (deftest merge-custom
   (is (= {:product
-          {:potatoes
-           #{{:delivery-date "2012-03-06", :product :potatoes, :quantity-delta 12}},
+          {:apples
+           #{{:delivery-date "2012-03-03", :product :apples, :quantity-delta 2}},
            :bananas
            #{{:delivery-date "2012-03-04", :product :bananas, :quantity-delta 2}
              {:delivery-date "2012-03-03", :product :bananas, :quantity-delta 1}},
-           :apples
-           #{{:delivery-date "2012-03-03", :product :apples, :quantity-delta 2}}},
+           :potatoes
+           #{{:delivery-date "2012-03-06", :product :potatoes, :quantity-delta 12}}},
           :delivery-date
-          {"2012-03-06"
-           #{{:delivery-date "2012-03-06", :product :potatoes, :quantity-delta 12}},
+          {"2012-03-03"
+           #{{:delivery-date "2012-03-03", :product :apples, :quantity-delta 2}
+             {:delivery-date "2012-03-03", :product :bananas, :quantity-delta 1}},
            "2012-03-04"
            #{{:delivery-date "2012-03-04", :product :bananas, :quantity-delta 2}},
-           "2012-03-03"
-           #{{:delivery-date "2012-03-03", :product :apples, :quantity-delta 2}
-             {:delivery-date "2012-03-03", :product :bananas, :quantity-delta 1}}},
-          :compound.core-test/delivery-date-product
+           "2012-03-06"
+           #{{:delivery-date "2012-03-06", :product :potatoes, :quantity-delta 12}}},
+          :compound.test/delivery-date-product
           {["2012-03-03" :bananas]
            {:delivery-date "2012-03-03", :product :bananas, :quantity-delta 1},
            ["2012-03-03" :apples]
@@ -264,33 +265,3 @@
                            {:delivery-date "2012-03-06" :product :potatoes :quantity-delta 2}
                            {:delivery-date "2012-03-06" :product :potatoes :quantity-delta 10}])
              (c/indexes-by-id)))))
-
-
-(def patterns
-  (-> (c/compound {:primary-index-def
-                   {:key :id
-                    :on-conflict :compound/replace}
-                   :secondary-index-defs
-                   [{:key :source
-                     :index-type :compound/one-to-many}
-                    {:key :difficulty
-                     :index-type :compound/one-to-many}
-                    {:key :appropriate-materials
-                     :index-type :compound/many-to-many}]})
-      (c/add-items #{{:id 1
-                      :source :instituto-di-moda
-                      :difficulty :medium,
-                      :appropriate-materials #{:cotton :linen}
-                      :pattern :bodice-basic}
-
-                     {:id 2
-                      :source :instituto-di-moda
-                      :difficulty :easy,
-                      :appropriate-materials #{:cotton}
-                      :pattern :shirt-basic}
-
-                     {:id 3 :source
-                      :instituto-di-moda,
-                      :difficulty :easy
-                      :appropriate-materials #{:cotton :linen}
-                      :pattern :bodice-dartless}})))

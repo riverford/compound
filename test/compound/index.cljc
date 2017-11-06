@@ -1,4 +1,4 @@
-(ns compound.docs
+(ns compound.index
   (:require  [clojure.test :as t]
              [lucid.publish :as publish]
              [lucid.publish.theme :as theme]

@@ -201,7 +201,7 @@
    (update-item compound k #(apply f % args))))
 
 (s/fdef clear
-        :args ::compound
+        :args (s/cat :compound ::compound)
         :ret ::compound)
 
 (defn clear
@@ -215,7 +215,7 @@
                                              (secondary-index-defs-by-id compound))))
 
 (s/fdef items
-        :args ::compound
+        :args (s/cat :compound ::compound)
         :ret (s/coll-of any?))
 
 (defn items
