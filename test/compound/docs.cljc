@@ -427,12 +427,12 @@ result here may be familiar."
 
 * `spec` - the spec for the index definition (optional, but helps with testing)"
 
-"Let's implement a custom index that indexes *all* attributes of a map"
+"To implement a custom index that indexes *all* attributes of a map"
 
 (require '[compound.secondary-indexes :as csi])
 (require '[clojure.spec.alpha :as s])
 
-"Simple spec - we'll be taking maps apart so only need an optional id, otherwise default to an id of `:all`"
+"Add a spec"
 
 (s/def ::id keyword?)
 

@@ -322,8 +322,8 @@
     (c/index :id)) =&gt;
 
 {1 {:id 1, :name &quot;bananas&quot;, :category &quot;Long fruit&quot;, :quantity 4},
- 2 {:id 2, :name &quot;grapes&quot;, :category &quot;Small round fruit&quot;, :quantity 14}}</code></pre></div><div><span id="custom-indexes"></span><h3>5.3 &nbsp;&nbsp; Custom indexes</h3></div><div><p>Compound can be extended with completely custom indexes, for example if you know of a data structure that provides optimized access for the access pattern that you will use e.g. one of <a href='https://github.com/michalmarczyk'>Michal Marczyk's</a> excellent data structures</p></div><div><p>To extend, implement the following multimethods from the <code>compound.secondary-indexes</code> namespace.</p></div><div><ul><li><code>empty</code> - the initial value of the index</li><li><code>id</code> - to get a unique id from the index definition</li><li><code>add</code> - to add items to the index, called after items are added to the primary index</li><li><code>remove</code> - to remove items from the index, called when items are removed from the primary index</li><li><code>spec</code> - the spec for the index definition (optional, but helps with testing)</li></ul></div><div><p>Let's implement a custom index that indexes <em>all</em> attributes of a map</p></div><div class="code"><pre><code class="clojure">(require '[compound.secondary-indexes :as csi])
-(require '[clojure.spec.alpha :as s])</code></pre></div><div><p>Simple spec - we'll be taking maps apart so only need an optional id, otherwise default to an id of <code>:all</code></p></div><div class="code"><pre><code class="clojure">(s/def ::id keyword?)
+ 2 {:id 2, :name &quot;grapes&quot;, :category &quot;Small round fruit&quot;, :quantity 14}}</code></pre></div><div><span id="custom-indexes"></span><h3>5.3 &nbsp;&nbsp; Custom indexes</h3></div><div><p>Compound can be extended with completely custom indexes, for example if you know of a data structure that provides optimized access for the access pattern that you will use e.g. one of <a href='https://github.com/michalmarczyk'>Michal Marczyk's</a> excellent data structures</p></div><div><p>To extend, implement the following multimethods from the <code>compound.secondary-indexes</code> namespace.</p></div><div><ul><li><code>empty</code> - the initial value of the index</li><li><code>id</code> - to get a unique id from the index definition</li><li><code>add</code> - to add items to the index, called after items are added to the primary index</li><li><code>remove</code> - to remove items from the index, called when items are removed from the primary index</li><li><code>spec</code> - the spec for the index definition (optional, but helps with testing)</li></ul></div><div><p>To implement a custom index that indexes <em>all</em> attributes of a map</p></div><div class="code"><pre><code class="clojure">(require '[compound.secondary-indexes :as csi])
+(require '[clojure.spec.alpha :as s])</code></pre></div><div><p>Add a spec</p></div><div class="code"><pre><code class="clojure">(s/def ::id keyword?)
 
 (defmethod csi/spec :all
   [_]
@@ -348,7 +348,7 @@
                    (let [existing-items (get-in index [k v])
                          new-items (disj existing-items item)]
                      (if (empty? new-items)
-                       (update index k disj v)
+                       (update index k dissoc v)
                        (assoc-in index [k v] new-items))))
                  index
                  item))
@@ -356,17 +356,29 @@
     removed))</code></pre></div><div><p>Now we're ready to rock and roll. </p></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:key :id
                                      :on-conflict :compound/replace}
                  :secondary-index-defs [{:index-type :all}]})
-    (c/add-items [{:id 1 :name &quot;bananas&quot; :category &quot;Long fruit&quot; :quantity 1 :ripe? true}
-                  {:id 2 :name &quot;grapes&quot; :category &quot;Small round fruit&quot; :quantity 4 :variety :pinot-grigio}
-                  {:id 3 :name &quot;grapes&quot; :category &quot;Small round fruit&quot; :quantity 4 :variety :pinot-noir}])
+    (c/add-items [{:id 1 :name &quot;bananas&quot;
+                   :category &quot;Long fruit&quot;
+                   :quantity 1
+                   :ripe? true}
+                  {:id 2
+                   :name &quot;grapes&quot;
+                   :category &quot;Small round fruit&quot;
+                   :quantity 4
+                   :variety :pinot-grigio}
+                  {:id 3
+                   :name &quot;oranges&quot;
+                   :category &quot;Medium round fruit&quot;
+                   :ripe? true
+                   :quantity 4}])
+    (c/remove-keys [1])
     (c/index :all)
-    (get-in [:variety :pinot-noir])) =&gt;
+    (get-in [:ripe? true])) =&gt;
 
-#{{:id 2,
-   :name &quot;grapes&quot;,
-   :category &quot;Small round fruit&quot;,
-   :quantity 4,
-   :variety :pinot-noir}}</code></pre></div>
+#{{:id 3,
+   :name &quot;oranges&quot;,
+   :category &quot;Medium round fruit&quot;,
+   :ripe? true,
+   :quantity 4}}</code></pre></div><div class="code"><pre><code class="clojure">(publish/publish-all)</code></pre></div>
         </div>
       </div>
     </div>
