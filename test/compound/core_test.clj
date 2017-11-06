@@ -12,7 +12,6 @@
 (st/instrument)
 (s/check-asserts true)
 
-
 (deftest creating
   (is (= {:primary-index-def {:key :id, :on-conflict :compound/replace},
           :primary-index {},
@@ -96,7 +95,7 @@
                                                   :index-type :compound/one-to-one}]})
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 3 :name "Red Squirrel"}])
              (c/indexes-by-id))))
-  
+
   (is (= {:name
           {"Terry" {:id 2, :name "Terry"},
            "Green Squirrel" {:id 3, :name "Green Squirrel"},
@@ -111,7 +110,7 @@
                                                   :index-type :compound/one-to-one}]})
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 3 :name "Green Squirrel"}])
              (c/indexes-by-id))))
-  
+
   (is (= {:name
           {"Terry" {:id 2, :name "Terry"},
            "Blue Squirrel" {:id 3, :name "Blue Squirrel"},
@@ -267,160 +266,31 @@
              (c/indexes-by-id)))))
 
 
-(deftest readme
-  (= (-> (c/compound {:primary-index-def {:key :id
-                                          :on-conflict :compound/replace}
-                      :secondary-index-defs [{:key :source
-                                              :index-type :compound/one-to-many}
-                                             {:key :difficulty
-                                              :index-type :compound/one-to-many}
-                                             {:key :appropriate-materials
-                                              :index-type :compound/many-to-many}]})
-         (c/add-items #{{:id 1 :source :instituto-di-moda :difficulty :medium,
-                         :appropriate-materials #{:cotton :linen} :pattern :bodice-basic}
+(def patterns
+  (-> (c/compound {:primary-index-def
+                   {:key :id
+                    :on-conflict :compound/replace}
+                   :secondary-index-defs
+                   [{:key :source
+                     :index-type :compound/one-to-many}
+                    {:key :difficulty
+                     :index-type :compound/one-to-many}
+                    {:key :appropriate-materials
+                     :index-type :compound/many-to-many}]})
+      (c/add-items #{{:id 1
+                      :source :instituto-di-moda
+                      :difficulty :medium,
+                      :appropriate-materials #{:cotton :linen}
+                      :pattern :bodice-basic}
 
-                        {:id 2 :source :instituto-di-moda :difficulty :easy,
-                         :appropriate-materials #{:cotton} :pattern :shirt-basic}
+                     {:id 2
+                      :source :instituto-di-moda
+                      :difficulty :easy,
+                      :appropriate-materials #{:cotton}
+                      :pattern :shirt-basic}
 
-                        {:id 3 :source :instituto-di-moda, :difficulty :easy
-                         :appropriate-materials #{:cotton :linen} :pattern :bodice-dartless}
-
-                        {:id 4 :source :winifred-aldrich :difficulty :medium
-                         :appropriate-materials #{:silk :cotton} :pattern :dress-princess-seam}
-
-                        {:id 5 :source :winifred-aldrich :pattern :winter-coat
-                         :appropriate-materials #{:wool} :difficulty :hard}})
-         (c/indexes-by-id))
-     {:source
-      {:winifred-aldrich
-       #{{:id 5,
-          :source :winifred-aldrich,
-          :pattern :winter-coat,
-          :appropriate-materials #{:wool},
-          :difficulty :hard}
-         {:id 4,
-          :source :winifred-aldrich,
-          :difficulty :medium,
-          :appropriate-materials #{:silk :cotton},
-          :pattern :dress-princess-seam}},
-       :instituto-di-moda
-       #{{:id 1,
-          :source :instituto-di-moda,
-          :difficulty :medium,
-          :appropriate-materials #{:cotton :linen},
-          :pattern :bodice-basic}
-         {:id 2,
-          :source :instituto-di-moda,
-          :difficulty :easy,
-          :appropriate-materials #{:cotton},
-          :pattern :shirt-basic}
-         {:id 3,
-          :source :instituto-di-moda,
-          :difficulty :easy,
-          :appropriate-materials #{:cotton :linen},
-          :pattern :bodice-dartless}}},
-      :difficulty
-      {:hard
-       #{{:id 5,
-          :source :winifred-aldrich,
-          :pattern :winter-coat,
-          :appropriate-materials #{:wool},
-          :difficulty :hard}},
-       :medium
-       #{{:id 1,
-          :source :instituto-di-moda,
-          :difficulty :medium,
-          :appropriate-materials #{:cotton :linen},
-          :pattern :bodice-basic}
-         {:id 4,
-          :source :winifred-aldrich,
-          :difficulty :medium,
-          :appropriate-materials #{:silk :cotton},
-          :pattern :dress-princess-seam}},
-       :easy
-       #{{:id 2,
-          :source :instituto-di-moda,
-          :difficulty :easy,
-          :appropriate-materials #{:cotton},
-          :pattern :shirt-basic}
-         {:id 3,
-          :source :instituto-di-moda,
-          :difficulty :easy,
-          :appropriate-materials #{:cotton :linen},
-          :pattern :bodice-dartless}}},
-      :appropriate-materials
-      {:wool
-       #{{:id 5,
-          :source :winifred-aldrich,
-          :pattern :winter-coat,
-          :appropriate-materials #{:wool},
-          :difficulty :hard}},
-       :cotton
-       #{{:id 1,
-          :source :instituto-di-moda,
-          :difficulty :medium,
-          :appropriate-materials #{:cotton :linen},
-          :pattern :bodice-basic}
-         {:id 4,
-          :source :winifred-aldrich,
-          :difficulty :medium,
-          :appropriate-materials #{:silk :cotton},
-          :pattern :dress-princess-seam}
-         {:id 2,
-          :source :instituto-di-moda,
-          :difficulty :easy,
-          :appropriate-materials #{:cotton},
-          :pattern :shirt-basic}
-         {:id 3,
-          :source :instituto-di-moda,
-          :difficulty :easy,
-          :appropriate-materials #{:cotton :linen},
-          :pattern :bodice-dartless}},
-       :linen
-       #{{:id 1,
-          :source :instituto-di-moda,
-          :difficulty :medium,
-          :appropriate-materials #{:cotton :linen},
-          :pattern :bodice-basic}
-         {:id 3,
-          :source :instituto-di-moda,
-          :difficulty :easy,
-          :appropriate-materials #{:cotton :linen},
-          :pattern :bodice-dartless}},
-       :silk
-       #{{:id 4,
-          :source :winifred-aldrich,
-          :difficulty :medium,
-          :appropriate-materials #{:silk :cotton},
-          :pattern :dress-princess-seam}}},
-      :id
-      {5
-       {:id 5,
-        :source :winifred-aldrich,
-        :pattern :winter-coat,
-        :appropriate-materials #{:wool},
-        :difficulty :hard},
-       1
-       {:id 1,
-        :source :instituto-di-moda,
-        :difficulty :medium,
-        :appropriate-materials #{:cotton :linen},
-        :pattern :bodice-basic},
-       4
-       {:id 4,
-        :source :winifred-aldrich,
-        :difficulty :medium,
-        :appropriate-materials #{:silk :cotton},
-        :pattern :dress-princess-seam},
-       2
-       {:id 2,
-        :source :instituto-di-moda,
-        :difficulty :easy,
-        :appropriate-materials #{:cotton},
-        :pattern :shirt-basic},
-       3
-       {:id 3,
-        :source :instituto-di-moda,
-        :difficulty :easy,
-        :appropriate-materials #{:cotton :linen},
-        :pattern :bodice-dartless}}}))
+                     {:id 3 :source
+                      :instituto-di-moda,
+                      :difficulty :easy
+                      :appropriate-materials #{:cotton :linen}
+                      :pattern :bodice-dartless}})))

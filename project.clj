@@ -4,4 +4,6 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.9.0-beta1"]
-                 [org.clojure/spec.alpha "0.1.134"]])
+                 [org.clojure/spec.alpha "0.1.134"]]
+  :profiles {:dev {:dependencies [[im.chit/lucid.publish "1.3.13"]]
+}})

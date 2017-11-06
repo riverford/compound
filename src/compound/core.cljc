@@ -1,7 +1,12 @@
 (ns compound.core
   (:require [clojure.set :as set]
             [clojure.spec.alpha :as s]
-            [compound.secondary-indexes :as csi]))
+            [compound.secondary-indexes :as csi]
+            [compound.secondary-indexes.many-to-many]
+            [compound.secondary-indexes.one-to-many]
+            [compound.secondary-indexes.one-to-many-nested]
+            [compound.secondary-indexes.one-to-one]
+            [compound.secondary-indexes.one-to-one-nested]))
 
 ;; ------------------------------
 ;;   Primary index spec
@@ -119,7 +124,10 @@
                      :items (s/coll-of any?))
         :ret ::compound)
 
-(defn add-items [compound items]
+(defn add-items
+  "Adds the given items to the compound, cascading the additions to the secondary indexes.
+   If the key exists, handle the conflict as specified in the primary index definition. "
+  [compound items]
   (let [{:keys [id key custom-key conflict-behaviour]} (primary-index-def compound)
         key-fn (or key (partial custom-key-fn custom-key))
         [new-primary-index added removed] (reduce (fn add-items-to-primary-index
@@ -153,7 +161,9 @@
                      :keys (s/coll-of any?))
         :ret ::compound)
 
-(defn remove-keys [compound ks]
+(defn remove-keys
+  "Remove items from the compound with the given primary keys"
+  [compound ks]
   (let [{:keys [id key custom-key]} (primary-index-def compound)
         key-fn (or key (partial custom-key-fn custom-key))
         [new-primary-index removed] (reduce (fn remove-items-from-primary-index
@@ -184,6 +194,7 @@
         :ret ::compound)
 
 (defn update-item
+  "Update the item with the given primary key, cascading updates to the secondary indexes"
   ([compound k f]
    (if-let [new-item (f (get (primary-index compound) k))]
      (-> compound
@@ -193,7 +204,13 @@
   ([compound k f & args]
    (update-item compound k #(apply f % args))))
 
-(defn clear [compound]
+(s/fdef clear
+        :args ::compound
+        :ret ::compound)
+
+(defn clear
+  "Clear a compound of data"
+  [compound]
   (assoc compound
          :primary-index {}
          :secondary-indexes-by-id (reduce-kv (fn clear-secondary-indexes [indexes index-id index-def]
@@ -201,8 +218,34 @@
                                              {}
                                              (secondary-index-defs-by-id compound))))
 
-(defn items [compound]
+(s/fdef items
+        :args ::compound
+        :ret (s/coll-of any?))
+
+(defn items
+  "Returns the items indexed by the compound"
+  [compound]
   (vals (primary-index compound)))
+
+(defn add-secondary-index
+  "Adds an additional secondary index to an existing compound.
+   Throws if there is there is a conflict on the index id."
+  [compound index-def]
+  (let [id (csi/id index-def)
+        secondary-index (csi/add (csi/empty index-def) index-def (items compound))]
+    (if (secondary-index compound id)
+      (throw (ex-info (str "Cannot add secondary index - index with id " id " already exists")
+                      {:id id :index-def index-def :compound compound}))
+      (-> compound
+          (update :secondary-index-defs-by-id assoc id index-def)
+          (update :secondary-indexes-by-id assoc id secondary-index)))))
+
+(defn remove-secondary-index
+  "Remove the secondary index with the provided id from the compound"
+  [compound id]
+  (-> compound
+      (update :secondary-index-defs-by-id dissoc id)
+      (update :secondary-indexes-by-id dissoc id)))
 
 ;; ------------------------------
 ;;   Constructor
@@ -217,15 +260,8 @@
         :ret ::compound)
 
 (defn compound [opts]
-  (let [{:keys [primary-index-def secondary-index-defs]} opts
-        secondary-indexes  (reduce (fn make-secondary-indexes [m index-def]
-                                     (let [id (csi/id index-def)]
-                                       (-> (assoc-in m [:secondary-index-defs-by-id id] index-def)
-                                           (assoc-in [:secondary-indexes-by-id id] (csi/empty index-def)))))
-                                   {}
-                                   secondary-index-defs)
-        {:keys [secondary-index-defs-by-id secondary-indexes-by-id]} secondary-indexes]
-    {:primary-index-def primary-index-def
-     :primary-index {}
-     :secondary-index-defs-by-id secondary-index-defs-by-id
-     :secondary-indexes-by-id secondary-indexes-by-id}))
+  (let [{:keys [primary-index-def secondary-index-defs]} opts]
+    (reduce add-secondary-index
+            {:primary-index-def primary-index-def
+             :primary-index {}}
+            secondary-index-defs)))

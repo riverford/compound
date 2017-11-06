@@ -20,107 +20,50 @@ You can have as many indexes as you like. Some index types are built in, but add
 
 There is no query engine. 
 
-## Usage
+## Basic Usage
 
 ```clojure
 
 (require [compound.core :as c]) 
-(require [compound.secondary-indexes.one-to-many]) 
-(require [compound.secondary-indexes.many-to-many])
-
 
 (def patterns
   (-> (c/compound 
          {:primary-index-def 
-            {:key :id
+            {:key :pattern
              :on-conflict :compound/replace}
              
           :secondary-index-defs 
-            [{:key :source
-              :index-type :compound/one-to-many}
-             {:key :difficulty
-              :index-type :compound/one-to-many}
-             {:key :appropriate-materials
-              :index-type :compound/many-to-many}]})
+            [{:key :difficulty
+              :index-type :compound/one-to-many}]})
               
        (c/add-items 
-         #{{:id 1 
-            :source :instituto-di-moda 
-            :difficulty :medium,
-            :appropriate-materials #{:cotton :linen} 
-            :pattern :bodice-basic}
+         #{{:pattern :bodice-basic
+            :difficulty :easy}
 
-           {:id 2 
-            :source :instituto-di-moda
-            :difficulty :easy,
-            :appropriate-materials #{:cotton} 
-            :pattern :shirt-basic}
+           {:pattern :shirt-basic
+            :difficulty :medium}
 
-           {:id 3 :source 
-            :instituto-di-moda, 
-            :difficulty :easy
-            :appropriate-materials #{:cotton :linen} 
-            :pattern :bodice-dartless}})))
+           {:pattern :bodice-dartless
+            :difficulty :easy}})))
 
-(get (c/primary-index patterns) 3)
+(get (c/primary-index patterns) :bodice-basic)
 
-;; {:id 3,
-;;  :source :instituto-di-moda,
-;;  :difficulty :easy,
-;;  :appropriate-materials #{:cotton :linen},
-;;  :pattern :bodice-dartless}
+;; {:pattern :shirt-basic
+;;  :difficulty :medium}
 
 
-(get (c/index patterns :source) :instituto-di-moda)
+(get (c/index patterns :difficulty) :easy)
 
-;; #{{:id 1,
-;;    :source :instituto-di-moda,
-;;    :difficulty :medium,
-;;    :appropriate-materials #{:cotton :linen},
-;;    :pattern :bodice-basic}
-;;   {:id 2,
-;;    :source :instituto-di-moda,
-;;    :difficulty :easy,
-;;    :appropriate-materials #{:cotton},
-;;    :pattern :shirt-basic}
-;;   {:id 3,
-;;    :source :instituto-di-moda,
-;;    :difficulty :easy,
-;;    :appropriate-materials #{:cotton :linen},
-;;    :pattern :bodice-dartless}}
-
-(get (c/index patterns :appropriate-materials) :linen)
-
-;; #{{:id 1,
-;;    :source :instituto-di-moda,
-;;    :difficulty :medium,
-;;    :appropriate-materials #{:cotton :linen},
-;;    :pattern :bodice-basic}
-;;   {:id 3,
-;;    :source :instituto-di-moda,
-;;    :difficulty :easy,
-;;    :appropriate-materials #{:cotton :linen},
-;;    :pattern :bodice-dartless}}
-
+;; #{{:pattern :bodice-basic
+;;    :difficulty :easy}
+;;   {:pattern :bodice-dartless
+;;    :difficulty :easy}}
 
 ```
 
-## Built-in indexes
+## Documentation
 
-### [One to One](https://github.com/danielneal/compound/blob/master/src/compound/secondary_indexes/one_to_one.clj)
-
-
-Use when `(key-fn item)` returns a single key for each item.
-Stores the item against the `(key-fn item)`; throws if `(key-fn item)` returns a duplicate key to a previous item. 
-
-### [One to Many](https://github.com/danielneal/compound/blob/master/src/compound/secondary_indexes/one_to_many.clj)
-
-Use when `(key-fn item)` returns a single key for each item, but duplicates are permitted.
-Stores a set of items against `(key-fn item)`; if `(key-fn item)` returns a duplicate, add to the set of items stored against `(key-fn item)`
-
-### [Many to Many](https://github.com/danielneal/compound/blob/master/src/compound/secondary_indexes/many_to_many.clj)
-
-Use when `(key-fn item)` returns multiple values, and the index will store the item against each of them.
+Further examples and documentation are found [here]()
 
 
 ## Extending with additional secondary indexes
@@ -128,17 +71,14 @@ Use when `(key-fn item)` returns multiple values, and the index will store the i
 Compound can be extended with additional indexes, for example if you know of a data structure that provides optimized 
 access for the access pattern that you will use (e.g. one of https://github.com/michalmarczyk excellent data structures)
 
-To extend, implement the following multimethods.
+To extend, implement the following multimethods from the `compound.secondary-indexes` namespace. 
 
- * `secondary-index-def-spec` - the spec for the index definition
- * `secondary-index-def->behaviour`, for the index behaviour
+ * `spec` - the spec for the index definition
+ * `empty` - the initial value of the index
+ * `id` - to get a unique id from the index definition
+ * `add` - to add items to the index, called after items are added to the primary index
+ * `remove` - to remove items from the index, called when items are removed from the primary index
  
-`secondary-index-def->behaviour` should return a map with the following keys
-
- * `:empty` - a constant to initialize the empty index
- * `:add` - a function to add items to the index, called when items are added to the primary index 
- * `:remove` - a function to remove items from the index, called when items are removed from the primary index
-
 See the [built-in indexes](https://github.com/danielneal/compound/tree/master/src/compound/indexes) for examples. 
 
 ## Influences 
