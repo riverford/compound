@@ -361,6 +361,8 @@ result here may be familiar."
 
 "We want to index our fruit by an SKU, which is a string composite of the first letter of the category (capitalized) and the id padded with 3 zeroes (not really, but just imagine)"
 
+"To do this, first implement the `compound.custom-key/custom-key-fn` multimethod to tell compound how to form the key from the item."
+
 (require '[compound.custom-key :as cu])
 (require '[clojure.string :as string])
 
@@ -368,6 +370,8 @@ result here may be familiar."
   [_ item]
   (let [{:keys [category id]} item]
     (str (string/upper-case (first category)) (format "%03d" id))))
+
+"And then reference it in the index definition, using `:custom-key`"
 
 (fact
   (-> (c/compound {:primary-index-def {:custom-key :sku
