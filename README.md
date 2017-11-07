@@ -27,22 +27,17 @@ There is no query engine.
 (require [compound.core :as c]) 
 
 (def patterns
-  (-> (c/compound 
-         {:primary-index-def 
-            {:key :pattern}
-             
-          :secondary-index-defs 
-            [{:key :difficulty}]})
-              
-       (c/add-items 
-         #{{:pattern :bodice-basic
-            :difficulty :easy}
+  (-> (c/compound {:primary-index-def {:key :pattern}
+                   :secondary-index-defs [{:key :difficulty}]})
+          
+      (c/add-items #{{:pattern :bodice-basic
+                      :difficulty :easy}
+                      
+                     {:pattern :shirt-basic
+                      :difficulty :medium}
 
-           {:pattern :shirt-basic
-            :difficulty :medium}
-
-           {:pattern :bodice-dartless
-            :difficulty :easy}})))
+                     {:pattern :bodice-dartless
+                      :difficulty :easy}})))
 
 (get (c/primary-index patterns) :bodice-basic)
 
