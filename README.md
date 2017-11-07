@@ -78,11 +78,11 @@ Using compound is a possible third option, as close as possible to (1). It adds 
                                  :secondary-index-defs [{:key :colour}]})
              ... })
                                  
-(reg-sub [:fruit]
+(reg-sub :fruit
   (fn [db] 
     (get db :fruit)))
    
-(reg-sub [:fruits-with-colour]
+(reg-sub :fruits-with-colour
   :<- [:fruit]
   (fn [fruit [_ selected-colour]]
     (get (c/index fruit :colour) selected-colour)))
