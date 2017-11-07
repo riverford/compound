@@ -9,7 +9,7 @@
 1. make up (a composite whole); constitute.
 2. make (something bad) worse. 
 
-Compound is a micro structure for data used in reagent (and re-frame etc) applications, 
+Compound is a micro structure for data used in reframe applications, 
 based on the idea that [worse is better](https://en.wikipedia.org/wiki/Worse_is_better). 
 
 It maintains a plain hash-map of indexes for your data. This has two benefits: 
