@@ -1,4 +1,4 @@
-![Compound](https://raw.githubusercontent.com/riverford/compound/master/compound.png)
+![Compound](https://raw.githubusercontent.com/riverford/compound/master/docs/img/compound.png)
 
 **noun** *kɒmpaʊnd*
 
@@ -53,7 +53,7 @@ There is no query engine.
 
 ```
 
-## What has this got to do with re-frame?
+## Why is this useful with re-frame?
 
 Over the lifetime of a re-frame app, the amount of data stored tends to grow, becoming more database-like, filling with sets of users, products, transactions and fruits. 
 

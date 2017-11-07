@@ -9,10 +9,10 @@
             :theme "bolton"
             :output "docs"
             :template {:author "Daniel Neal"
-                       :email "danielneal@riverford.co.uk"
-                       :defaults {:logo-white "compound.png"}}
+                       :logo-white "img/compound_small.png"
+                       :email "danielneal@riverford.co.uk"}
             :files {"index" {:input "test/compound/docs.cljc"
-                            :site "compound"
-                            :title "core"
-                            :subtitle "api docs"}}}
+                             :site "compound"
+                             :title "core"
+                             :subtitle "api docs"}}}
   :profiles {:dev {:dependencies [[im.chit/lucid.publish "1.3.13"]]}})

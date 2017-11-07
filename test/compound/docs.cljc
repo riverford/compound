@@ -519,4 +519,6 @@ We should probably set up somewhere to store all the information about it."
      :quantity 4}})
 
 (comment
+  (publish/load-settings)
+  (publish/copy-assets)
   (publish/publish-all))
