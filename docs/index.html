@@ -61,8 +61,8 @@
           <div class="heading">
             <div>
               <h5>Author: Daniel Neal&nbsp;&nbsp;<a href="mailto:danielneal@riverford.co.uk">(danielneal@riverford.co.uk)</a></h5>
-              <h5>Date: 06 November 2017</h5>
-              <h5>Repository: <a href="https://github.com/danielneal/compound">https://github.com/danielneal/compound</a></h5>
+              <h5>Date: 07 November 2017</h5>
+              <h5>Repository: <a href="https://github.com/riverford/compound">https://github.com/riverford/compound</a></h5>
               <h5>Version: 0.3.0-SNAPSHOT</h5></div></div>
           <hr/>
           <div class="outline">
@@ -155,7 +155,7 @@
   &quot;yellow&quot; #{{:id 2, :name &quot;bananas&quot;, :colour &quot;yellow&quot;}}},
  :id
  {1 {:id 1, :name &quot;grapes&quot;, :colour &quot;green&quot;},
-  2 {:id 2, :name &quot;bananas&quot;, :colour &quot;yellow&quot;}}}</code></pre></div><div><span id="built-in-index-types"></span><h3>3.1 &nbsp;&nbsp; Built in index types</h3></div><div><p>There are a bunch of different index types built in, to cover the common use cases</p></div><div><span id="one-to-many"></span><h3><i>3.1.1 &nbsp;&nbsp; One to many</i></h3></div><div><p>The one to many index is used when there may be more than one item with the same <code>:key</code>. The index is a map with a set for each key value.</p></div><div><p>This is also, the default secondary index type if the <code>:index-type</code> is not specified, so the result here may be familiar.</p></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:key :id}
+  2 {:id 2, :name &quot;bananas&quot;, :colour &quot;yellow&quot;}}}</code></pre></div><div><span id="built-in-index-types"></span><h3>3.1 &nbsp;&nbsp; Built in index types</h3></div><div><p>There are a bunch of different index types built in, to cover the common use cases</p></div><div><span id="one-to-many"></span><h3><i>3.1.1 &nbsp;&nbsp; One to many</i></h3></div><div><p>The one to many index is used when there may be more than one item with the same <code>:key</code>. The index is a map with a set for each key value.</p></div><div><p><em>Note: this is also, the default secondary index type if the <code>:index-type</code> is not specified.</em></p></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:key :id}
                  :secondary-index-defs [{:key :colour
                                          :index-type :compound/one-to-many}]})
     (c/add-items [{:id 1 :name &quot;grapes&quot; :colour &quot;green&quot;}
@@ -299,9 +299,9 @@
                   {:id 3 :name &quot;tomatoes&quot; :category &quot;Pretend fruit&quot;}])
     (c/primary-index)) =&gt;
 
-{&quot;S002&quot; #{{:id 2, :name &quot;grapes&quot;, :category &quot;Small round fruit&quot;}},
- &quot;L001&quot; #{{:id 1, :name &quot;bananas&quot;, :category &quot;Long fruit&quot;}},
- &quot;P003&quot; #{{:id 3, :name &quot;tomatoes&quot;, :category &quot;Pretend fruit&quot;}}}</code></pre></div><div><p>The built-in secondary indexes can have a custom keys too. It works the same way.</p></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:key :id
+{&quot;S002&quot; {:id 2, :name &quot;grapes&quot;, :category &quot;Small round fruit&quot;},
+ &quot;L001&quot; {:id 1, :name &quot;bananas&quot;, :category &quot;Long fruit&quot;},
+ &quot;P003&quot; {:id 3, :name &quot;tomatoes&quot;, :category &quot;Pretend fruit&quot;}}</code></pre></div><div><p>The built-in secondary indexes can have a custom keys too. It works the same way.</p></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:key :id
                                      :on-conflict :compound/merge}
                  :secondary-index-defs [{:custom-key :sku}]})
     (c/add-items [{:id 1 :name &quot;bananas&quot; :category &quot;Long fruit&quot;}
@@ -322,7 +322,7 @@
     (c/index :id)) =&gt;
 
 {1 {:id 1, :name &quot;bananas&quot;, :category &quot;Long fruit&quot;, :quantity 4},
- 2 {:id 2, :name &quot;grapes&quot;, :category &quot;Small round fruit&quot;, :quantity 14}}</code></pre></div><div><span id="custom-indexes"></span><h3>5.3 &nbsp;&nbsp; Custom indexes</h3></div><div><p>Compound can be extended with completely custom indexes, for example if you know of a data structure that provides optimized access for the access pattern that you will use e.g. one of <a href='https://github.com/michalmarczyk'>Michal Marczyk's</a> excellent data structures</p></div><div><p>To extend, implement the following multimethods from the <code>compound.secondary-indexes</code> namespace.</p></div><div><ul><li><code>empty</code> - the initial value of the index</li><li><code>id</code> - to get a unique id from the index definition</li><li><code>add</code> - to add items to the index, called after items are added to the primary index</li><li><code>remove</code> - to remove items from the index, called when items are removed from the primary index</li><li><code>spec</code> - the spec for the index definition (optional, but helps with testing)</li></ul></div><div><p>To implement a custom index that indexes <em>all</em> attributes of a map</p></div><div class="code"><pre><code class="clojure">(require '[compound.secondary-indexes :as csi])
+ 2 {:id 2, :name &quot;grapes&quot;, :category &quot;Small round fruit&quot;, :quantity 14}}</code></pre></div><div><span id="custom-indexes"></span><h3>5.3 &nbsp;&nbsp; Custom indexes</h3></div><div><p>Compound can be extended with completely custom indexes, for example if you know of a data structure that provides optimized access for the access pattern that you will use e.g. one of <a href='https://github.com/michalmarczyk'>Michal Marczyk's</a> excellent data structures</p></div><div><p>To extend, implement the following multimethods from the <code>compound.secondary-indexes</code> namespace.</p></div><div><ul><li><code>empty</code> - the initial value of the index</li><li><code>id</code> - to get a unique id from the index definition</li><li><code>add</code> - to add items to the index, called after items are added to the primary index</li><li><code>remove</code> - to remove items from the index, called when items are removed from the primary index</li><li><code>spec</code> - the spec for the index definition</li></ul></div><div><p>To implement a custom index that indexes <em>all</em> attributes of a map</p></div><div class="code"><pre><code class="clojure">(require '[compound.secondary-indexes :as csi])
 (require '[clojure.spec.alpha :as s])</code></pre></div><div><p>Add a spec</p></div><div class="code"><pre><code class="clojure">(s/def ::id keyword?)
 
 (defmethod csi/spec :all

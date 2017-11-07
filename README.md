@@ -26,35 +26,71 @@ There is no query engine.
 
 (require [compound.core :as c]) 
 
-(def patterns
-  (-> (c/compound {:primary-index-def {:key :pattern}
-                   :secondary-index-defs [{:key :difficulty}]})
+(def fruit
+  (-> (c/compound {:primary-index-def {:key :name}
+                   :secondary-index-defs [{:key :colour}]})
           
-      (c/add-items #{{:pattern :bodice-basic
-                      :difficulty :easy}
+      (c/add-items #{{:name :strawberry
+                      :colour :red}
                       
-                     {:pattern :shirt-basic
-                      :difficulty :medium}
+                     {:name :raspberry
+                      :colour :red}
 
-                     {:pattern :bodice-dartless
-                      :difficulty :easy}})))
+                     {:name :banana
+                      :colour :yellow}})))
 
-(get (c/primary-index patterns) :bodice-basic)
+(get (c/index fruit :name) :banana)
 
-;; {:pattern :shirt-basic
-;;  :difficulty :medium}
+;; {:name :banana
+;;  :colour :yellow}
 
-(get (c/index patterns :difficulty) :easy)
+(get (c/index patterns :colour) :red)
 
-;; #{{:pattern :bodice-basic
-;;    :difficulty :easy}
-;;   {:pattern :bodice-dartless
-;;    :difficulty :easy}}
+;; #{{:name :strawberry
+;;    :colour :red}
+;;   {:name :raspberry
+;;    :colour :red}}
 
 ```
-## More examples and documentation
 
-Detailed documentation and examples and documentation are found on the [github pages](https://riverford.github.io/compound)
+## What has this got to do with re-frame?
+
+Over the lifetime of a re-frame app, the amount of data stored tends to grow, becoming more database-like, filling with sets of users, products, transactions and fruits. 
+
+As it grows, the maintainer of the app can either:
+
+ 1. Keep sets and vectors of maps, scanning over them `#(filter (comp #{:red} :colour) fruit)` in subscriptions and handlers.
+ 2. Look for a database solution, such as datascript, and run queries or entity lookups to find entities. 
+
+(1) is possibly the clearest solution, however processing time can scale both with the number of items and the number of subscriptions which perform scans. Writing filter/sequence comprehension code again and again in subscriptions and handlers can also get tedious. 
+
+(2) is a great solution for querying but is not necessarily a perfect fit for re-frame subscriptions. 
+The datascript db is opaque to visualisation tools, and although solutions like `posh` exist, out of the box performance of 
+subscriptions is typically bad because *every* subscription depends on the db. 
+
+Using compound is a possible third option, as close as possible to (1). It adds a convention to the maps and provides support for multiple access patterns, different cardinalities, composite keys, whilst staying open to extension.
+
+
+```clojure
+(require '[compound.core :as c])
+
+(def app-db {:fruit (c/compound {:primary-index-def {:key :name} 
+                                 :secondary-index-defs [{:key :colour}]})
+             ... })
+                                 
+(reg-sub [:fruit]
+  (fn [db] 
+    (get db :fruit)))
+   
+(reg-sub [:fruits-with-colour]
+  :<- [:fruit]
+  (fn [fruit [_ selected-colour]]
+    (get (c/index fruit :colour) selected-colour)))
+```
+
+## Documentation
+
+Full example-based documentation, covering the built-in indexes, extending with additional indexes, composite keys, handling duplicates and custom key functions, etc is found on the [github pages](https://riverford.github.io/compound)
 
 ## Influences 
 
