@@ -147,8 +147,7 @@ We should probably set up somewhere to store all the information about it."
 
 "The one to many index is used when there may be more than one item with the same `:key`. The index is a map with a set for each key value."
 
-"This is also, the default secondary index type if the `:index-type` is not specified, so the
-result here may be familiar."
+"*Note: this is also, the default secondary index type if the `:index-type` is not specified.*"
 
 (fact
   (-> (c/compound {:primary-index-def {:key :id}
@@ -189,7 +188,6 @@ result here may be familiar."
 [[:subsection {:title "Many to one"}]]
 
 "The many to one index is used when there an item's `:key` can have multiple values, but each value can occur at most once"
-
 
 (fact
   (-> (c/compound {:primary-index-def {:key :id}
@@ -433,7 +431,7 @@ result here may be familiar."
 * `add` - to add items to the index, called after items are added to the primary index
 * `remove` - to remove items from the index, called when items are removed from the primary index
 
-* `spec` - the spec for the index definition (optional, but helps with testing)"
+* `spec` - the spec for the index definition"
 
 "To implement a custom index that indexes *all* attributes of a map"
 

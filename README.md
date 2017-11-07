@@ -29,12 +29,10 @@ There is no query engine.
 (def patterns
   (-> (c/compound 
          {:primary-index-def 
-            {:key :pattern
-             :on-conflict :compound/replace}
+            {:key :pattern}
              
           :secondary-index-defs 
-            [{:key :difficulty
-              :index-type :compound/one-to-many}]})
+            [{:key :difficulty}]})
               
        (c/add-items 
          #{{:pattern :bodice-basic
@@ -51,7 +49,6 @@ There is no query engine.
 ;; {:pattern :shirt-basic
 ;;  :difficulty :medium}
 
-
 (get (c/index patterns :difficulty) :easy)
 
 ;; #{{:pattern :bodice-basic
@@ -62,7 +59,7 @@ There is no query engine.
 ```
 ## More examples and documentation
 
-Detailed documentation and examples and documentation are found on [github pages](https://riverford.github.io/compound)
+Detailed documentation and examples and documentation are found on the [github pages](https://riverford.github.io/compound)
 
 ## Influences 
 
