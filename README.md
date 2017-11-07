@@ -60,12 +60,12 @@ Over the lifetime of a re-frame app, the amount of data stored tends to grow, be
 As it grows, the maintainer of the app can either:
 
  1. Keep sets and vectors of maps, scanning over them `#(filter (comp #{:red} :colour) fruit)` in subscriptions and handlers.
- 2. Look for a database solution, such as datascript, and run queries or entity lookups to find entities. 
+ 2. Look for a database solution, such as [datascript](https://github.com/tonsky/datascript), and run queries or entity lookups to find entities. 
 
 (1) is possibly the clearest solution, however processing time can scale both with the number of items and the number of subscriptions which perform scans. Writing filter/sequence comprehension code again and again in subscriptions and handlers can also get tedious. 
 
 (2) is a great solution for querying but is not necessarily a perfect fit for re-frame subscriptions. 
-The datascript db is opaque to visualisation tools, and although solutions like `posh` exist, out of the box performance of 
+The datascript db is opaque to visualisation tools, and although solutions like [posh](https://github.com/mpdairy/posh) exist, out of the box performance of 
 subscriptions is typically bad because *every* subscription depends on the db. 
 
 Using compound is a possible third option, as close as possible to (1). It adds a convention to the maps and provides support for multiple access patterns, different cardinalities, composite keys, whilst staying open to extension.
