@@ -44,7 +44,7 @@ There is no query engine.
 ;; {:name :banana
 ;;  :colour :yellow}
 
-(get (c/index patterns :colour) :red)
+(get (c/index fruit :colour) :red)
 
 ;; #{{:name :strawberry
 ;;    :colour :red}
