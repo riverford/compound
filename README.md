@@ -20,7 +20,14 @@ You can have as many indexes as you like. Some index types are built in, but add
 
 There is no query engine. 
 
+## Current Version
+
+```clojure 
+[riverford/compound "0.4.0"
+```
+
 ## Basic Usage
+
 
 ```clojure
 
