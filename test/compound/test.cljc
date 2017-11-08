@@ -3,8 +3,8 @@
             [compound.secondary-indexes.one-to-one]
             [compound.secondary-indexes.one-to-many]
             [compound.secondary-indexes.many-to-many]
-            [compound.secondary-indexes.one-to-one-nested]
-            [compound.secondary-indexes.one-to-many-nested]
+            [compound.secondary-indexes.one-to-one-composite]
+            [compound.secondary-indexes.one-to-many-composite]
             [compound.custom-key :as cu]
             [compound.core :as c]
             [clojure.spec.test.alpha :as st]
@@ -169,7 +169,7 @@
   [k item]
   [(:delivery-date item) (:product item)])
 
-(deftest nested-indexes
+(deftest composite-indexes
   (is (= {[:delivery-date :product]
           {"2012-03-04"
            {:potatoes {:delivery-date "2012-03-04", :product :potatoes},
@@ -194,9 +194,9 @@
          (-> (c/compound {:primary-index-def {:custom-key ::delivery-date-product
                                               :on-conflict :compound/replace}
                           :secondary-index-defs [{:keys [:delivery-date :product]
-                                                  :index-type :compound/one-to-one-nested}
+                                                  :index-type :compound/one-to-one-composite}
                                                  {:keys [:product :delivery-date]
-                                                  :index-type :compound/one-to-many-nested}]})
+                                                  :index-type :compound/one-to-many-composite}]})
              (c/add-items [{:delivery-date "2012-03-03" :product :bananas}
                            {:delivery-date "2012-03-03" :product :apples}
                            {:delivery-date "2012-03-04" :product :potatoes}

@@ -6,9 +6,9 @@
             [compound.secondary-indexes.many-to-many]
             [compound.secondary-indexes.many-to-one]
             [compound.secondary-indexes.one-to-many]
-            [compound.secondary-indexes.one-to-many-nested]
+            [compound.secondary-indexes.one-to-many-composite]
             [compound.secondary-indexes.one-to-one]
-            [compound.secondary-indexes.one-to-one-nested]))
+            [compound.secondary-indexes.one-to-one-composite]))
 
 ;; ------------------------------
 ;;   Primary index spec
@@ -273,3 +273,6 @@
              :secondary-indexes-by-id {}
              :secondary-index-defs-by-id {}}
             secondary-index-defs)))
+
+
+

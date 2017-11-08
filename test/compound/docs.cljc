@@ -239,17 +239,17 @@ We should probably set up somewhere to store all the information about it."
 
 "(the answer is not bananas)"
 
-[[:subsection {:title "Nested indexes"}]]
+[[:subsection {:title "Composite indexes"}]]
 
-"The nested indexes form a composite key using nesting"
+"Composite indexes are useful when you want to index something by this *then* by *that*"
 
-"The is useful when you want to index something by this *then* by *that*"
+"They require `:keys`to be a sequence of keys"
 
-[[:subsubsection {:title "One to many (nested)"}]]
+[[:subsubsection {:title "One to many (composite)"}]]
 (fact
   (-> (c/compound {:primary-index-def {:key :id}
                    :secondary-index-defs [{:keys [:colour :category]
-                                           :index-type :compound/one-to-many-nested}]})
+                                           :index-type :compound/one-to-many-composite}]})
       (c/add-items [{:id 1 :name "grapes" :colour "green" :category "berries"}
                     {:id 2 :name "sloe" :colour "blue" :category "berries"}
                     {:id 3 :name "orange" :colour "orange" :category "citrus"}
@@ -263,11 +263,11 @@ We should probably set up somewhere to store all the information about it."
    "yellow" {"citrus" #{{:id 4, :name "lemon", :colour "yellow", :category "citrus"}}},
    "blue" {"berries" #{{:id 2, :name "sloe", :colour "blue", :category "berries"}}}})
 
-[[:subsubsection {:title "One to one (nested)"}]]
+[[:subsubsection {:title "One to one (composite)"}]]
 (fact
   (-> (c/compound {:primary-index-def {:key :id}
                    :secondary-index-defs [{:keys [:category :display-index]
-                                           :index-type :compound/one-to-one-nested}]})
+                                           :index-type :compound/one-to-one-composite}]})
       (c/add-items [{:id 1 :name "grapes" :display-index 1 :category "berries"}
                     {:id 2 :name "sloe" :display-index 2 :category "berries"}
                     {:id 3 :name "orange" :display-index 1 :category "citrus"}
@@ -519,6 +519,4 @@ We should probably set up somewhere to store all the information about it."
      :quantity 4}})
 
 (comment
-  (publish/load-settings)
-  (publish/copy-assets)
   (publish/publish-all))
