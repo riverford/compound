@@ -6,8 +6,8 @@
 
 **verb** *kəmˈpaʊnd*
 
-1. make up (a composite whole); constitute.
-2. make (something bad) worse. 
+1. make up; constitute.
+2. make something worse. 
 
 Compound is a micro structure for data used in reframe applications, 
 based on the idea that [worse is better](https://en.wikipedia.org/wiki/Worse_is_better). 
