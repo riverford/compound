@@ -139,11 +139,9 @@ We should probably set up somewhere to store all the information about it."
    {1 {:id 1, :name "grapes", :colour "green"},
     2 {:id 2, :name "bananas", :colour "yellow"}}})
 
-[[:section {:title "Built in index types"}]]
+"There are a bunch of different index types built in, to cover common use cases"
 
-"There are a bunch of different index types built in, to cover the common use cases"
-
-[[:subsection {:title "One to many"}]]
+[[:section {:title "One to many"}]]
 
 "The one to many index is used when there may be more than one item with the same `:key`. The index is a map with a set for each key value."
 
@@ -164,7 +162,7 @@ We should probably set up somewhere to store all the information about it."
    {1 {:id 1, :name "grapes", :colour "green"},
     2 {:id 2, :name "bananas", :colour "yellow"}}})
 
-[[:subsection {:title "One to one"}]]
+[[:section {:title "One to one"}]]
 
 "The one to one index is used when there can only be one item for each `:key`. An error is thrown if an item with a duplicate key is added without first removing the existing one"
 
@@ -185,7 +183,7 @@ We should probably set up somewhere to store all the information about it."
     2 {:id 2, :name "bananas", :colour "yellow"}}})
 
 
-[[:subsection {:title "Many to one"}]]
+[[:section {:title "Many to one"}]]
 
 "The many to one index is used when there an item's `:key` can have multiple values, but each value can occur at most once"
 
@@ -218,7 +216,7 @@ We should probably set up somewhere to store all the information about it."
      :colour "yellow",
      :aka #{"monkey nourishers" "yellow boomerangs"}}}})
 
-[[:subsection {:title "Many to many"}]]
+[[:section {:title "Many to many"}]]
 
 "The many to many index is used when there an item's `:key` can have multiple values, and each value can occur multiple times"
 
@@ -239,13 +237,13 @@ We should probably set up somewhere to store all the information about it."
 
 "(the answer is not bananas)"
 
-[[:subsection {:title "Composite indexes"}]]
+[[:section {:title "Composite indexes"}]]
 
 "Composite indexes are useful when you want to index something by this *then* by *that*"
 
 "They require `:keys`to be a sequence of keys"
 
-[[:subsubsection {:title "One to many (composite)"}]]
+[[:subsection {:title "One to many (composite)"}]]
 (fact
   (-> (c/compound {:primary-index-def {:key :id}
                    :secondary-index-defs [{:keys [:colour :category]
@@ -263,7 +261,7 @@ We should probably set up somewhere to store all the information about it."
    "yellow" {"citrus" #{{:id 4, :name "lemon", :colour "yellow", :category "citrus"}}},
    "blue" {"berries" #{{:id 2, :name "sloe", :colour "blue", :category "berries"}}}})
 
-[[:subsubsection {:title "One to one (composite)"}]]
+[[:subsection {:title "One to one (composite)"}]]
 (fact
   (-> (c/compound {:primary-index-def {:key :id}
                    :secondary-index-defs [{:keys [:category :display-index]
