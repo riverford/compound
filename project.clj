@@ -1,4 +1,4 @@
-(defproject riverford/compound "0.4.0-SNAPSHOT"
+(defproject riverford/compound "0.4.0"
   :description "A micro structure for reagent data"
   :url "https://github.com/riverford/compound"
   :license {:name "Eclipse Public License"
