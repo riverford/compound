@@ -349,7 +349,7 @@ We should probably set up somewhere to store all the information about it."
 
 [[:section {:title "Custom"}]]
 
-"Custom conflict behaviour can also be defined. This is covered in the next section."
+"Custom conflict behaviour can also be defined. This is covered in the extension section."
 
 [[:chapter {:title "Extension" :tag "Extension"}]]
 
@@ -515,6 +515,46 @@ We should probably set up somewhere to store all the information about it."
      :category "Medium round fruit",
      :ripe? true,
      :quantity 4}})
+
+
+[[:chapter {:title "Miscellaneous addenda"}]]
+
+[[:section {:title "Diffing"}]]
+
+"Some utility functions are provided to help diffing compounds.
+This is useful if you have two sources of data which you need to synchronize,
+e.g. client and server state"
+
+(fact
+  (let [source (-> (c/compound {:primary-index-def {:key :id}})
+                   (c/add-items [{:id 1 :name "bananas" :category "Old fruit"}
+                                 {:id 2 :name "grapes" :category "New fruit"}
+                                 {:id 4 :name "strawberries" :category "Red fruit"}
+                                 {:id 5 :name "blueberries" :category "Blue fruit"}]))
+        target (-> (c/compound {:primary-index-def {:key :id}})
+                   (c/add-items [{:id 1 :name "bananas" :category "Long fruit"}
+                                 {:id 2 :name "grapes" :category "Small round fruit"}
+                                 {:id 3 :name "tomatoes" :category "Pretend fruit"}]))]
+    (c/diff source target) => {:add
+                               #{{:id 5, :name "blueberries", :category "Blue fruit"}
+                                 {:id 4, :name "strawberries", :category "Red fruit"}},
+                               :modify
+                               #{{:source {:id 2, :name "grapes", :category "New fruit"},
+                                  :target {:id 2, :name "grapes", :category "Small round fruit"}}
+                                 {:source {:id 1, :name "bananas", :category "Old fruit"},
+                                  :target {:id 1, :name "bananas", :category "Long fruit"}}},
+                               :remove #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}}
+
+    (c/apply-diff target {:add
+                          #{{:id 5, :name "blueberries", :category "Blue fruit"}
+                            {:id 4, :name "strawberries", :category "Red fruit"}},
+                          :modify
+                          #{{:source {:id 2, :name "grapes", :category "New fruit"},
+                             :target {:id 2, :name "grapes", :category "Small round fruit"}}
+                            {:source {:id 1, :name "bananas", :category "Old fruit"},
+                             :target {:id 1, :name "bananas", :category "Long fruit"}}},
+                          :remove #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}}) => source))
+
 
 (comment
   (publish/publish-all))

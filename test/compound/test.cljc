@@ -265,3 +265,30 @@
                            {:delivery-date "2012-03-06" :product :potatoes :quantity-delta 2}
                            {:delivery-date "2012-03-06" :product :potatoes :quantity-delta 10}])
              (c/indexes-by-id)))))
+
+(deftest diffing
+  (let [source (-> (c/compound {:primary-index-def {:key :id
+                                                    :on-conflict :compound/replace}
+                                :secondary-index-defs [{:key :name
+                                                        :index-type :compound/one-to-one}]})
+                   (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}]))
+        target (-> (c/compound {:primary-index-def {:key :id
+                                                    :on-conflict :compound/replace}
+                                :secondary-index-defs [{:key :name
+                                                        :index-type :compound/one-to-one}]})
+                   (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Bill"} {:id 4 :name "Ahmed"}]))
+        some-other-compound (c/compound {:primary-index-def {:key :blerg
+                                                             :on-conflict :compound/replace}
+                                         :secondary-index-defs [{:key :name
+                                                                 :index-type :compound/one-to-one}]})
+        diff (c/diff source target)]
+    (is (= {:add #{{:id 3, :name "Squirrel"}},
+            :modify #{{:source {:id 2, :name "Terry"}, :target {:id 2, :name "Bill"}}},
+            :remove #{{:id 4, :name "Ahmed"}}}
+           (c/diff source target)))
+    (is (= (c/apply-diff target {:add #{{:id 3, :name "Squirrel"}},
+                                 :modify #{{:source {:id 2, :name "Terry"}, :target {:id 2, :name "Bill"}}},
+                                 :remove #{{:id 4, :name "Ahmed"}}})
+           source))
+    (is (thrown? java.lang.AssertionError (c/diff source some-other-compound)))))
+

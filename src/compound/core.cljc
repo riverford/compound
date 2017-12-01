@@ -41,6 +41,17 @@
                    ::secondary-index-defs-by-id
                    ::secondary-indexes-by-id]))
 
+(s/def ::diff.add (s/coll-of any?))
+(s/def ::diff.remove (s/coll-of any?))
+(s/def ::diff.update.source any?)
+(s/def ::diff.update.target any?)
+(s/def ::diff.update (s/coll-of (s/keys :req-un [::diff.update.source ::diff.update.target])))
+
+(s/def ::diff
+  (s/keys :opt-un [::diff.add
+                   ::diff.remove
+                   ::diff.update]))
+
 ;; ------------------------------
 ;;   Helper functions
 ;; ------------------------------
@@ -68,6 +79,10 @@
 
 (defn primary-index [compound]
   (get compound :primary-index))
+
+(defn primary-index-fn [compound]
+  (let [{:keys [key custom-key]} (primary-index-def compound)]
+    (or key (partial cu/custom-key-fn custom-key))))
 
 (defn index-defs-by-id [compound]
   (assoc (secondary-index-defs-by-id compound) (primary-index-id compound) (primary-index-def compound)))
@@ -119,8 +134,7 @@
   "Adds the given items to the compound, cascading the additions to the secondary indexes.
    If the key exists, handle the conflict as specified in the primary index definition. "
   [compound items]
-  (let [{:keys [id key custom-key conflict-behaviour]} (primary-index-def compound)
-        key-fn (or key (partial cu/custom-key-fn custom-key))
+  (let [key-fn (primary-index-fn compound)
         [new-primary-index added removed] (reduce (fn add-items-to-primary-index
                                                     [[index added removed] item]
                                                     (let [k (key-fn item)
@@ -155,8 +169,7 @@
 (defn remove-keys
   "Remove items from the compound with the given primary keys"
   [compound ks]
-  (let [{:keys [id key custom-key]} (primary-index-def compound)
-        key-fn (or key (partial cu/custom-key-fn custom-key))
+  (let [key-fn (primary-index-fn compound)
         [new-primary-index removed] (reduce (fn remove-items-from-primary-index
                                               [[index removed] k]
                                               (let [item (get index k)]
@@ -223,6 +236,58 @@
   [compound]
   (vals (primary-index compound)))
 
+(s/fdef diff
+        :args (s/cat :source ::compound
+                     :target ::compound)
+        :ret ::diff)
+
+(defn diff
+  "Returns a diff which will provide the information required to turn the _source_ compound into the _target_ compound,
+   so that source can be turned into target  in the following format.
+
+   {:add ... items that exist only in source, and not in target
+    :modify {:source ... :target ...} source and target items that exist in source and target, but are different
+    :remove ... items that exist in target, but not in source
+
+   This is useful when e.g. syncing a compound with an external mutable datastructure"
+  [source target]
+  (assert (= (primary-index-def source) (primary-index-def target)) "Only compounds with matching primary-indexes can be diffed")
+  (let [source-index (primary-index source)
+        target-index (primary-index target)]
+    (reduce (fn [m k]
+              (let [in-source? (contains? source-index k)
+                    in-target? (contains? target-index k)]
+                (cond
+                  (and in-source? (not in-target?)) (update m :add conj (get source-index k))
+                  (and in-target? (not in-source?)) (update m :remove conj (get target-index k))
+                  ;; must be in both
+                  :else (let [s (get source-index k)
+                              k (get target-index k)]
+                          (if (not= s k)
+                            (update m :modify conj {:source s, :target k})
+                            m)))))
+            {:add #{}
+             :modify #{}
+             :remove #{}}
+            (into #{} (concat (keys source-index) (keys target-index))))))
+
+(s/fdef apply-diff
+        :args (s/cat :compound ::compound
+                     :diff ::diff)
+        :ret ::compound)
+
+(defn apply-diff
+  [c diff]
+  (let [key-fn (primary-index-fn c)
+        ;; convert modifies to add/remove
+        {:keys [add remove]} (reduce (fn [m {:keys [source target]}]
+                                                 (-> (update m :add conj source)
+                                                     (update :remove conj target)))
+                                               diff
+                                               (get diff :modify))]
+    (-> (remove-keys c (map key-fn remove))
+        (add-items add))))
+
 ;; ------------------------------
 ;;   Constructor
 ;; ------------------------------
@@ -273,6 +338,3 @@
              :secondary-indexes-by-id {}
              :secondary-index-defs-by-id {}}
             secondary-index-defs)))
-
-
-
