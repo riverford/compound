@@ -20,11 +20,13 @@ You can have as many indexes as you like. Some index types are built in, but add
 
 There is no query engine. 
 
-## Current Version
+## Version
 
-```clojure 
-[riverford/compound "0.4.0"]
+```clojure
+[riverford/compound "0.5.0-alpha1"]
 ```
+
+For previous versions - see [changelog](https://github.com/riverford/compound/blob/master/CHANGELOG.md)
 
 ## Basic Usage
 
