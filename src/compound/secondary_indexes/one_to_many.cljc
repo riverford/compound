@@ -45,7 +45,7 @@
                                   new-items (disj existing-items item)]
                               (if (empty? new-items)
                                 (dissoc! index k)
-                                (assoc! index new-items))))
+                                (assoc! index k new-items))))
                           (transient index)
                           removed)]
     (persistent! new-index)))

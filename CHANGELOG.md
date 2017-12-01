@@ -1,6 +1,10 @@
 # Change Log
 ## [Unreleased] 
 
+## [0.5.0-alpha2] - 2017-12-01
+### Fixed
+- Fixed an issue with removing items a :compound/one-to-many index 
+
 ## [0.5.0-alpha1] - 2017-12-01
 ### Added
 - Added support for diffing compounds `(diff source target)` `(apply-diff compound diff)` - see https://riverford.github.io/compound/#diffing for docs
