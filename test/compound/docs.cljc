@@ -517,7 +517,7 @@ We should probably set up somewhere to store all the information about it."
      :quantity 4}})
 
 
-[[:chapter {:title "Miscellaneous addenda"}]]
+[[:chapter {:title "Miscellaneous"}]]
 
 [[:section {:title "Diffing"}]]
 
@@ -535,15 +535,17 @@ e.g. client and server state"
                    (c/add-items [{:id 1 :name "bananas" :category "Long fruit"}
                                  {:id 2 :name "grapes" :category "Small round fruit"}
                                  {:id 3 :name "tomatoes" :category "Pretend fruit"}]))]
-    (c/diff source target) => {:add
-                               #{{:id 5, :name "blueberries", :category "Blue fruit"}
-                                 {:id 4, :name "strawberries", :category "Red fruit"}},
-                               :modify
-                               #{{:source {:id 2, :name "grapes", :category "New fruit"},
-                                  :target {:id 2, :name "grapes", :category "Small round fruit"}}
-                                 {:source {:id 1, :name "bananas", :category "Old fruit"},
-                                  :target {:id 1, :name "bananas", :category "Long fruit"}}},
-                               :remove #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}}
+    (c/diff source target) =>
+
+    {:add
+     #{{:id 5, :name "blueberries", :category "Blue fruit"}
+       {:id 4, :name "strawberries", :category "Red fruit"}},
+     :modify
+     #{{:source {:id 2, :name "grapes", :category "New fruit"},
+        :target {:id 2, :name "grapes", :category "Small round fruit"}}
+       {:source {:id 1, :name "bananas", :category "Old fruit"},
+        :target {:id 1, :name "bananas", :category "Long fruit"}}},
+     :remove #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}}
 
     (c/apply-diff target {:add
                           #{{:id 5, :name "blueberries", :category "Blue fruit"}
@@ -553,7 +555,8 @@ e.g. client and server state"
                              :target {:id 2, :name "grapes", :category "Small round fruit"}}
                             {:source {:id 1, :name "bananas", :category "Old fruit"},
                              :target {:id 1, :name "bananas", :category "Long fruit"}}},
-                          :remove #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}}) => source))
+                          :remove #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}}) =>
+    source))
 
 
 (comment
