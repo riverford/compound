@@ -3,7 +3,7 @@
 
 ## [0.5.0-alpha2] - 2017-12-01
 ### Fixed
-- Fixed an issue with removing items a :compound/one-to-many index 
+- Fixed arity exception on `assoc!` when removing items from a `:compound/one-to-many` index 
 
 ## [0.5.0-alpha1] - 2017-12-01
 ### Added
