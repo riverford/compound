@@ -20,7 +20,7 @@ You can have as many indexes as you like. Some index types are built in, but add
 
 There is no query engine. 
 
-## Version
+## Current Version
 
 ```clojure
 [riverford/compound "0.5.0-alpha1"]
@@ -62,6 +62,11 @@ For previous versions - see [changelog](https://github.com/riverford/compound/bl
 
 ```
 
+## Advanced usage
+
+Full example-based documentation, covering the built-in indexes, extending with additional indexes, composite keys, handling duplicates and custom key functions, etc is found on the [github pages](https://riverford.github.io/compound)
+
+
 ## Why is this useful with re-frame?
 
 Over the lifetime of a re-frame app, the amount of data stored tends to grow, becoming more database-like, filling with sets of users, products, transactions and fruits. 
@@ -96,10 +101,6 @@ Using compound is a possible third option, as close as possible to (1). It adds 
   (fn [fruit [_ selected-colour]]
     (get (c/index fruit :colour) selected-colour)))
 ```
-
-## Documentation
-
-Full example-based documentation, covering the built-in indexes, extending with additional indexes, composite keys, handling duplicates and custom key functions, etc is found on the [github pages](https://riverford.github.io/compound)
 
 ## Influences 
 
