@@ -50,6 +50,20 @@
                                                   :index-type :compound/one-to-one}]})
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
              (c/remove-keys [1 2])
+             (c/indexes-by-id))))
+  (is (= {:name
+          {"Terry" #{{:id 2, :name "Terry"}},
+           "Squirrel" #{{:id 4, :name "Squirrel"} {:id 5, :name "Squirrel"}}},
+          :id
+          {5 {:id 5, :name "Squirrel"},
+           2 {:id 2, :name "Terry"},
+           4 {:id 4, :name "Squirrel"}}}
+         (-> (c/compound {:primary-index-def {:key :id
+                                              :on-conflict :compound/replace}
+                          :secondary-index-defs [{:key :name
+                                                  :index-type :compound/one-to-many}]})
+             (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 4 :name "Squirrel"} {:id 5 :name "Squirrel"}])
+             (c/remove-keys [1 3])
              (c/indexes-by-id)))))
 
 (deftest clearing
