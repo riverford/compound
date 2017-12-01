@@ -10,6 +10,6 @@
 
 Initial public release
 
-[Unreleased]: https://github.com/your-name/compound/compare/0.5.0-alpha1....HEAD
-[0.5.0-alpha1]: https://github.com/your-name/compound/compare/0.4.0...0.5.0-alpha1
+[Unreleased]: https://github.com/riverford/compound/compare/0.5.0-alpha1....HEAD
+[0.5.0-alpha1]: https://github.com/riverford/compound/compare/0.4.0...0.5.0-alpha1
 
