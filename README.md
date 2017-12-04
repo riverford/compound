@@ -23,7 +23,7 @@ There is no query engine.
 ## Current Version
 
 ```clojure
-[riverford/compound "0.5.0-alpha2"]
+[riverford/compound "0.5.0-alpha3"]
 ```
 
 For previous versions - see [changelog](https://github.com/riverford/compound/blob/master/CHANGELOG.md)

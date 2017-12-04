@@ -33,7 +33,9 @@
                                                   (conj kvs k (conj existing-items item))))
                                               []
                                               ks)]
-                              (apply assoc! index kvs)))
+                              (if (seq kvs)
+                                (apply assoc! index kvs)
+                                index)))
                           (transient index)
                           added)]
     (persistent! new-index)))
@@ -49,7 +51,9 @@
                                                   (conj kvs k (disj existing-items item))))
                                               []
                                               ks)]
-                              (apply assoc! index kvs)))
+                              (if (seq kvs)
+                                (apply assoc! index kvs)
+                                index)))
                           (transient index)
                           removed)]
     (persistent! new-index)))

@@ -1,6 +1,10 @@
 # Change Log
 ## [Unreleased] 
 
+## [0.5.0-alpha3] - 2017-12-04
+### Fixed
+- Fixed arity exception on `assoc!` when `:keys` for an item is empty when adding or removing items from a `:compound/many-to-many` index
+
 ## [0.5.0-alpha2] - 2017-12-01
 ### Fixed
 - Fixed arity exception on `assoc!` when removing items from a `:compound/one-to-many` index 
