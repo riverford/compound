@@ -158,6 +158,7 @@
   (is (= {:name
           {"Terry" {:id 2, :name "Terry", :aliases #{:terence :t-man}},
            "Squirrel" {:id 3, :name "Squirrel", :aliases #{:terence}},
+           "Jim" {:id 4, :name "Jim", :aliases #{}},
            "Bob" {:id 1, :name "Bob", :aliases #{:bobby :robert}}},
           :aliases
           {:terence
@@ -169,14 +170,15 @@
           :id
           {1 {:id 1, :name "Bob", :aliases #{:bobby :robert}},
            2 {:id 2, :name "Terry", :aliases #{:terence :t-man}},
-           3 {:id 3, :name "Squirrel", :aliases #{:terence}}}}
+           3 {:id 3, :name "Squirrel", :aliases #{:terence}}
+           4 {:id 4, :name "Jim", :aliases #{}}}}
          (-> (c/compound {:primary-index-def {:key :id
                                               :on-conflict :compound/throw}
                           :secondary-index-defs [{:key :name
                                                   :index-type :compound/one-to-one}
                                                  {:key :aliases
                                                   :index-type :compound/many-to-many}]})
-             (c/add-items [{:id 1 :name "Bob" :aliases #{:robert :bobby}} {:id 2 :name "Terry" :aliases #{:terence :t-man}} {:id 3 :name "Squirrel" :aliases #{:terence}}])
+             (c/add-items [{:id 1 :name "Bob" :aliases #{:robert :bobby}} {:id 2 :name "Terry" :aliases #{:terence :t-man}} {:id 3 :name "Squirrel" :aliases #{:terence}} {:id 4, :name "Jim", :aliases #{}}])
              (c/indexes-by-id)))))
 
 (defmethod cu/custom-key-fn ::delivery-date-product
