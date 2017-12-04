@@ -41,16 +41,17 @@
                    ::secondary-index-defs-by-id
                    ::secondary-indexes-by-id]))
 
-(s/def ::diff.add (s/coll-of any?))
-(s/def ::diff.remove (s/coll-of any?))
 (s/def ::diff.update.source any?)
 (s/def ::diff.update.target any?)
-(s/def ::diff.update (s/coll-of (s/keys :req-un [::diff.update.source ::diff.update.target])))
+(s/def ::diff.update (s/keys :req-un [::diff.update.source ::diff.update.target]))
+(s/def ::diff.updates (s/coll-of ::diff.update))
+(s/def ::diff.inserts (s/coll-of any?))
+(s/def ::diff.deletes (s/coll-of any?))
 
 (s/def ::diff
-  (s/keys :opt-un [::diff.add
-                   ::diff.remove
-                   ::diff.update]))
+  (s/keys :opt-un [::diff.inserts
+                   ::diff.updates
+                   ::diff.deletes]))
 
 ;; ------------------------------
 ;;   Helper functions
@@ -245,9 +246,9 @@
   "Returns a diff which will provide the information required to turn the _source_ compound into the _target_ compound,
    so that source can be turned into target  in the following format.
 
-   {:add ... items that exist only in source, and not in target
-    :modify {:source ... :target ...} source and target items that exist in source and target, but are different
-    :remove ... items that exist in target, but not in source
+   {:inserts ... items that exist only in source, and not in target
+    :updates {:source ... :target ...} source and target items that exist in source and target, but are different
+    :deletes ... items that exist in target, but not in source
 
    This is useful when e.g. syncing a compound with an external mutable datastructure"
   [source target]
@@ -258,17 +259,17 @@
               (let [in-source? (contains? source-index k)
                     in-target? (contains? target-index k)]
                 (cond
-                  (and in-source? (not in-target?)) (update m :add conj (get source-index k))
-                  (and in-target? (not in-source?)) (update m :remove conj (get target-index k))
+                  (and in-source? (not in-target?)) (update m :inserts conj (get source-index k))
+                  (and in-target? (not in-source?)) (update m :deletes conj (get target-index k))
                   ;; must be in both
                   :else (let [s (get source-index k)
                               k (get target-index k)]
                           (if (not= s k)
-                            (update m :modify conj {:source s, :target k})
+                            (update m :updates conj {:source s, :target k})
                             m)))))
-            {:add #{}
-             :modify #{}
-             :remove #{}}
+            {:inserts #{}
+             :updates #{}
+             :deletes #{}}
             (into #{} (concat (keys source-index) (keys target-index))))))
 
 (s/fdef apply-diff
@@ -279,14 +280,14 @@
 (defn apply-diff
   [c diff]
   (let [key-fn (primary-index-fn c)
-        ;; convert modifies to add/remove
-        {:keys [add remove]} (reduce (fn [m {:keys [source target]}]
-                                                 (-> (update m :add conj source)
-                                                     (update :remove conj target)))
-                                               diff
-                                               (get diff :modify))]
-    (-> (remove-keys c (map key-fn remove))
-        (add-items add))))
+        ;; convert updates to add/remove
+        {:keys [inserts deletes]} (reduce (fn [m {:keys [source target]}]
+                                            (-> (update m :inserts conj source)
+                                                (update :deletes conj target)))
+                                          diff
+                                          (get diff :updates))]
+    (-> (remove-keys c (map key-fn deletes))
+        (add-items inserts))))
 
 ;; ------------------------------
 ;;   Constructor

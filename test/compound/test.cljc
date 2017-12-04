@@ -298,13 +298,13 @@
                                          :secondary-index-defs [{:key :name
                                                                  :index-type :compound/one-to-one}]})
         diff (c/diff source target)]
-    (is (= {:add #{{:id 3, :name "Squirrel"}},
-            :modify #{{:source {:id 2, :name "Terry"}, :target {:id 2, :name "Bill"}}},
-            :remove #{{:id 4, :name "Ahmed"}}}
+    (is (= {:inserts #{{:id 3, :name "Squirrel"}},
+            :updates #{{:source {:id 2, :name "Terry"}, :target {:id 2, :name "Bill"}}},
+            :deletes #{{:id 4, :name "Ahmed"}}}
            (c/diff source target)))
-    (is (= (c/apply-diff target {:add #{{:id 3, :name "Squirrel"}},
-                                 :modify #{{:source {:id 2, :name "Terry"}, :target {:id 2, :name "Bill"}}},
-                                 :remove #{{:id 4, :name "Ahmed"}}})
+    (is (= (c/apply-diff target {:inserts #{{:id 3, :name "Squirrel"}},
+                                 :updates #{{:source {:id 2, :name "Terry"}, :target {:id 2, :name "Bill"}}},
+                                 :deletes #{{:id 4, :name "Ahmed"}}})
            source))
     (is (thrown? java.lang.AssertionError (c/diff source some-other-compound)))))
 

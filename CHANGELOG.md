@@ -1,6 +1,12 @@
 # Change Log
 ## [Unreleased] 
 
+## [0.5.0-alpha4] - 2017-12-04
+### Changed
+- Changed diffing keys - `add` -> `inserts`, `modify` -> `updates`, `remove` -> `deletes`. 
+  This is a) to avoid shadowing `clojure.core/remove` when destructuring, and b) because the plural names (inserts, updates, deletes) are closer to the operations 
+  you'd perform on a mutable target (e.g. a SQL database). 
+
 ## [0.5.0-alpha3] - 2017-12-04
 ### Fixed
 - Fixed arity exception on `assoc!` when `:keys` for an item is empty when adding or removing items from a `:compound/many-to-many` index
@@ -18,7 +24,8 @@
 
 Initial public release
 
-[Unreleased]: https://github.com/riverford/compound/compare/0.5.0-alpha3....HEAD
+[Unreleased]: https://github.com/riverford/compound/compare/0.5.0-alpha4....HEAD
+[0.5.0-alpha4]: https://github.com/riverford/compound/compare/0.5.0-alpha3...0.5.0-alpha4
 [0.5.0-alpha3]: https://github.com/riverford/compound/compare/0.5.0-alpha2...0.5.0-alpha3
 [0.5.0-alpha2]: https://github.com/riverford/compound/compare/0.5.0-alpha1...0.5.0-alpha2
 [0.5.0-alpha1]: https://github.com/riverford/compound/compare/0.4.0...0.5.0-alpha1

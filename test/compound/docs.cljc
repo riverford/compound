@@ -537,25 +537,25 @@ e.g. client and server state"
                                  {:id 3 :name "tomatoes" :category "Pretend fruit"}]))]
     (c/diff source target) =>
 
-    {:add
+    {:inserts
      #{{:id 5, :name "blueberries", :category "Blue fruit"}
        {:id 4, :name "strawberries", :category "Red fruit"}},
-     :modify
+     :updates
      #{{:source {:id 2, :name "grapes", :category "New fruit"},
         :target {:id 2, :name "grapes", :category "Small round fruit"}}
        {:source {:id 1, :name "bananas", :category "Old fruit"},
         :target {:id 1, :name "bananas", :category "Long fruit"}}},
-     :remove #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}}
+     :deletes #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}}
 
-    (c/apply-diff target {:add
+    (c/apply-diff target {:inserts
                           #{{:id 5, :name "blueberries", :category "Blue fruit"}
                             {:id 4, :name "strawberries", :category "Red fruit"}},
-                          :modify
+                          :updates
                           #{{:source {:id 2, :name "grapes", :category "New fruit"},
                              :target {:id 2, :name "grapes", :category "Small round fruit"}}
                             {:source {:id 1, :name "bananas", :category "Old fruit"},
                              :target {:id 1, :name "bananas", :category "Long fruit"}}},
-                          :remove #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}}) =>
+                          :deletes #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}}) =>
     source))
 
 
