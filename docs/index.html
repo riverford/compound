@@ -61,9 +61,9 @@
           <div class="heading">
             <div>
               <h5>Author: Daniel Neal&nbsp;&nbsp;<a href="mailto:danielneal@riverford.co.uk">(danielneal@riverford.co.uk)</a></h5>
-              <h5>Date: 04 December 2017</h5>
+              <h5>Date: 20 December 2017</h5>
               <h5>Repository: <a href="https://github.com/riverford/compound">https://github.com/riverford/compound</a></h5>
-              <h5>Version: 0.5.0-alpha4</h5></div></div>
+              <h5>Version: 2017.12.20-1</h5></div></div>
           <hr/>
           <div class="outline">
             <div class="toc">
@@ -83,7 +83,8 @@
                 </ul>
               </nav>
           </div>
-          <div><span id="getting-started"></span><h2><b>1 &nbsp;&nbsp; Getting started</b></h2></div><div class="code"><pre><code class="clojure">(require '[compound.core :as c])</code></pre></div><div><p>We're gonna have to handle a lot of fruit today. We should probably set up somewhere to store all the information about it.</p></div><div class="code"><pre><code class="clojure">(c/compound {:primary-index-def {:key :id}}) =&gt;
+          <div class="code"><pre><code class="clojure">(st/instrument)
+(s/check-asserts true)</code></pre></div><div><span id="getting-started"></span><h2><b>1 &nbsp;&nbsp; Getting started</b></h2></div><div class="code"><pre><code class="clojure">(require '[compound.core :as c])</code></pre></div><div><p>We're gonna have to handle a lot of fruit today. We should probably set up somewhere to store all the information about it.</p></div><div class="code"><pre><code class="clojure">(c/compound {:primary-index-def {:key :id}}) =&gt;
   
 {:primary-index-def {:key :id
                      :on-conflict :compound/replace},
@@ -261,16 +262,16 @@
  :id
  {1 {:id 1, :name &quot;bananas&quot;},
   2 {:id 2, :name &quot;grapes&quot;},
-  3 {:id 3, :name &quot;oranges&quot;}}}</code></pre></div><div><span id="throw"></span><h3>4.2 &nbsp;&nbsp; Throw</h3></div><div><p>Using <code>:compound/throw</code> for <code>:on-conflict</code> will throw an error if we try and add an item with a key that already exists</p></div><div class="code"><pre><code class="clojure">(throws-info {:existing-item {:id 3 :name &quot;tomatoes&quot;}
-              :new-item {:id 3 :name &quot;oranges&quot;}}
-             (-&gt; (c/compound {:primary-index-def {:key :id
-                                                  :on-conflict :compound/throw}
-                              :secondary-index-defs [{:key :name}]})
-                 (c/add-items [{:id 1 :name &quot;bananas&quot;}
-                               {:id 2 :name &quot;grapes&quot;}
-                               {:id 3 :name &quot;tomatoes&quot;}
-                               {:id 3 :name &quot;oranges&quot;}])
-                 (c/indexes-by-id)))</code></pre></div><div><span id="merge"></span><h3>4.3 &nbsp;&nbsp; Merge</h3></div><div><p>Using <code>:compound/merge</code> for <code>:on-conflict</code> will call <code>clojure.core/merge</code> on the previous item and the new item when the key already exists</p></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:key :id
+  3 {:id 3, :name &quot;oranges&quot;}}}</code></pre></div><div><span id="throw"></span><h3>4.2 &nbsp;&nbsp; Throw</h3></div><div><p>Using <code>:compound/throw</code> for <code>:on-conflict</code> will throw an error if we try and add an item with a key that already exists</p></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:key :id
+                                     :on-conflict :compound/throw}
+                 :secondary-index-defs [{:key :name}]})
+    (c/add-items [{:id 1 :name &quot;bananas&quot;}
+                  {:id 2 :name &quot;grapes&quot;}
+                  {:id 3 :name &quot;tomatoes&quot;}
+                  {:id 3 :name &quot;oranges&quot;}])
+    (c/indexes-by-id))
+=&gt; (throws-info {:existing-item {:id 3 :name &quot;tomatoes&quot;}
+                 :new-item {:id 3 :name &quot;oranges&quot;}})</code></pre></div><div><span id="merge"></span><h3>4.3 &nbsp;&nbsp; Merge</h3></div><div><p>Using <code>:compound/merge</code> for <code>:on-conflict</code> will call <code>clojure.core/merge</code> on the previous item and the new item when the key already exists</p></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:key :id
                                      :on-conflict :compound/merge}
                  :secondary-index-defs [{:key :name}]})
     (c/add-items [{:id 1 :name &quot;bananas&quot;}
@@ -378,37 +379,41 @@
    :name &quot;oranges&quot;,
    :category &quot;Medium round fruit&quot;,
    :ripe? true,
-   :quantity 4}}</code></pre></div><div><span id="miscellaneous"></span><h2><b>6 &nbsp;&nbsp; Miscellaneous</b></h2></div><div><span id="diffing"></span><h3>6.1 &nbsp;&nbsp; Diffing</h3></div><div><p>Some utility functions are provided to help diffing compounds. This is useful if you have two sources of data which you need to synchronize, e.g. client and server state</p></div><div class="code"><pre><code class="clojure">(let [source (-&gt; (c/compound {:primary-index-def {:key :id}})
-                 (c/add-items [{:id 1 :name &quot;bananas&quot; :category &quot;Old fruit&quot;}
-                               {:id 2 :name &quot;grapes&quot; :category &quot;New fruit&quot;}
-                               {:id 4 :name &quot;strawberries&quot; :category &quot;Red fruit&quot;}
-                               {:id 5 :name &quot;blueberries&quot; :category &quot;Blue fruit&quot;}]))
-      target (-&gt; (c/compound {:primary-index-def {:key :id}})
-                 (c/add-items [{:id 1 :name &quot;bananas&quot; :category &quot;Long fruit&quot;}
-                               {:id 2 :name &quot;grapes&quot; :category &quot;Small round fruit&quot;}
-                               {:id 3 :name &quot;tomatoes&quot; :category &quot;Pretend fruit&quot;}]))]
-  (c/diff source target) =&gt;
-
-  {:inserts
-   #{{:id 5, :name &quot;blueberries&quot;, :category &quot;Blue fruit&quot;}
-     {:id 4, :name &quot;strawberries&quot;, :category &quot;Red fruit&quot;}},
-   :updates
-   #{{:source {:id 2, :name &quot;grapes&quot;, :category &quot;New fruit&quot;},
-      :target {:id 2, :name &quot;grapes&quot;, :category &quot;Small round fruit&quot;}}
-     {:source {:id 1, :name &quot;bananas&quot;, :category &quot;Old fruit&quot;},
-      :target {:id 1, :name &quot;bananas&quot;, :category &quot;Long fruit&quot;}}},
-   :deletes #{{:id 3, :name &quot;tomatoes&quot;, :category &quot;Pretend fruit&quot;}}}
-
-  (c/apply-diff target {:inserts
-                        #{{:id 5, :name &quot;blueberries&quot;, :category &quot;Blue fruit&quot;}
-                          {:id 4, :name &quot;strawberries&quot;, :category &quot;Red fruit&quot;}},
-                        :updates
-                        #{{:source {:id 2, :name &quot;grapes&quot;, :category &quot;New fruit&quot;},
-                           :target {:id 2, :name &quot;grapes&quot;, :category &quot;Small round fruit&quot;}}
-                          {:source {:id 1, :name &quot;bananas&quot;, :category &quot;Old fruit&quot;},
-                           :target {:id 1, :name &quot;bananas&quot;, :category &quot;Long fruit&quot;}}},
-                        :deletes #{{:id 3, :name &quot;tomatoes&quot;, :category &quot;Pretend fruit&quot;}}}) =&gt;
-  source)</code></pre></div><div class="code"><pre><code class="clojure">(publish/publish-all)</code></pre></div>
+   :quantity 4}}</code></pre></div><div><span id="miscellaneous"></span><h2><b>6 &nbsp;&nbsp; Miscellaneous</b></h2></div><div><span id="diffing"></span><h3>6.1 &nbsp;&nbsp; Diffing</h3></div><div><p>Some utility functions are provided to help diffing compounds. This is useful if you have two sources of data which you need to synchronize, e.g. client and server state</p></div><div class="code"><pre><code class="clojure">(c/diff (-&gt; (c/compound {:primary-index-def {:key :id}})
+            (c/add-items [{:id 1 :name &quot;bananas&quot; :category &quot;Old fruit&quot;}
+                          {:id 2 :name &quot;grapes&quot; :category &quot;New fruit&quot;}
+                          {:id 4 :name &quot;strawberries&quot; :category &quot;Red fruit&quot;}
+                          {:id 5 :name &quot;blueberries&quot; :category &quot;Blue fruit&quot;}]))
+        (-&gt; (c/compound {:primary-index-def {:key :id}})
+            (c/add-items [{:id 1 :name &quot;bananas&quot; :category &quot;Long fruit&quot;}
+                          {:id 2 :name &quot;grapes&quot; :category &quot;Small round fruit&quot;}
+                          {:id 3 :name &quot;tomatoes&quot; :category &quot;Pretend fruit&quot;}]))) =&gt;
+{:inserts
+ #{{:id 5, :name &quot;blueberries&quot;, :category &quot;Blue fruit&quot;}
+   {:id 4, :name &quot;strawberries&quot;, :category &quot;Red fruit&quot;}},
+ :updates
+ #{{:source {:id 2, :name &quot;grapes&quot;, :category &quot;New fruit&quot;},
+    :target {:id 2, :name &quot;grapes&quot;, :category &quot;Small round fruit&quot;}}
+   {:source {:id 1, :name &quot;bananas&quot;, :category &quot;Old fruit&quot;},
+    :target {:id 1, :name &quot;bananas&quot;, :category &quot;Long fruit&quot;}}},
+ :deletes #{{:id 3, :name &quot;tomatoes&quot;, :category &quot;Pretend fruit&quot;}}}</code></pre></div><div class="code"><pre><code class="clojure">(c/apply-diff (-&gt; (c/compound {:primary-index-def {:key :id}})
+                  (c/add-items [{:id 1 :name &quot;bananas&quot; :category &quot;Long fruit&quot;}
+                                {:id 2 :name &quot;grapes&quot; :category &quot;Small round fruit&quot;}
+                                {:id 3 :name &quot;tomatoes&quot; :category &quot;Pretend fruit&quot;}]))
+              {:inserts
+               #{{:id 5, :name &quot;blueberries&quot;, :category &quot;Blue fruit&quot;}
+                 {:id 4, :name &quot;strawberries&quot;, :category &quot;Red fruit&quot;}},
+               :updates
+               #{{:source {:id 2, :name &quot;grapes&quot;, :category &quot;New fruit&quot;},
+                  :target {:id 2, :name &quot;grapes&quot;, :category &quot;Small round fruit&quot;}}
+                 {:source {:id 1, :name &quot;bananas&quot;, :category &quot;Old fruit&quot;},
+                  :target {:id 1, :name &quot;bananas&quot;, :category &quot;Long fruit&quot;}}},
+               :deletes #{{:id 3, :name &quot;tomatoes&quot;, :category &quot;Pretend fruit&quot;}}}) =&gt;
+(-&gt; (c/compound {:primary-index-def {:key :id}})
+    (c/add-items [{:id 1 :name &quot;bananas&quot; :category &quot;Old fruit&quot;}
+                  {:id 2 :name &quot;grapes&quot; :category &quot;New fruit&quot;}
+                  {:id 4 :name &quot;strawberries&quot; :category &quot;Red fruit&quot;}
+                  {:id 5 :name &quot;blueberries&quot; :category &quot;Blue fruit&quot;}]))</code></pre></div><div class="code"><pre><code class="clojure">(publish/publish-all)</code></pre></div>
         </div>
       </div>
     </div>
