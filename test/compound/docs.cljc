@@ -4,9 +4,13 @@
              [lucid.publish.theme :as theme]
              [clojure.java.io :as io]
              [hara.io.project :as project]
-             [hara.test :refer [fact throws-info]]
+             [hara.test :refer [fact facts throws-info]]
+             [orchestra.spec.test :as st]
+             [clojure.spec.alpha :as s]
              [clojure.spec.alpha :as s]))
 
+(st/instrument)
+(s/check-asserts true)
 
 [[:chapter {:title "Getting started"}]]
 
@@ -313,16 +317,16 @@ We should probably set up somewhere to store all the information about it."
 "Using `:compound/throw` for `:on-conflict` will throw an error if we try and add an item with a key that already exists"
 
 (fact
-  (throws-info {:existing-item {:id 3 :name "tomatoes"}
-                :new-item {:id 3 :name "oranges"}}
-               (-> (c/compound {:primary-index-def {:key :id
-                                                    :on-conflict :compound/throw}
-                                :secondary-index-defs [{:key :name}]})
-                   (c/add-items [{:id 1 :name "bananas"}
-                                 {:id 2 :name "grapes"}
-                                 {:id 3 :name "tomatoes"}
-                                 {:id 3 :name "oranges"}])
-                   (c/indexes-by-id))))
+  (-> (c/compound {:primary-index-def {:key :id
+                                       :on-conflict :compound/throw}
+                   :secondary-index-defs [{:key :name}]})
+      (c/add-items [{:id 1 :name "bananas"}
+                    {:id 2 :name "grapes"}
+                    {:id 3 :name "tomatoes"}
+                    {:id 3 :name "oranges"}])
+      (c/indexes-by-id))
+  => (throws-info {:existing-item {:id 3 :name "tomatoes"}
+                   :new-item {:id 3 :name "oranges"}}))
 
 [[:section {:title "Merge"}]]
 
@@ -526,38 +530,44 @@ This is useful if you have two sources of data which you need to synchronize,
 e.g. client and server state"
 
 (fact
-  (let [source (-> (c/compound {:primary-index-def {:key :id}})
-                   (c/add-items [{:id 1 :name "bananas" :category "Old fruit"}
-                                 {:id 2 :name "grapes" :category "New fruit"}
-                                 {:id 4 :name "strawberries" :category "Red fruit"}
-                                 {:id 5 :name "blueberries" :category "Blue fruit"}]))
-        target (-> (c/compound {:primary-index-def {:key :id}})
-                   (c/add-items [{:id 1 :name "bananas" :category "Long fruit"}
-                                 {:id 2 :name "grapes" :category "Small round fruit"}
-                                 {:id 3 :name "tomatoes" :category "Pretend fruit"}]))]
-    (c/diff source target) =>
+  (c/diff (-> (c/compound {:primary-index-def {:key :id}})
+              (c/add-items [{:id 1 :name "bananas" :category "Old fruit"}
+                            {:id 2 :name "grapes" :category "New fruit"}
+                            {:id 4 :name "strawberries" :category "Red fruit"}
+                            {:id 5 :name "blueberries" :category "Blue fruit"}]))
+          (-> (c/compound {:primary-index-def {:key :id}})
+              (c/add-items [{:id 1 :name "bananas" :category "Long fruit"}
+                            {:id 2 :name "grapes" :category "Small round fruit"}
+                            {:id 3 :name "tomatoes" :category "Pretend fruit"}]))) =>
+  {:inserts
+   #{{:id 5, :name "blueberries", :category "Blue fruit"}
+     {:id 4, :name "strawberries", :category "Red fruit"}},
+   :updates
+   #{{:source {:id 2, :name "grapes", :category "New fruit"},
+      :target {:id 2, :name "grapes", :category "Small round fruit"}}
+     {:source {:id 1, :name "bananas", :category "Old fruit"},
+      :target {:id 1, :name "bananas", :category "Long fruit"}}},
+   :deletes #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}})
 
-    {:inserts
-     #{{:id 5, :name "blueberries", :category "Blue fruit"}
-       {:id 4, :name "strawberries", :category "Red fruit"}},
-     :updates
-     #{{:source {:id 2, :name "grapes", :category "New fruit"},
-        :target {:id 2, :name "grapes", :category "Small round fruit"}}
-       {:source {:id 1, :name "bananas", :category "Old fruit"},
-        :target {:id 1, :name "bananas", :category "Long fruit"}}},
-     :deletes #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}}
-
-    (c/apply-diff target {:inserts
-                          #{{:id 5, :name "blueberries", :category "Blue fruit"}
-                            {:id 4, :name "strawberries", :category "Red fruit"}},
-                          :updates
-                          #{{:source {:id 2, :name "grapes", :category "New fruit"},
-                             :target {:id 2, :name "grapes", :category "Small round fruit"}}
-                            {:source {:id 1, :name "bananas", :category "Old fruit"},
-                             :target {:id 1, :name "bananas", :category "Long fruit"}}},
-                          :deletes #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}}) =>
-    source))
-
+(fact
+  (c/apply-diff (-> (c/compound {:primary-index-def {:key :id}})
+                    (c/add-items [{:id 1 :name "bananas" :category "Long fruit"}
+                                  {:id 2 :name "grapes" :category "Small round fruit"}
+                                  {:id 3 :name "tomatoes" :category "Pretend fruit"}]))
+                {:inserts
+                 #{{:id 5, :name "blueberries", :category "Blue fruit"}
+                   {:id 4, :name "strawberries", :category "Red fruit"}},
+                 :updates
+                 #{{:source {:id 2, :name "grapes", :category "New fruit"},
+                    :target {:id 2, :name "grapes", :category "Small round fruit"}}
+                   {:source {:id 1, :name "bananas", :category "Old fruit"},
+                    :target {:id 1, :name "bananas", :category "Long fruit"}}},
+                 :deletes #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}}) =>
+  (-> (c/compound {:primary-index-def {:key :id}})
+      (c/add-items [{:id 1 :name "bananas" :category "Old fruit"}
+                    {:id 2 :name "grapes" :category "New fruit"}
+                    {:id 4 :name "strawberries" :category "Red fruit"}
+                    {:id 5 :name "blueberries" :category "Blue fruit"}])))
 
 (comment
   (publish/publish-all))
