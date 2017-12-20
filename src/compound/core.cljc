@@ -230,7 +230,7 @@
 
 (s/fdef items
         :args (s/cat :compound ::compound)
-        :ret (s/coll-of any?))
+        :ret (s/nilable (s/coll-of any?)))
 
 (defn items
   "Returns the items indexed by the compound"

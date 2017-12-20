@@ -7,7 +7,7 @@
             [compound.secondary-indexes.one-to-many-composite]
             [compound.custom-key :as cu]
             [compound.core :as c]
-            [clojure.spec.test.alpha :as st]
+            [orchestra.spec.test :as st]
             [clojure.spec.alpha :as s]))
 
 (st/instrument)
