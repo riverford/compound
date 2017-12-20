@@ -1,6 +1,10 @@
 # Change Log
 ## [Unreleased] 
 
+## [2017.12.20-1] - 2017-12-20
+### Fixed
+- Fixed broken spec for `compound.core/items` 
+
 ## [0.5.0-alpha4] - 2017-12-04
 ### Changed
 - Changed diffing keys - `add` -> `inserts`, `modify` -> `updates`, `remove` -> `deletes`. 
@@ -24,7 +28,8 @@
 
 Initial public release
 
-[Unreleased]: https://github.com/riverford/compound/compare/0.5.0-alpha4....HEAD
+[Unreleased]: https://github.com/riverford/compound/compare/2017.12.20-1....HEAD
+[2017.12.20-1] https://github.com/riverford/compound/compare/2017.12.20-1....0.5.0-alpha4
 [0.5.0-alpha4]: https://github.com/riverford/compound/compare/0.5.0-alpha3...0.5.0-alpha4
 [0.5.0-alpha3]: https://github.com/riverford/compound/compare/0.5.0-alpha2...0.5.0-alpha3
 [0.5.0-alpha2]: https://github.com/riverford/compound/compare/0.5.0-alpha1...0.5.0-alpha2
