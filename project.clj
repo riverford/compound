@@ -3,8 +3,8 @@
   :url "https://github.com/riverford/compound"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.9.0-beta1"]
-                 [org.clojure/spec.alpha "0.1.134"]]
+  :dependencies [[org.clojure/clojure "1.9.0-RC2"]
+                 [org.clojure/spec.alpha "0.1.143"]]
   :publish {:site "compound"
             :theme "bolton"
             :output "docs"
@@ -15,4 +15,5 @@
                              :site "compound"
                              :title "core"
                              :subtitle "api docs"}}}
-  :profiles {:dev {:dependencies [[im.chit/lucid.publish "1.3.13"]]}})
+  :profiles {:dev {:dependencies [[im.chit/lucid.publish "1.3.13"]
+                                  [orchestra "2017.11.12-1"]]}})
