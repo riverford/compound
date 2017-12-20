@@ -29,7 +29,7 @@
 Initial public release
 
 [Unreleased]: https://github.com/riverford/compound/compare/2017.12.20-1....HEAD
-[2017.12.20-1]: https://github.com/riverford/compound/compare/2017.12.20-1...0.5.0-alpha4
+[2017.12.20-1]: https://github.com/riverford/compound/compare/0.5.0-alpha4...2017.12.20-1
 [0.5.0-alpha4]: https://github.com/riverford/compound/compare/0.5.0-alpha3...0.5.0-alpha4
 [0.5.0-alpha3]: https://github.com/riverford/compound/compare/0.5.0-alpha2...0.5.0-alpha3
 [0.5.0-alpha2]: https://github.com/riverford/compound/compare/0.5.0-alpha1...0.5.0-alpha2
