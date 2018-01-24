@@ -1,7 +1,11 @@
 # Change Log
-## [Unreleased] 
+## [Unreleased]
 
-## [2017.12.20-1] - 2017-12-20
+## [2018.01.24-1] 
+### Fixed
+- Incorrect arity for `ex-info` in update-item
+
+## [2017.12.20-1]
 ### Fixed
 - Fixed broken spec for `compound.core/items` 
 
@@ -28,7 +32,8 @@
 
 Initial public release
 
-[Unreleased]: https://github.com/riverford/compound/compare/2017.12.20-1....HEAD
+[Unreleased]: https://github.com/riverford/compound/compare/2018.01.24-1....HEAD
+[2018.01.24-1]: https://github.com/riverford/compound/compare/2017.12.20-1...2018.01.24-1
 [2017.12.20-1]: https://github.com/riverford/compound/compare/0.5.0-alpha4...2017.12.20-1
 [0.5.0-alpha4]: https://github.com/riverford/compound/compare/0.5.0-alpha3...0.5.0-alpha4
 [0.5.0-alpha3]: https://github.com/riverford/compound/compare/0.5.0-alpha2...0.5.0-alpha3
