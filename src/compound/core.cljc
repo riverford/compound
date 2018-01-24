@@ -210,7 +210,7 @@
      (-> compound
          (remove-keys [k])
          (add-items [new-item]))
-     (throw (ex-info (str "Can't update item, item with key " k " not found" {:compound compound})))))
+     (throw (ex-info (str "Can't update item, item with key " k " not found") {:compound compound}))))
   ([compound k f & args]
    (update-item compound k #(apply f % args))))
 
