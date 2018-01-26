@@ -47,8 +47,8 @@
 
 (defmethod compound-spec :compound/flat
   [_]
-  (s/keys :req [:compound/primary-index-defs
-                :compound/secondary-index-defs
+  (s/keys :req [:compound/primary-index-def
+                :compound/secondary-index-defs-by-id
                 :compound/structure]))
 
 (s/def ::compound
@@ -106,7 +106,7 @@
 
 (defn indexes-by-id [compound]
   (case (structure compound)
-    :compound/flat (dissoc compound :compound/structure :compound/primary-index-defs :compound/secondary-indedx-defs-by-id)
+    :compound/flat (dissoc compound :compound/structure :compound/primary-index-def :compound/secondary-indedx-defs-by-id)
     (assoc (secondary-indexes-by-id compound) (primary-index-id compound) (primary-index compound))))
 
 (defn set-primary-index [compound primary-index]
@@ -376,7 +376,7 @@
         primary-index-def (merge primary-index-defaults primary-index-def)]
     (case structure
       :compound/flat {:compound/primary-index-def primary-index-def
-                      :compound/secondary-index-defs {}
+                      :compound/secondary-index-defs-by-id {}
                       :compound/structure structure
                       (id primary-index-def) {}}
       {:primary-index-def primary-index-def
@@ -390,6 +390,7 @@
         :ret ::compound)
 
 (defn compound [opts]
-  (reduce add-secondary-index
-          (empty-compound opts)
-          secondary-index-defs))
+  (let [{:keys [secondary-index-defs]} opts]
+    (reduce add-secondary-index
+            (empty-compound opts)
+            secondary-index-defs)))
