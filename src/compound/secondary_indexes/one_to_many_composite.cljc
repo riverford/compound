@@ -4,8 +4,8 @@
             [clojure.spec.alpha :as s]
             [clojure.string :as string]))
 
-(s/def ::keys (s/coll-of keyword? :kind vector?))
-(s/def ::custom-key keyword?)
+(s/def ::keys (s/coll-of :compound.core/key :kind vector?))
+(s/def ::custom-key :compound.core/custom-key)
 (s/def ::id any?)
 
 (defmethod csi/spec :compound/one-to-many-composite
@@ -26,9 +26,9 @@
 (defmethod csi/add :compound/one-to-many-composite
   [index index-def added]
   (let [{:keys [keys custom-key]} index-def
-        key-fn (if keys (apply juxt keys) (partial cu/custom-key-fn custom-key))
+        keys-fn (csi/keys-fn index-def)
         new-index (reduce (fn add-items [index item]
-                            (let [ks (key-fn item)]
+                            (let [ks (keys-fn item)]
                               (update-in index ks (fnil conj #{}) item)))
                           index
                           added)]
@@ -37,9 +37,9 @@
 (defmethod csi/remove :compound/one-to-many-composite
   [index index-def removed]
   (let [{:keys [keys custom-key]} index-def
-        key-fn (if keys (apply juxt keys) (partial cu/custom-key-fn custom-key))
+        keys-fn (csi/keys-fn index-def)
         new-index (reduce (fn remove-items [index item]
-                            (let [ks (key-fn item)]
+                            (let [ks (keys-fn item)]
                               (update-in index ks disj item)))
                           index
                           removed)]

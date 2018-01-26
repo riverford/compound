@@ -15,7 +15,7 @@
 ;; ------------------------------
 
 (s/def ::id any?)
-(s/def ::key keyword?)
+(s/def ::key (s/or :key keyword? :path (s/coll-of keyword? :kind vector)))
 (s/def ::custom-key keyword?)
 (s/def ::conflict-behaviour keyword?)
 
@@ -83,7 +83,11 @@
 
 (defn primary-index-fn [compound]
   (let [{:keys [key custom-key]} (primary-index-def compound)]
-    (or key (partial cu/custom-key-fn custom-key))))
+    (cond
+      (keyword? key) key
+      (vector? key) (fn [x] (get-in x key))
+      custom-key (partial cu/custom-key-fn custom-key)
+      :else (throw (ex-info "Unsupported key type" {:key key})))))
 
 (defn index-defs-by-id [compound]
   (assoc (secondary-index-defs-by-id compound) (primary-index-id compound) (primary-index-def compound)))
@@ -319,7 +323,7 @@
       (update :secondary-indexes-by-id dissoc id)))
 
 (s/def ::secondary-index-defs
-  (s/coll-of map?)) ;; can't check at this stage
+  (s/coll-of map?))
 
 (s/fdef compound
         :args (s/cat :opts (s/keys :req-un [::primary-index-def]

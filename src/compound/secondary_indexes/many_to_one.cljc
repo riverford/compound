@@ -3,8 +3,8 @@
             [compound.secondary-indexes :as csi]
             [clojure.spec.alpha :as s]))
 
-(s/def ::key keyword?)
-(s/def ::custom-key keyword?)
+(s/def ::key :compound.core/key)
+(s/def ::custom-key :compound.core/custom-key)
 (s/def ::id any?)
 
 (defmethod csi/spec :compound/many-to-one
@@ -22,10 +22,18 @@
       (:custom-key index-def)
       (:key index-def)))
 
+(defn key-fn [index-def]
+  (let [{:keys [key custom-key]} index-def]
+    (cond
+      (keyword? key) key
+      (vector? key) (fn [x] (get-in x key))
+      custom-key (partial cu/custom-key-fn custom-key)
+      :else (throw (ex-info "Unsupported key type" {:key key})))))
+
 (defmethod csi/add :compound/many-to-one
   [index index-def added]
   (let [{:keys [key custom-key]} index-def
-        key-fn (or key (partial cu/custom-key-fn custom-key))
+        key-fn (csi/key-fn index-def)
         new-index (reduce (fn add-items [index item]
                             (let [ks (key-fn item)
                                   kvs (reduce (fn [kvs k]
@@ -44,7 +52,7 @@
 (defmethod csi/remove :compound/many-to-one
   [index index-def removed]
   (let [{:keys [key custom-key]} index-def
-        key-fn (or key (partial cu/custom-key-fn custom-key))
+        key-fn (csi/key-fn index-def)
         new-index (reduce (fn remove-items [index item]
                             (let [ks (key-fn item)]
                               (println ks)

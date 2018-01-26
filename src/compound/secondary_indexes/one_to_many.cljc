@@ -3,8 +3,8 @@
             [compound.secondary-indexes :as csi]
             [clojure.spec.alpha :as s]))
 
-(s/def ::key keyword?)
-(s/def ::custom-key keyword?)
+(s/def ::key :compound.core/key)
+(s/def ::custom-key :compound.core/custom-key)
 (s/def ::id any?)
 
 (defmethod csi/spec :compound/one-to-many
@@ -25,7 +25,7 @@
 (defmethod csi/add :compound/one-to-many
   [index index-def added]
   (let [{:keys [key custom-key]} index-def
-        key-fn (or key (partial cu/custom-key-fn custom-key))
+        key-fn (csi/key-fn index-def)
         new-index (reduce (fn add-items [index item]
                             (let [k (key-fn item)
                                   existing-items (get index k #{})]
@@ -38,7 +38,7 @@
 (defmethod csi/remove :compound/one-to-many
   [index index-def removed]
   (let [{:keys [key custom-key]} index-def
-        key-fn (or key (partial cu/custom-key-fn custom-key))
+        key-fn (csi/key-fn index-def)
         new-index (reduce (fn remove-items [index item]
                             (let [k (key-fn item)
                                   existing-items (get index k #{})

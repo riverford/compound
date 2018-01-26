@@ -523,6 +523,63 @@ We should probably set up somewhere to store all the information about it."
 
 [[:chapter {:title "Miscellaneous"}]]
 
+[[:section {:title "Paths as keys"}]]
+"The primary index and built in secondary indexes support using paths as keys.
+This is helpful if you have a set of nested structures and want to use
+a nested value as a key or part of one"
+
+(fact
+  (-> (c/compound {:primary-index-def {:key [:product :id]}})
+      (c/add-items [{:product {:id 3
+                                :name "apples"}
+                     :quantity 4}
+                    {:product {:id 4
+                               :name "bananans"}
+                     :quantity 500}])))
+
+(fact
+  (-> (c/compound {:primary-index-def {:key [:product :id]}
+                   :secondary-index-defs [{:keys [[:product :id] :delivery-date]
+                                           :id :products-on-date
+                                           :index-type :compound/one-to-one-composite}]})
+      (c/add-items [{:product {:id 3
+                               :name "apples"}
+                     :delivery-date "1964-04-01"
+                     :quantity 4}
+                    {:product {:id 4
+                               :name "bananans"}
+                     :delivery-date "1964-04-01"
+                     :quantity 500}
+                    {:product {:id 4
+                               :name "cherries"}
+                     :delivery-date "1964-04-02"
+                     :quantity 6}]))
+  {:primary-index-def {:on-conflict :compound/replace, :key [:product :id]},
+   :primary-index
+   {3
+    {:product {:id 3, :name "apples"}, :delivery-date "1964-04-01", :quantity 4},
+    4
+    {:product {:id 4, :name "cherries"},
+     :delivery-date "1964-04-02",
+     :quantity 6}},
+   :secondary-indexes-by-id
+   {:products-on-date
+    {4
+     {"1964-04-02"
+      {:product {:id 4, :name "cherries"},
+       :delivery-date "1964-04-02",
+       :quantity 6}},
+     3
+     {"1964-04-01"
+      {:product {:id 3, :name "apples"},
+       :delivery-date "1964-04-01",
+       :quantity 4}}}},
+   :secondary-index-defs-by-id
+   {:products-on-date
+    {:index-type :compound/one-to-one-composite,
+     :keys [[:product :id] :delivery-date],
+     :id :products-on-date}}})
+
 [[:section {:title "Diffing"}]]
 
 "Some utility functions are provided to help diffing compounds.

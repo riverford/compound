@@ -1,10 +1,9 @@
-(defproject riverford/compound "2018.01.24-1"
+(defproject riverford/compound "2018.01.26-1"
   :description "A micro structure for reagent data"
   :url "https://github.com/riverford/compound"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.9.0-RC2"]
-                 [org.clojure/spec.alpha "0.1.143"]]
+  :dependencies [[org.clojure/clojure "1.9.0"]]
   :publish {:site "compound"
             :theme "bolton"
             :output "docs"
