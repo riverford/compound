@@ -1,6 +1,10 @@
 # Change Log
 ## [Unreleased]
 
+## [2018.01.26-1] 
+### Added
+- Allow use of vector paths as well as single keywords as keys in primary and secondary indexes.
+
 ## [2018.01.24-1] 
 ### Fixed
 - Incorrect arity for `ex-info` in update-item
@@ -32,7 +36,8 @@
 
 Initial public release
 
-[Unreleased]: https://github.com/riverford/compound/compare/2018.01.24-1....HEAD
+[Unreleased]: https://github.com/riverford/compound/compare/2018.01.26-1....HEAD
+[2018.01.26-1]: https://github.com/riverford/compound/compare/2017.01.24-1...2018.01.26-1
 [2018.01.24-1]: https://github.com/riverford/compound/compare/2017.12.20-1...2018.01.24-1
 [2017.12.20-1]: https://github.com/riverford/compound/compare/0.5.0-alpha4...2017.12.20-1
 [0.5.0-alpha4]: https://github.com/riverford/compound/compare/0.5.0-alpha3...0.5.0-alpha4
