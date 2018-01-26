@@ -4,8 +4,8 @@
             [clojure.spec.alpha :as s]
             [clojure.string :as string]))
 
-(s/def ::keys (s/coll-of :compound.core/key :kind vector?))
-(s/def ::custom-key :compound.core/custom-key)
+(s/def ::keys (s/coll-of ::csi/key :kind vector?))
+(s/def ::custom-key ::csi/custom-key)
 (s/def ::id any?)
 
 (defmethod csi/spec :compound/one-to-one-composite

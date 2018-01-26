@@ -3,8 +3,8 @@
              [compound.secondary-indexes :as csi]
              [clojure.spec.alpha :as s]))
 
-(s/def ::key keyword?)
-(s/def ::custom-key keyword?)
+(s/def ::key ::csi/key)
+(s/def ::custom-key ::csi/custom-key)
 (s/def ::id any?)
 
 (defmethod csi/spec :compound/one-to-one

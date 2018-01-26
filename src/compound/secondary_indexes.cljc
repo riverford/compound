@@ -15,12 +15,21 @@
 (defmulti remove
   (fn [index index-def removed] (:index-type index-def)))
 
-(s/def ::index-type keyword?)
+;; ------------------------------
+;;   Secondary index spec
+;; ------------------------------
 
+(s/def ::key (s/or :key keyword? :path (s/coll-of keyword? :kind vector)))
+(s/def ::custom-key keyword?)
+(s/def ::index-type keyword?)
 (s/def ::secondary-index-def
   (s/and
     (s/keys :req-un [::index-type])
     (s/multi-spec spec :index-type)))
+
+;; ------------------------------
+;;   Helper functions
+;; ------------------------------
 
 (defn extract-fn [key]
   (cond
