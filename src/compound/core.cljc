@@ -144,18 +144,6 @@
       custom-key (partial cu/custom-key-fn custom-key)
       :else (throw (ex-info "Unsupported key type" {:key key})))))
 
-(defn empty-compound [opts]
-  (let [{:keys [primary-index-def structure]} opts]
-    (case structure
-      :compound/flat {:compound/primary-index-def primary-index-def
-                      :compound/secondary-index-defs-by-id {}
-                      :compound/structure structure
-                      (id primary-index-def) {}}
-      {:primary-index-def primary-index-def
-       :primary-index {}
-       :secondary-indexes-by-id {}
-       :secondary-index-defs-by-id {}})))
-
 ;; ------------------------------
 ;;   Custom conflict behaviour
 ;; ------------------------------
@@ -380,18 +368,28 @@
 (s/def ::secondary-index-defs
   (s/coll-of map?))
 
+(def primary-index-defaults
+  {:on-conflict :compound/replace})
+
+(defn empty-compound [opts]
+  (let [{:keys [primary-index-def structure]} opts
+        primary-index-def (merge primary-index-defaults primary-index-def)]
+    (case structure
+      :compound/flat {:compound/primary-index-def primary-index-def
+                      :compound/secondary-index-defs {}
+                      :compound/structure structure
+                      (id primary-index-def) {}}
+      {:primary-index-def primary-index-def
+       :primary-index {}
+       :secondary-indexes-by-id {}
+       :secondary-index-defs-by-id {}})))
+
 (s/fdef compound
         :args (s/cat :opts (s/keys :req-un [::primary-index-def]
                                    :opt-un [::secondary-index-defs]))
         :ret ::compound)
 
-(def primary-index-defaults
-  {:on-conflict :compound/replace})
-
 (defn compound [opts]
-  (let [{:keys [primary-index-def secondary-index-defs]} opts
-        primary-index-def (merge primary-index-defaults primary-index-def)]
-    (s/assert ::primary-index-def primary-index-def)
-    (reduce add-secondary-index
-            (empty-compound opts)
-            secondary-index-defs)))
+  (reduce add-secondary-index
+          (empty-compound opts)
+          secondary-index-defs))
