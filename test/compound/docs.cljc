@@ -526,7 +526,7 @@ We should probably set up somewhere to store all the information about it."
 [[:section {:title "Paths as keys"}]]
 "The primary index and built in secondary indexes support using paths as keys.
 This is helpful if you have a set of nested structures and want to use
-a nested value as a key or part of one"
+a nested value as a key or part of one."
 
 (fact
   (-> (c/compound {:primary-index-def {:key [:product :id]}})
@@ -535,7 +535,13 @@ a nested value as a key or part of one"
                      :quantity 4}
                     {:product {:id 4
                                :name "bananans"}
-                     :quantity 500}])))
+                     :quantity 500}])) =>
+  {:primary-index-def {:on-conflict :compound/replace, :key [:product :id]},
+   :primary-index
+   {3 {:product {:id 3, :name "apples"}, :quantity 4},
+    4 {:product {:id 4, :name "bananans"}, :quantity 500}},
+   :secondary-indexes-by-id {},
+   :secondary-index-defs-by-id {}})
 
 (fact
   (-> (c/compound {:primary-index-def {:key [:product :id]}
@@ -553,7 +559,7 @@ a nested value as a key or part of one"
                     {:product {:id 4
                                :name "cherries"}
                      :delivery-date "1964-04-02"
-                     :quantity 6}]))
+                     :quantity 6}])) =>
   {:primary-index-def {:on-conflict :compound/replace, :key [:product :id]},
    :primary-index
    {3

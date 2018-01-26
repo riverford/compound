@@ -379,13 +379,19 @@
    :name &quot;oranges&quot;,
    :category &quot;Medium round fruit&quot;,
    :ripe? true,
-   :quantity 4}}</code></pre></div><div><span id="miscellaneous"></span><h2><b>6 &nbsp;&nbsp; Miscellaneous</b></h2></div><div><span id="paths-as-keys"></span><h3>6.1 &nbsp;&nbsp; Paths as keys</h3></div><div><p>The primary index and built in secondary indexes support using paths as keys. This is helpful if you have a set of nested structures and want to use a nested value as a key or part of one</p></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:key [:product :id]}})
+   :quantity 4}}</code></pre></div><div><span id="miscellaneous"></span><h2><b>6 &nbsp;&nbsp; Miscellaneous</b></h2></div><div><span id="paths-as-keys"></span><h3>6.1 &nbsp;&nbsp; Paths as keys</h3></div><div><p>The primary index and built in secondary indexes support using paths as keys. This is helpful if you have a set of nested structures and want to use a nested value as a key or part of one.</p></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:key [:product :id]}})
     (c/add-items [{:product {:id 3
                               :name &quot;apples&quot;}
                    :quantity 4}
                   {:product {:id 4
                              :name &quot;bananans&quot;}
-                   :quantity 500}]))</code></pre></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:key [:product :id]}
+                   :quantity 500}])) =&gt;
+{:primary-index-def {:on-conflict :compound/replace, :key [:product :id]},
+ :primary-index
+ {3 {:product {:id 3, :name &quot;apples&quot;}, :quantity 4},
+  4 {:product {:id 4, :name &quot;bananans&quot;}, :quantity 500}},
+ :secondary-indexes-by-id {},
+ :secondary-index-defs-by-id {}}</code></pre></div><div class="code"><pre><code class="clojure">(-&gt; (c/compound {:primary-index-def {:key [:product :id]}
                  :secondary-index-defs [{:keys [[:product :id] :delivery-date]
                                          :id :products-on-date
                                          :index-type :compound/one-to-one-composite}]})
@@ -400,7 +406,7 @@
                   {:product {:id 4
                              :name &quot;cherries&quot;}
                    :delivery-date &quot;1964-04-02&quot;
-                   :quantity 6}]))
+                   :quantity 6}])) =&gt;
 {:primary-index-def {:on-conflict :compound/replace, :key [:product :id]},
  :primary-index
  {3
