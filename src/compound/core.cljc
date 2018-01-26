@@ -35,11 +35,24 @@
 (s/def ::secondary-indexes-by-id
   (s/map-of ::id any?))
 
-(s/def ::compound
+(defmulti compound-spec :compound/structure)
+
+(defmethod compound-spec :default
+  [_]
   (s/keys :req-un [::primary-index-def
                    ::primary-index
                    ::secondary-index-defs-by-id
-                   ::secondary-indexes-by-id]))
+                   ::secondary-indexes-by-id]
+          :opt [:compound/structure]))
+
+(defmethod compound-spec :compound/flat
+  [_]
+  (s/keys :req [:compound/primary-index-defs
+                :compound/secondary-index-defs
+                :compound/structure]))
+
+(s/def ::compound
+  (s/multi-spec compound-spec :compound/structure))
 
 (s/def ::diff.update.source any?)
 (s/def ::diff.update.target any?)
@@ -57,29 +70,71 @@
 ;;   Helper functions
 ;; ------------------------------
 
-(defn secondary-indexes-by-id [compound]
-  (get compound :secondary-indexes-by-id))
+(defn structure [compound]
+  (get compound :compound/structure :default))
 
-(defn secondary-index [compound id]
-  (get-in compound [:secondary-indexes-by-id id]))
+(defn primary-index-def [compound]
+  (case (structure compound)
+    :compound/flat (get compound :compound/primary-index-def)
+    (get compound :primary-index-def)))
+
+(defn id [index-def]
+  (or (:id index-def)
+      (:custom-key index-def)
+      (:key index-def)))
+
+(defn primary-index-id [compound]
+  (id (primary-index-def compound)))
 
 (defn secondary-index-defs-by-id [compound]
-  (get compound :secondary-index-defs-by-id))
+  (case (structure compound)
+    :compound/flat (get compound :compound/secondary-index-defs-by-id)
+    (get compound :secondary-index-defs-by-id)))
+
+(defn secondary-indexes-by-id [compound]
+  (case (structure compound)
+    :compound/flat (dissoc compound :compound/structure :compound/primary-index-def :compound/secondary-index-defs-by-id (primary-index-id compound))
+    (get compound :secondary-indexes-by-id)))
+
+(defn secondary-index [compound id]
+  (get (secondary-indexes-by-id compound) id))
+
+(defn primary-index [compound]
+  (case (structure compound)
+    :compound/flat (get compound (primary-index-id compound))
+    (get compound :primary-index)))
+
+(defn indexes-by-id [compound]
+  (case (structure compound)
+    :compound/flat (dissoc compound :compound/structure :compound/primary-index-defs :compound/secondary-indedx-defs-by-id)
+    (assoc (secondary-indexes-by-id compound) (primary-index-id compound) (primary-index compound))))
+
+(defn set-primary-index [compound primary-index]
+  (case (structure compound)
+    :compound/flat (assoc compound (primary-index-id compound) primary-index)
+    (assoc compound :primary-index primary-index)))
+
+(defn set-secondary-indexes-by-id [compound secondary-indexes-by-id]
+  (case (structure compound)
+    :compound/flat (merge compound secondary-indexes-by-id)
+    (assoc compound :secondary-indexes-by-id secondary-indexes-by-id)))
+
+(defn set-secondary-index-defs-by-id [compound secondary-index-defs-by-id]
+  (case (structure compound)
+    :compound/flat (assoc compound :compound/secondary-index-defs-by-id secondary-index-defs-by-id)
+    (assoc compound :secondary-index-defs-by-id secondary-index-defs-by-id)))
 
 (defn secondary-index-def [compound id]
   (get (secondary-index-defs-by-id compound) id))
 
-(defn primary-index-def [compound]
-  (get compound :primary-index-def))
+(defn index-defs-by-id [compound]
+  (assoc (secondary-index-defs-by-id compound) (primary-index-id compound) (primary-index-def compound)))
 
-(defn primary-index-id [compound]
-  (let [index-def (primary-index-def compound)]
-    (or (:id index-def)
-        (:custom-key index-def)
-        (:key index-def))))
+(defn index-def [compound id]
+  (get (index-defs-by-id compound) id))
 
-(defn primary-index [compound]
-  (get compound :primary-index))
+(defn index [compound id]
+  (get (indexes-by-id compound) id))
 
 (defn primary-index-fn [compound]
   (let [{:keys [key custom-key]} (primary-index-def compound)]
@@ -89,17 +144,17 @@
       custom-key (partial cu/custom-key-fn custom-key)
       :else (throw (ex-info "Unsupported key type" {:key key})))))
 
-(defn index-defs-by-id [compound]
-  (assoc (secondary-index-defs-by-id compound) (primary-index-id compound) (primary-index-def compound)))
-
-(defn index-def [compound id]
-  (get (index-defs-by-id compound) id))
-
-(defn indexes-by-id [compound]
-  (assoc (secondary-indexes-by-id compound) (primary-index-id compound) (primary-index compound)))
-
-(defn index [compound id]
-  (get (indexes-by-id compound) id))
+(defn empty-compound [opts]
+  (let [{:keys [primary-index-def structure]} opts]
+    (case structure
+      :compound/flat {:compound/primary-index-def primary-index-def
+                      :compound/secondary-index-defs-by-id {}
+                      :compound/structure structure
+                      (id primary-index-def) {}}
+      {:primary-index-def primary-index-def
+       :primary-index {}
+       :secondary-indexes-by-id {}
+       :secondary-index-defs-by-id {}})))
 
 ;; ------------------------------
 ;;   Custom conflict behaviour
@@ -162,9 +217,9 @@
                                                                                 (csi/add index-def added)))))
                                                (transient {})
                                                (secondary-indexes-by-id compound))]
-    (assoc compound
-           :primary-index (persistent! new-primary-index)
-           :secondary-indexes-by-id (persistent! new-secondary-indexes-by-id))))
+    (-> compound
+        (set-primary-index (persistent! new-primary-index))
+        (set-secondary-indexes-by-id (persistent! new-secondary-indexes-by-id)))))
 
 (s/fdef remove-keys
         :args (s/cat :compound ::compound
@@ -191,9 +246,9 @@
                                                    (assoc! m index-id (csi/remove index index-def removed))))
                                                (transient {})
                                                (secondary-indexes-by-id compound))]
-    (assoc compound
-           :primary-index (persistent! new-primary-index)
-           :secondary-indexes-by-id (persistent! new-secondary-indexes-by-id))))
+    (-> compound
+        (set-primary-index (persistent! new-primary-index))
+        (set-secondary-indexes-by-id (persistent! new-secondary-indexes-by-id)))))
 
 (s/fdef update-item
         :args (s/cat :compound ::compound
@@ -225,12 +280,12 @@
 (defn clear
   "Clear a compound of data"
   [compound]
-  (assoc compound
-         :primary-index {}
-         :secondary-indexes-by-id (reduce-kv (fn clear-secondary-indexes [indexes index-id index-def]
-                                               (assoc indexes index-id (csi/empty index-def)))
-                                             {}
-                                             (secondary-index-defs-by-id compound))))
+  (-> compound
+      (set-primary-index {})
+      (set-secondary-indexes-by-id (reduce-kv (fn clear-secondary-indexes [indexes index-id index-def]
+                                                (assoc indexes index-id (csi/empty index-def)))
+                                              {}
+                                              (secondary-index-defs-by-id compound)))))
 
 (s/fdef items
         :args (s/cat :compound ::compound)
@@ -312,15 +367,15 @@
                       {:id id :index-def index-def :compound compound}))
       (let [new-secondary-index (csi/add (csi/empty index-def) index-def (items compound))]
         (-> compound
-            (update :secondary-index-defs-by-id assoc id index-def)
-            (update :secondary-indexes-by-id assoc id new-secondary-index))))))
+            (set-secondary-indexes-by-id (assoc (secondary-indexes-by-id compound) id new-secondary-index))
+            (set-secondary-index-defs-by-id (assoc (secondary-index-defs-by-id compound) id index-def)))))))
 
 (defn remove-secondary-index
   "Remove the secondary index with the provided id from the compound"
   [compound id]
   (-> compound
-      (update :secondary-index-defs-by-id dissoc id)
-      (update :secondary-indexes-by-id dissoc id)))
+      (set-secondary-indexes-by-id (dissoc (secondary-indexes-by-id compound) id))
+      (set-secondary-index-defs-by-id (dissoc (secondary-index-defs-by-id compound) id))))
 
 (s/def ::secondary-index-defs
   (s/coll-of map?))
@@ -338,8 +393,5 @@
         primary-index-def (merge primary-index-defaults primary-index-def)]
     (s/assert ::primary-index-def primary-index-def)
     (reduce add-secondary-index
-            {:primary-index-def primary-index-def
-             :primary-index {}
-             :secondary-indexes-by-id {}
-             :secondary-index-defs-by-id {}}
+            (empty-compound opts)
             secondary-index-defs)))
