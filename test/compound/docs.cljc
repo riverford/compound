@@ -612,25 +612,25 @@ e.g. client and server state"
       :target {:id 1, :name "bananas", :category "Long fruit"}}},
    :deletes #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}})
 
+[[:section {:title "(experimental) Alternate structure"}]]
+
+"You can get a flatter structure for a compound by passing in `:structure :compound/flat`
+when creating it. "
+
+"This makes using compounds in maps nicer because you don't have to switch between
+`get` and `(c/index)` and can use `get-in` all the way through"
+
 (fact
-  (c/apply-diff (-> (c/compound {:primary-index-def {:key :id}})
-                    (c/add-items [{:id 1 :name "bananas" :category "Long fruit"}
-                                  {:id 2 :name "grapes" :category "Small round fruit"}
-                                  {:id 3 :name "tomatoes" :category "Pretend fruit"}]))
-                {:inserts
-                 #{{:id 5, :name "blueberries", :category "Blue fruit"}
-                   {:id 4, :name "strawberries", :category "Red fruit"}},
-                 :updates
-                 #{{:source {:id 2, :name "grapes", :category "New fruit"},
-                    :target {:id 2, :name "grapes", :category "Small round fruit"}}
-                   {:source {:id 1, :name "bananas", :category "Old fruit"},
-                    :target {:id 1, :name "bananas", :category "Long fruit"}}},
-                 :deletes #{{:id 3, :name "tomatoes", :category "Pretend fruit"}}}) =>
-  (-> (c/compound {:primary-index-def {:key :id}})
+  (-> (c/compound {:primary-index-def {:key :id}
+                   :secondary-index-defs [{:key :name}
+                                          {:key :category}]
+                   :structure :compound/flat})
       (c/add-items [{:id 1 :name "bananas" :category "Old fruit"}
                     {:id 2 :name "grapes" :category "New fruit"}
                     {:id 4 :name "strawberries" :category "Red fruit"}
-                    {:id 5 :name "blueberries" :category "Blue fruit"}])))
+                    {:id 5 :name "blueberries" :category "Blue fruit"}])
+      (get-in [:category "Red fruit"]))
+  => #{{:id 4, :name "strawberries", :category "Red fruit"}})
 
 (comment
   (publish/publish-all))
