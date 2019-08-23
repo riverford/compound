@@ -156,6 +156,8 @@
                                                                                    :on-conflict :compound/throw}]})
                                               (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 4 :name "Squirrel"}])))))
 
+
+
 (deftest many-to-many-index
   (is (= {:name
           {"Terry" {:id 2, :name "Terry", :aliases #{:terence :t-man}},

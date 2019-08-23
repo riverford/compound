@@ -6,7 +6,7 @@
 
 (defmethod on-conflict-fn :default
   [index-def existing-item new-item]
-  (println (str "Implementation of conflict for " (get index-def :on-conflict)  " not found, replacing"))
+  (println (str "Implementation of conflict for index " index-def  " not found, replacing"))
   new-item)
 
 (defmethod on-conflict-fn :compound/replace
