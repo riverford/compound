@@ -2,6 +2,7 @@
   (:require [clojure.set :as set]
             [clojure.spec.alpha :as s]
             [compound.custom-key :as cu]
+            [compound.conflict :as cc]
             [compound.secondary-indexes :as csi]
             [compound.secondary-indexes.many-to-many]
             [compound.secondary-indexes.many-to-one]
@@ -17,7 +18,7 @@
 (s/def ::id any?)
 (s/def ::key (s/or :key keyword? :path (s/coll-of keyword? :kind vector)))
 (s/def ::custom-key keyword?)
-(s/def ::conflict-behaviour keyword?)
+(s/def ::on-conflict keyword?)
 
 ;; ------------------------------
 ;;   Compound spec
@@ -25,7 +26,7 @@
 
 (s/def ::primary-index-def
   (s/keys :req-un [(or ::key ::custom-key)]
-          :opt-un [::id ::conflict-behaviour]))
+          :opt-un [::id ::on-conflict]))
 
 (s/def ::primary-index map?)
 
@@ -144,30 +145,6 @@
       custom-key (partial cu/custom-key-fn custom-key)
       :else (throw (ex-info "Unsupported key type" {:key key})))))
 
-;; ------------------------------
-;;   Custom conflict behaviour
-;; ------------------------------
-
-(defmulti on-conflict-fn
-  (fn [index-def existing-item new-item] (get index-def :on-conflict)))
-
-(defmethod on-conflict-fn :default
-  [index-def existing-item new-item]
-  (throw (ex-info (str "Implementation of conflict for " (get index-def :on-conflict)  " not found") {:index-def index-def, :existing-item existing-item, :new-item new-item})))
-
-(defmethod on-conflict-fn :compound/replace
-  [_ existing-item new-item]
-  new-item)
-
-(defmethod on-conflict-fn :compound/throw
-  [index-def existing-item new-item]
-  (let [{:keys [key custom-key]} index-def
-        key-fn (or key (partial cu/custom-key-fn custom-key))]
-    (throw (ex-info (str "Duplicate key " (key-fn new-item) " in primary index") {:existing-item existing-item, :new-item new-item}))))
-
-(defmethod on-conflict-fn :compound/merge
-  [_ existing-item new-item]
-  (merge existing-item new-item))
 
 ;; ------------------------------
 ;; Core implementation
@@ -188,7 +165,7 @@
                                                     (let [k (key-fn item)
                                                           existing (get index k)]
                                                       (if existing
-                                                        (let [new-item (on-conflict-fn (primary-index-def compound) existing item)]
+                                                        (let [new-item (cc/on-conflict-fn (primary-index-def compound) existing item)]
                                                           [(assoc! index k new-item)
                                                            (-> (disj! added existing)
                                                                (conj! new-item))

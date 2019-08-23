@@ -21,7 +21,7 @@ We should probably set up somewhere to store all the information about it."
 
 (fact
   (c/compound {:primary-index-def {:key :id}}) =>
-  
+
   {:primary-index-def {:key :id
                        :on-conflict :compound/replace},
    :primary-index {},
@@ -58,7 +58,7 @@ We should probably set up somewhere to store all the information about it."
                     {:id 2 :name "grapes"}
                     {:id 3 :name "tomatoes"}])
       (c/remove-keys [1])) =>
-  
+
   {:primary-index-def {:on-conflict :compound/replace, :key :id},
    :primary-index {3 {:id 3, :name "tomatoes"},
                    2 {:id 2, :name "grapes"}},
@@ -103,7 +103,7 @@ We should probably set up somewhere to store all the information about it."
       (c/remove-keys [1])
       (c/index :id)
       (get 2)) =>
-  
+
   {:id 2, :name "grapes"})
 
 "Isn't that just grapes!"
@@ -120,7 +120,7 @@ We should probably set up somewhere to store all the information about it."
       (c/add-items [{:id 1 :name "grapes" :colour "green"}
                     {:id 2 :name "bananas" :colour "yellow"}])
       (c/indexes-by-id)) =>
-  
+
   {:colour
    {"green" #{{:id 1, :name "grapes", :colour "green"}},
     "yellow" #{{:id 2, :name "bananas", :colour "yellow"}}},
@@ -135,7 +135,7 @@ We should probably set up somewhere to store all the information about it."
                     {:id 2 :name "bananas" :colour "yellow"}])
       (c/add-secondary-index {:key :colour})
       (c/indexes-by-id)) =>
-  
+
   {:colour
    {"green" #{{:id 1, :name "grapes", :colour "green"}},
     "yellow" #{{:id 2, :name "bananas", :colour "yellow"}}},
@@ -158,7 +158,7 @@ We should probably set up somewhere to store all the information about it."
       (c/add-items [{:id 1 :name "grapes" :colour "green"}
                     {:id 2 :name "bananas" :colour "yellow"}])
       (c/indexes-by-id)) =>
-  
+
   {:colour
    {"green" #{{:id 1, :name "grapes", :colour "green"}},
     "yellow" #{{:id 2, :name "bananas", :colour "yellow"}}},
@@ -178,7 +178,7 @@ We should probably set up somewhere to store all the information about it."
       (c/add-items [{:id 1 :name "grapes" :colour "green"}
                     {:id 2 :name "bananas" :colour "yellow"}])
       (c/indexes-by-id)) =>
-  
+
   {:name
    {"grapes" {:id 1, :name "grapes", :colour "green"},
     "bananas" {:id 2, :name "bananas", :colour "yellow"}},
@@ -341,7 +341,7 @@ We should probably set up somewhere to store all the information about it."
                     {:id 3 :name "tomatoes"}
                     {:id 3 :colour "red"}])
       (c/indexes-by-id)) =>
-  
+
   {:name
    {"grapes" #{{:id 2, :name "grapes"}},
     "bananas" #{{:id 1, :name "bananas"}},
@@ -402,9 +402,11 @@ We should probably set up somewhere to store all the information about it."
 
 [[:section {:title "Custom conflict behaviour" :tag "custom-conflict"}]]
 
+(require '[compound.conflict :as cc])
+
 "If the provided conflict behaviours aren't sufficient, override the `compound.core/on-conflict-fn` multimethod, to tell compound what to do when two items with the same key are found."
 
-(defmethod c/on-conflict-fn :add-quantities
+(defmethod cc/on-conflict-fn :add-quantities
   [_ a b]
   (merge a b {:quantity (+ (get a :quantity) (get b :quantity))}))
 

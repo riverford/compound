@@ -6,6 +6,7 @@
             [compound.secondary-indexes.one-to-one-composite]
             [compound.secondary-indexes.one-to-many-composite]
             [compound.custom-key :as cu]
+            [compound.conflict :as cc]
             [compound.core :as c]
             [orchestra.spec.test :as st]
             [clojure.spec.alpha :as s]))
@@ -151,7 +152,8 @@
   (is (thrown? clojure.lang.ExceptionInfo (-> (c/compound {:primary-index-def {:key :id
                                                                                :on-conflict :compound/replace}
                                                            :secondary-index-defs [{:key :name
-                                                                                   :index-type :compound/one-to-one}]})
+                                                                                   :index-type :compound/one-to-one
+                                                                                   :on-conflict :compound/throw}]})
                                               (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 4 :name "Squirrel"}])))))
 
 (deftest many-to-many-index
@@ -237,7 +239,7 @@
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrek"} {:id 3 :color :red}])
              (c/indexes-by-id)))))
 
-(defmethod c/on-conflict-fn ::add-quantities
+(defmethod cc/on-conflict-fn ::add-quantities
   [index-def existing-item new-item]
   (assoc (merge existing-item new-item) :quantity-delta
          (+ (get existing-item :quantity-delta) (get new-item :quantity-delta))))
@@ -307,4 +309,3 @@
                                  :deletes #{{:id 4, :name "Ahmed"}}})
            source))
     (is (thrown? java.lang.AssertionError (c/diff source some-other-compound)))))
-

@@ -1,6 +1,7 @@
 (ns compound.secondary-indexes.one-to-one
    (:require [compound.custom-key :as cu]
              [compound.secondary-indexes :as csi]
+             [compound.conflict :as cc]
              [clojure.spec.alpha :as s]))
 
 (s/def ::key ::csi/key)
@@ -30,7 +31,7 @@
                             (let [k (key-fn item)
                                   existing-item (get index k)]
                               (if existing-item
-                                (throw (ex-info (str "Duplicate key " k " in secondary-index " (csi/id index-def)) {:existing-item existing-item, :new-item item}))
+                                (assoc! index k (cc/on-conflict-fn index-def existing-item item))
                                 (assoc! index k item))))
                           (transient index)
                           added)]
