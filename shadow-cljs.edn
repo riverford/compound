@@ -1,0 +1,7 @@
+{:source-paths ["src" "test"]
+ :dependencies [[cider/cider-nrepl "0.22.0-beta11"]]
+ :builds
+ {:script
+  {:target :node-script
+   :main compound2.performance/performance-test
+   :output-to "performance.js"}}}

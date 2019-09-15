@@ -307,4 +307,3 @@
                                  :deletes #{{:id 4, :name "Ahmed"}}})
            source))
     (is (thrown? java.lang.AssertionError (c/diff source some-other-compound)))))
-

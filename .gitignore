@@ -12,3 +12,6 @@ pom.xml.asc
 .hgignore
 .hg/
 .DS_Store
+/node_modules
+/.shadow-cljs
+/.cpcache
