@@ -1,5 +1,7 @@
 (ns compound2.core)
 
+#?(:cljs (enable-console-print!))
+
 (defprotocol Index
   (id [this])
   (extract-key [this x])
@@ -10,7 +12,8 @@
 
 (defprotocol PrimaryIndex
   (get-by-key [this coll k])
-  (get-all [this coll]))
+  (get-all [this coll])
+  (on-conflict [this old new]))
 
 (defprotocol Compound
   :extend-via-metadata true
@@ -20,16 +23,19 @@
 
 (defmulti indexer :index-type)
 
-(defmethod indexer :unique
+(defmethod indexer :one-to-one
   [opts]
-  (let [{:keys [id kfn]} opts]
+  (let [{:keys [id kfn]} opts
+        id (or id (when (keyword? kfn) kfn))]
+    (assert (some? id) "Must provide an id")
     (reify
       PrimaryIndex
       (get-by-key [this coll k]
         (get coll k))
       (get-all [this coll]
         (vals coll))
-
+      (on-conflict [this old new]
+        new)
       Index
       (id [this]
         id)
@@ -44,9 +50,11 @@
       (before [this coll]
         (transient (or coll {}))))))
 
-(defmethod indexer :multi
+(defmethod indexer :one-to-many
   [opts]
-  (let [{:keys [id kfn]} opts]
+  (let [{:keys [id kfn]} opts
+        id (or id (when (keyword? kfn) kfn))]
+    (assert (some? id) "Must provide an id")
     (reify
       Index
       (id [this]
@@ -76,9 +84,11 @@
         (assoc m k m2)))
     (dissoc m k)))
 
-(defmethod indexer :nested.unique
+(defmethod indexer :nested-to-one
   [opts]
-  (let [{:keys [id path]} opts]
+  (let [{:keys [id path]} opts
+        id (or id (when (vector? path) path))]
+    (assert (some? id) "Must provide an id")
     (reify
       Index
       (id [this]
@@ -95,9 +105,11 @@
       (before [this coll]
         (or coll {})))))
 
-(defmethod indexer :nested.multi
+(defmethod indexer :nested-to-many
   [opts]
-  (let [{:keys [id path]} opts]
+  (let [{:keys [id path]} opts
+        id (or id (when (vector? path) path))]
+    (assert (some? id) "Must provide an id")
     (reify
       Index
       (id [this]
@@ -106,7 +118,7 @@
         (into [] (for [p path]
                    (p x))))
       (index [this coll path x]
-        (update-in coll path (fnil conj #{})x))
+        (update-in coll path (fnil conj #{})))
       (unindex [this coll path x]
         (let [existing (get-in coll path)
               new (disj existing x)]
@@ -118,72 +130,34 @@
       (before [this coll]
         (or coll {})))))
 
-(defn compound* [indexes]
-  (let [[pt & sts] (map indexer indexes)]
-    (assert (satisfies? PrimaryIndex pt) "First index must be a primary index")
-    (with-meta {}
-      {`items (fn [m]
-                (get-all pt (get m (id pt))))
-       `add-items (fn [m xs]
-                    (loop [pi (before pt (get m (id pt)))
-                           sis (map (fn [st]
-                                      (before st (get m (id st))))
-                                    sts)
-                           [x & more] xs]
-                      (if (nil? x)
-                        (with-meta
-                          (into
-                           {(id pt) (after pt pi)}
-                           (map (fn [st si] [(id st) (after st si)]) sts sis))
-                          (meta m))
-                        (let [k (extract-key pt x)
-                              existing (get-by-key pt pi k)]
-                          (if existing
-                            (let [without (unindex pt pi k existing)]
-                              (recur
-                               (index pt without k x)
-                               (mapv (fn [st si]
-                                       (let [k1 (extract-key st existing)
-                                             k2 (extract-key st x)
-                                             without (unindex st si k1 existing)]
-                                         (index st without k2 x)))
-                                     sts
-                                     sis)
-                               more))
-                            (recur
-                             (index pt pi k x)
-                             (mapv (fn [st si]
-                                     (let [k (extract-key st x)]
-                                       (index st si k x)))
-                                   sts
-                                   sis)
-                             more))))))
-       `remove-keys (fn [m ks]
-                      (loop [pi (before pt (get m (id pt)))
-                             sis (map (fn [st]
-                                        (before st (get m (id st))))
-                                      sts)
-                             [k & more] ks]
-                        (if (nil? k)
-                          (with-meta
-                            (into {(id pt) (after pt pi)}
-                                  (map (fn [st si]
-                                         [(id st)
-                                          (after st si)])
-                                       sts
-                                       sis))
-                            (meta m))
-                          (let [existing (get-by-key pt pi k)]
-                            (if existing
-                              (recur
-                               (unindex pt pi k existing)
-                               (mapv (fn [st si]
-                                       (let [k (extract-key st existing)]
-                                         (unindex st si k existing)))
-                                     sts
-                                     sis)
-                               more)
-                              (recur pi sis more))))))})))
+(defmethod indexer :many-to-many
+  [opts]
+  (let [{:keys [id kfn]} opts
+        id (or id (when (keyword? kfn) kfn))]
+    (assert (some? id) "Must provide an id")
+    (reify
+      Index
+      (id [this]
+        id)
+      (extract-key [this x]
+        (kfn x))
+      (index [this coll ks x]
+        (reduce
+         (fn [acc k]
+           (assoc! acc k x))
+         coll
+         ks))
+      (unindex [this coll ks x]
+        (reduce
+         (fn [acc k]
+           (dissoc! acc k x))
+         coll
+         ks))
+      (after [this coll]
+        (persistent! coll))
+      (before [this coll]
+        (transient (or coll {}))))))
+
 #?(:clj
    (defmacro compound [indexes]
      (let [[p-opts & s-opts] indexes
@@ -225,13 +199,11 @@
                                     ~existing-sym (get-by-key ~pt-sym ~pi-sym k#)]
                                 (if ~existing-sym
                                   (recur
-                                   (let [without# (unindex ~pt-sym ~pi-sym k# ~existing-sym)]
-                                     (index ~pt-sym without# k# ~x-sym))
+                                   (index ~pt-sym ~pi-sym k# ~x-sym)
                                    ~@(map (fn [st si]
                                             `(let [k1# (extract-key ~st ~existing-sym)
-                                                   k2# (extract-key ~st ~x-sym)
-                                                   without# (unindex ~st ~si k1# ~existing-sym)]
-                                               (index ~st without# k2# ~x-sym)))
+                                                   k2# (extract-key ~st ~x-sym)]
+                                               (index ~st (unindex ~st ~si k1# ~existing-sym) k2# ~x-sym)))
                                           st-syms
                                           si-syms)
                                    more#)
@@ -272,127 +244,65 @@
                                      ~pi-sym
                                      ~@si-syms
                                      more#))))))})))))
+(println (rand-int 50))
 
-
-(defn compound2* [indexes]
+(defn compound* [indexes]
   (let [[pt & sts] (map indexer indexes)]
     (assert (satisfies? PrimaryIndex pt) "First index must be a primary index")
     (with-meta {}
       {`items (fn [m]
                 (get-all pt (get m (id pt))))
        `add-items (fn [m xs]
-                    (let [[pi sis]
-                          (reduce
-                           (fn [acc x]
-                             (let [[pi sis] acc]
-                               (let [k (extract-key pt x)
-                                     existing (get-by-key pt pi k)]
-                                 (if existing
-                                   (let [without (unindex pt pi k existing)]
-                                     (list
-                                      (index pt without k x)
-                                      (doall (map (fn [st si]
-                                                   (let [k1 (extract-key st existing)
-                                                         k2 (extract-key st x)
-                                                         without (unindex st si k1 existing)]
-                                                     (index st without k2 x)))
-                                                 sts
-                                                 sis))))
-                                   (list (index pt pi k x)
-                                         (doall (map (fn [st si]
-                                                      (let [k (extract-key st x)]
-                                                        (index st si k x)))
-                                                    sts
-                                                    sis)))))))
-                           (list (before pt (get m (id pt)))
-                                 (doall (map (fn [st]
-                                               (before st (get m (id st))))
-                                             sts)))
-                           xs)]
-                      (with-meta
-                        (into
-                         {(id pt) (after pt pi)}
-                         (map (fn [st si] [(id st) (after st si)]) sts sis))
-                        (meta m))))
-       `remove-keys (fn [m ks]
-                      (let [[pi sis]
-                            (reduce
-                             (fn [acc k]
-                               (let [[pi sis] acc]
-                                 (if (nil? k)
-                                   (let [existing (get-by-key pt pi k)]
-                                     (if existing
-                                       (list (unindex pt pi k existing)
-                                             (doall (map (fn [st si]
-                                                           (let [k (extract-key st existing)]
-                                                             (unindex st si k existing)))
-                                                         sts
-                                                         sis)))
-                                       (list pi sis))))))
-                             (list
-                              (before pt (get m (id pt)))
-                              (doall (map (fn [st]
-                                            (before st (get m (id st))))
-                                          sts)))
-                             ks)]
+                    (loop [pi (before pt (get m (id pt)))
+                           sis (doall (map (fn [st]
+                                             (before st (get m (id st))))
+                                           sts))
+                           [x & xs] xs]
+                      (if (nil? x)
                         (with-meta
-                          (into {(id pt) (after pt pi)}
-                                (map (fn [st si]
-                                       [(id st)
-                                        (after st si)])
-                                     sts
-                                     sis))
-                          (meta m))))})))
-
-(cons 2 (sequence (map (fn [a b] [a b])) (range 5) (range 10)))
-
-
-(defn compound3* [indexes]
-  (let [[pt & sts] (map indexer indexes)]
-    (assert (satisfies? PrimaryIndex pt) "First index must be a primary index")
-    (with-meta {}
-      {`items (fn [m]
-                (get-all pt (get m (id pt))))
-       `add-items (fn [m xs]
-                    (let [[pi added removed] (reduce
-                                              (fn [acc x]
-                                                (let [[pi added removed] acc]
-                                                  (let [k (extract-key pt x)
-                                                        existing (get-by-key pt pi k)]
-                                                    (if existing
-                                                      (let [without (unindex pt pi k existing)]
-                                                        (list
-                                                         (index pt without k x)
-                                                         (conj! added x)
-                                                         (conj! removed existing)))
-                                                      (list
-                                                       (index pt pi k x)
-                                                       (conj! added x)
-                                                       removed)))))
-                                              (list (before pt (get m (id pt)))
-                                                    (transient #{})
-                                                    (transient #{}))
-                                              xs)
-                          sis (reduce (fn [sis x]
-                                        (mapv (fn [st si]
-                                                (let [k (extract-key st x)]
-                                                  (unindex st si k x)))
-                                              sts
-                                              sis))
-                                      (mapv (fn [st]
-                                              (before st (get m (id st))))
-                                            sts)
-                                      (persistent! removed))
-                          sis (reduce (fn [sis x]
-                                        (mapv (fn [st si]
-                                                (let [k (extract-key st x)]
-                                                  (index st si k x)))
-                                              sts
-                                              sis))
-                                      sis
-                                      (persistent! added))]
-                      (with-meta
-                        (into
-                         {(id pt) (after pt pi)}
-                         (map (fn [st si] [(id st) (after st si)]) sts sis))
-                        (meta m))))})))
+                          (into
+                           {(id pt) (after pt pi)}
+                           (map (fn [st si] [(id st) (after st si)]) sts sis))
+                          (meta m))
+                        (let [k (extract-key pt x)
+                              existing (get-by-key pt pi k)]
+                          (if existing
+                            (recur (index pt pi k (on-conflict pt existing x))
+                                   (doall (map (fn [st si]
+                                           (let [k1 (extract-key st existing)
+                                                 k2 (extract-key st x)]
+                                             (index st (unindex st si k1 existing) k2 x)))
+                                         sts
+                                         sis))
+                                   xs)
+                            (recur (index pt pi k x)
+                                   (doall (map (fn [st si]
+                                                 (let [k (extract-key st x)]
+                                                   (index st si k x)))
+                                               sts
+                                               sis))
+                                   xs))))))
+       `remove-keys (fn [m ks]
+                      (loop [pi (before pt (get m (id pt)))
+                             sis (doall (map (fn [st]
+                                               (before st (get m (id st))))
+                                             sts))
+                             [k & ks] ks]
+                        (if (nil? k)
+                          (with-meta
+                            (into {(id pt) (after pt pi)}
+                                  (map (fn [st si]
+                                         [(id st)
+                                          (after st si)])
+                                       sts
+                                       sis))
+                            (meta m)))
+                        (if-let [existing (get-by-key pt pi k)]
+                          (recur (unindex pt pi k existing)
+                                 (doall (map (fn [st si]
+                                              (let [k (extract-key st existing)]
+                                                (unindex st si k existing)))
+                                            sts
+                                            sis))
+                                 ks)
+                          (recur pi sis ks))))})))

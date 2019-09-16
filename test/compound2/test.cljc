@@ -11,11 +11,9 @@
           {1 {:id 1, :name "Bob"},
            2 {:id 2, :name "Terry"},
            3 {:id 3, :name "Squirrel"}}}
-         (-> (c/compound [{:index-type :unique
-                           :id :id
+         (-> (c/compound [{:index-type :one-to-one
                            :kfn :id}
-                          {:index-type :unique
-                           :id :name
+                          {:index-type :one-to-one
                            :kfn :name}])
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])))))
 
@@ -24,10 +22,9 @@
           {"Squirrel" {:id 3, :name "Squirrel"}},
           :id
           {3 {:id 3, :name "Squirrel"}}}
-         (-> (c/compound [{:index-type :unique
-                           :id :id
+         (-> (c/compound [{:index-type :one-to-one
                            :kfn :id}
-                          {:index-type :unique
+                          {:index-type :one-to-one
                            :id :name
                            :kfn :name}])
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"}])
@@ -39,10 +36,10 @@
           {5 {:id 5, :name "Squirrel"},
            2 {:id 2, :name "Terry"},
            4 {:id 4, :name "Squirrel"}}}
-         (-> (c/compound [{:index-type :unique
+         (-> (c/compound [{:index-type :one-to-one
                            :kfn :id
                            :id :id}
-                          {:index-type :multi
+                          {:index-type :one-to-many
                            :kfn :name
                            :id :name}])
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrel"} {:id 4 :name "Squirrel"} {:id 5 :name "Squirrel"}])
@@ -69,13 +66,13 @@
            ["2012-03-03" :apples] {:delivery-date "2012-03-03", :product :apples},
            ["2012-03-04" :potatoes] {:delivery-date "2012-03-04", :product :potatoes},
            ["2012-03-04" :bananas] {:delivery-date "2012-03-04", :product :bananas}}}
-         (-> (c/compound [{:index-type :unique
+         (-> (c/compound [{:index-type :one-to-one
                            :id :delivery-date-product
                            :kfn (juxt :delivery-date :product)}
-                          {:index-type :nested.unique
+                          {:index-type :nested-one-to-one
                            :path [:delivery-date :product]
                            :id [:delivery-date :product]}
-                          {:index-type :nested.multi
+                          {:index-type :nested-one-to-many
                            :path [:product :delivery-date]
                            :id [:product :delivery-date]}])
              (c/add-items [{:delivery-date "2012-03-03" :product :bananas}

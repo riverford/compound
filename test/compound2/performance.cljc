@@ -1,9 +1,11 @@
 (ns compound2.performance
   (:require [compound.secondary-indexes :as csi]
             [compound.core :as c1]
-           #?(:cljs [compound2.core :as c2 :include-macros true])
-           #?(:clj [compound2.core :as c2])
-           #?(:clj [criterium.core :as crit])))
+            #?@(:cljs [[compound2.core :as c2 :include-macros true]]
+                :clj [[compound2.core :as c2]
+                      [criterium.core :as crit]])))
+
+#?(:cljs (enable-console-print!))
 
 (def fruit
   ["Açaí"
@@ -132,91 +134,96 @@
    "James"])
 
 (def test-data
-  (for [i (range 50000)]
+  (for [i (range 5000)]
     {:id i
+     :code (str "PERSON:" i)
      :name (rand-nth names)
      :likes (rand-nth fruit)}))
 
 (def c1 (c1/compound {:primary-index-def {:key :id}
-                      :secondary-index-defs [{:key :name
+                      :secondary-index-defs [{:key :code
+                                              :index-type :compound/one-to-one}
+                                             {:key :name
                                               :index-type :compound/one-to-many}
                                              {:key :likes
                                               :index-type :compound/one-to-many}]}))
 
 (def c2 (c2/compound
-         [{:index-type :unique
-           :id :id
+         [{:index-type :one-to-one
            :kfn :id}
-          {:index-type :multi
-           :id :name
+          {:index-type :one-to-one
+           :kfn :code}
+          {:index-type :one-to-many
            :kfn :name}
-          {:index-type :multi
-           :id :likes
+          {:index-type :one-to-many
            :kfn :likes}]))
 
-(def c3 (c2/compound*
-         [{:index-type :unique
-           :id :id
-           :kfn :id}
-          {:index-type :multi
-           :id :name
-           :kfn :name}
-          {:index-type :multi
-           :id :likes
-           :kfn :likes}]))
-
-(def c4 (c2/compound2*
-         [{:index-type :unique
-           :id :id
-           :kfn :id}
-          {:index-type :multi
-           :id :name
-           :kfn :name}
-          {:index-type :multi
-           :id :likes
-           :kfn :likes}]))
-
-
-(def c5 (c2/compound3*
-        [{:index-type :unique
-          :id :id
-          :kfn :id}
-         {:index-type :multi
-          :id :name
-          :kfn :name}
-         {:index-type :multi
-          :id :likes
-          :kfn :likes}]))
-
-(c2/add-items c5 (take 10 test-data))
-
+(def c2* (c2/compound*
+          [{:index-type :one-to-one
+            :id :id
+            :kfn :id}
+           {:index-type :one-to-one
+            :id :code
+            :kfn :code}
+           {:index-type :one-to-many
+            :id :name
+            :kfn :name}
+           {:index-type :one-to-many
+            :id :likes
+            :kfn :likes}]))
 
 #?(:clj (defn performance-test []
           (println "checking equality")
-          (assert (= (c2/add-items c2 test-data)
-                     (c2/add-items c3 test-data)
-                     (c2/add-items c4 test-data)
-                     (c2/add-items c5 test-data)
-                     (c1/indexes-by-id (c1/add-items c1 test-data))))
+          (assert (= (c1/indexes-by-id (c1/add-items c1 test-data))
+                     (c2/add-items c2 test-data)
+                     (c2/add-items c2* test-data)))
           (println "profiling compound 1")
           (crit/with-progress-reporting
             (crit/quick-bench
              (c1/add-items c1 test-data)))
-          (println "profiling compound 2 - macro")
+          (println "profiling compound c2 - macro")
           (crit/with-progress-reporting
             (crit/quick-bench
              (c2/add-items c2 test-data)))
-          (println "profiling compound 2 - function")
+          (println "profiling compound c2 - function")
           (crit/with-progress-reporting
             (crit/quick-bench
-             (c2/add-items c3 test-data)))
-          (println "profiling compound 5")
-          (crit/with-progress-reporting
-            (crit/quick-bench
-             (c2/add-items c5 test-data)))))
+             (c2/add-items c2* test-data)))))
 
 #?(:cljs (defn performance-test []
-           (println "checking equality")
-           (assert (= (c2/add-items c2 test-data)
-                      (c1/indexes-by-id (c1/add-items c1 test-data))))))
-(performance-test)
+           (let [c1 (c1/compound {:primary-index-def {:key :id}
+                                  :secondary-index-defs [{:key :code
+                                                          :index-type :compound/one-to-one}
+                                                         {:key :name
+                                                          :index-type :compound/one-to-many}
+                                                         {:key :likes
+                                                          :index-type :compound/one-to-many}]})
+                 c2* (c2/compound* [{:index-type :one-to-one
+                                     :kfn :id}
+                                    {:index-type :one-to-one
+                                     :kfn :code}
+                                    {:index-type :one-to-many
+                                     :kfn :name}
+                                    {:index-type :one-to-many
+                                     :kfn :likes}])
+                 c2 (c2/compound [{:index-type :one-to-one
+                                   :kfn :id}
+                                  {:index-type :one-to-one
+                                   :kfn :code}
+                                  {:index-type :one-to-many
+                                   :kfn :name}
+                                  {:index-type :one-to-many
+                                   :kfn :likes}])]
+             (js/setTimeout
+              (fn []
+                (println "Timing compound 2 - function")
+                (simple-benchmark []
+                                  (c2/add-items c2* test-data) 1)
+                (println "Timing compound 2 - macro")
+                (simple-benchmark []
+                                  (c2/add-items c2 test-data) 1)
+                (println "Timing compound 1")
+                (simple-benchmark []
+                                  (c1/add-items c1 test-data) 1)
+                )
+              2000))))
