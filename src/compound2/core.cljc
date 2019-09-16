@@ -25,8 +25,9 @@
 
 (defmethod indexer :one-to-one
   [opts]
-  (let [{:keys [id kfn]} opts
-        id (or id (when (keyword? kfn) kfn))]
+  (let [{:keys [id kfn on-conflict]} opts
+        id (or id (when (keyword? kfn) kfn))
+        on-conflict (or on-conflict (fn [_ new] new))]
     (assert (some? id) "Must provide an id")
     (reify
       PrimaryIndex
@@ -35,7 +36,7 @@
       (get-all [this coll]
         (vals coll))
       (on-conflict [this old new]
-        new)
+        (on-conflict old new))
       Index
       (id [this]
         id)
@@ -62,11 +63,11 @@
       (extract-key [this x]
         (kfn x))
       (index [this coll k x]
-        (let [existing (get coll k)]
-          (assoc! coll k (conj (or existing #{}) x))))
+        (let [ex (get coll k)]
+          (assoc! coll k (conj (or ex #{}) x))))
       (unindex [this coll k x]
-        (let [existing (get coll k)
-              new (disj existing x)]
+        (let [ex (get coll k)
+              new (disj ex x)]
           (if (seq new)
             (assoc! coll k new)
             (dissoc! coll k))))
@@ -96,10 +97,10 @@
       (extract-key [this x]
         (into [] (for [p path]
                    (p x))))
-      (index [this coll path x]
-        (assoc-in coll path x))
-      (unindex [this coll path x]
-        (dissoc-in coll path))
+      (index [this coll ks x]
+        (assoc-in coll ks x))
+      (unindex [this coll ks x]
+        (dissoc-in coll ks))
       (after [this coll]
         coll)
       (before [this coll]
@@ -117,14 +118,14 @@
       (extract-key [this x]
         (into [] (for [p path]
                    (p x))))
-      (index [this coll path x]
-        (update-in coll path (fnil conj #{})))
-      (unindex [this coll path x]
-        (let [existing (get-in coll path)
-              new (disj existing x)]
+      (index [this coll ks x]
+        (update-in coll ks (fnil conj #{}) x))
+      (unindex [this coll ks x]
+        (let [ex (get-in coll ks)
+              new (disj ex x)]
           (if (seq new)
-            (assoc-in coll path new)
-            (update-in coll (butlast path) dissoc (last path)))))
+            (assoc-in coll ks new)
+            (dissoc-in coll ks))))
       (after [this coll]
         coll)
       (before [this coll]
@@ -144,19 +145,19 @@
       (index [this coll ks x]
         (reduce
          (fn [acc k]
-           (assoc! acc k x))
+           (update acc k (fnil conj #{}) x))
          coll
          ks))
       (unindex [this coll ks x]
         (reduce
          (fn [acc k]
-           (dissoc! acc k x))
+           (update acc k disj x))
          coll
          ks))
       (after [this coll]
-        (persistent! coll))
+        coll)
       (before [this coll]
-        (transient (or coll {}))))))
+        (or coll {})))))
 
 #?(:clj
    (defmacro compound [indexes]
@@ -170,7 +171,8 @@
            m-sym (gensym "m")
            x-sym (gensym "x")
            k-sym (gensym "k")
-           ex-sym (gensym "ex")]
+           ex-sym (gensym "ex")
+           new-sym (gensym "new")]
        `(let [~pt-sym (indexer ~p-opts)
               ~@(mapcat (fn [sym opts]
                           [sym `(indexer ~opts)])
@@ -198,15 +200,16 @@
                               (let [k# (extract-key ~pt-sym ~x-sym)
                                     ~ex-sym (get-by-key ~pt-sym ~pi-sym k#)]
                                 (if ~ex-sym
-                                  (recur
-                                   (index ~pt-sym ~pi-sym k# ~x-sym)
-                                   ~@(map (fn [st si]
-                                            `(let [k1# (extract-key ~st ~ex-sym)
-                                                   k2# (extract-key ~st ~x-sym)]
-                                               (index ~st (unindex ~st ~si k1# ~ex-sym) k2# ~x-sym)))
-                                          st-syms
-                                          si-syms)
-                                   xs#)
+                                  (let [~new-sym (on-conflict ~pt-sym ~ex-sym ~x-sym)]
+                                    (recur
+                                     (index ~pt-sym ~pi-sym k# ~new-sym)
+                                     ~@(map (fn [st si]
+                                              `(let [k1# (extract-key ~st ~ex-sym)
+                                                     k2# (extract-key ~st ~new-sym)]
+                                                 (index ~st (unindex ~st ~si k1# ~ex-sym) k2# ~new-sym)))
+                                            st-syms
+                                            si-syms)
+                                     xs#))
                                   (recur
                                    (index ~pt-sym ~pi-sym k# ~x-sym)
                                    ~@(map (fn [st si]
@@ -267,14 +270,15 @@
                         (let [k (extract-key pi x)
                               ex (get-by-key pi px k)]
                           (if ex
-                            (recur (index pi px k (on-conflict pi ex x))
-                                   (reduce-kv (fn [acc si sx]
-                                                (assoc acc si (let [k1 (extract-key si ex)
-                                                                    k2 (extract-key si x)]
-                                                                (index si (unindex si sx k1 ex) k2 x))))
-                                              {}
-                                              sixs)
-                                   xs)
+                            (let [new (on-conflict pi ex x)]
+                              (recur (index pi px k new)
+                                     (reduce-kv (fn [acc si sx]
+                                                  (assoc acc si (let [k1 (extract-key si ex)
+                                                                      k2 (extract-key si new)]
+                                                                  (index si (unindex si sx k1 ex) k2 new))))
+                                                {}
+                                                sixs)
+                                     xs))
                             (recur (index pi px k x)
                                    (reduce-kv (fn [acc si sx]
                                                 (assoc acc si (let [k (extract-key si x)]
