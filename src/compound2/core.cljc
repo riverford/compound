@@ -161,90 +161,90 @@
 
 #?(:clj
    (defmacro compound [indexes]
-     (let [[p-opts & s-opts] indexes
-           pt-sym (gensym "pt")
+     (let [[p-opis & s-opis] indexes
            pi-sym (gensym "pi")
-           st-syms (for [_ s-opts]
-                     (gensym "st"))
-           si-syms (for [_ s-opts]
+           px-sym (gensym "px")
+           si-syms (for [_ s-opis]
                      (gensym "si"))
+           sx-syms (for [_ s-opis]
+                     (gensym "sx"))
            m-sym (gensym "m")
            x-sym (gensym "x")
            k-sym (gensym "k")
            ex-sym (gensym "ex")
            new-sym (gensym "new")]
-       `(let [~pt-sym (indexer ~p-opts)
-              ~@(mapcat (fn [sym opts]
-                          [sym `(indexer ~opts)])
-                        st-syms
-                        s-opts)]
-          (assert (satisfies? PrimaryIndex ~pt-sym) "First index must be a primary index")
+       `(let [~pi-sym (indexer ~p-opis)
+              ~@(mapcat (fn [sym opis]
+                          [sym `(indexer ~opis)])
+                        si-syms
+                        s-opis)]
+          (assert (satisfies? PrimaryIndex ~pi-sym) "Firsi index musi be a primary index")
           (with-meta {}
             {`items (fn [~m-sym]
-                      (get-all ~pt-sym (get ~m-sym (id ~pt-sym))))
+                      (get-all ~pi-sym (get ~m-sym (id ~pi-sym))))
              `add-items (fn [~m-sym xs#]
-                          (loop [~pi-sym (before ~pt-sym (get ~m-sym (id ~pt-sym)))
-                                 ~@(mapcat (fn [st si]
-                                             [si `(before ~st (get ~m-sym (id ~st)))])
-                                           st-syms
-                                           si-syms)
+                          (loop [~px-sym (before ~pi-sym (get ~m-sym (id ~pi-sym)))
+                                 ~@(mapcat (fn [si sx]
+                                             [sx `(before ~si (get ~m-sym (id ~si)))])
+                                           si-syms
+                                           sx-syms)
                                  [~x-sym & xs#] xs#]
                             (if (nil? ~x-sym)
-                              (with-meta ~(into {`(id ~pt-sym) `(after ~pt-sym ~pi-sym)}
-                                                (map (fn [st si]
-                                                       [`(id ~st)
-                                                        `(after ~st ~si)])
-                                                     st-syms
-                                                     si-syms))
+                              (with-meta ~(into {`(id ~pi-sym) `(after ~pi-sym ~px-sym)}
+                                                (map (fn [si sx]
+                                                       [`(id ~si)
+                                                        `(after ~si ~sx)])
+                                                     si-syms
+                                                     sx-syms))
                                 (meta ~m-sym))
-                              (let [k# (extract-key ~pt-sym ~x-sym)
-                                    ~ex-sym (get-by-key ~pt-sym ~pi-sym k#)]
+                              (let [k# (extract-key ~pi-sym ~x-sym)
+                                    ~ex-sym (get-by-key ~pi-sym ~px-sym k#)]
                                 (if ~ex-sym
-                                  (let [~new-sym (on-conflict ~pt-sym ~ex-sym ~x-sym)]
+                                  (let [~new-sym (on-conflict ~pi-sym ~ex-sym ~x-sym)]
                                     (recur
-                                     (index ~pt-sym ~pi-sym k# ~new-sym)
-                                     ~@(map (fn [st si]
-                                              `(let [k1# (extract-key ~st ~ex-sym)
-                                                     k2# (extract-key ~st ~new-sym)]
-                                                 (index ~st (unindex ~st ~si k1# ~ex-sym) k2# ~new-sym)))
-                                            st-syms
-                                            si-syms)
+                                     (index ~pi-sym ~px-sym k# ~new-sym)
+                                     ~@(map (fn [si sx]
+                                              `(let [k1# (extract-key ~si ~ex-sym)
+                                                     k2# (extract-key ~si ~new-sym)]
+                                                 (index ~si (unindex ~si ~sx k1# ~ex-sym) k2# ~new-sym)))
+                                            si-syms
+                                            sx-syms)
                                      xs#))
                                   (recur
-                                   (index ~pt-sym ~pi-sym k# ~x-sym)
-                                   ~@(map (fn [st si]
-                                            `(let [k# (extract-key ~st ~x-sym)]
-                                               (index ~st ~si k# ~x-sym)))
-                                          st-syms
-                                          si-syms)
+                                   (index ~pi-sym ~px-sym k# ~x-sym)
+                                   ~@(map (fn [si sx]
+                                            `(let [k# (extract-key ~si ~x-sym)]
+                                               (index ~si ~sx k# ~x-sym)))
+                                          si-syms
+                                          sx-syms)
                                    xs#))))))
              `remove-keys (fn [~m-sym ks#]
-                            (loop [~pi-sym (before ~pt-sym (get ~m-sym (id ~pt-sym)))
-                                   ~@(mapcat (fn [st si]
-                                               [si `(before ~st (get ~m-sym (id ~st)))])
-                                             st-syms
-                                             si-syms)
+                            (loop [~px-sym (before ~pi-sym (get ~m-sym (id ~pi-sym)))
+                                   ~@(mapcat (fn [si sx]
+                                               [sx `(before ~si (get ~m-sym (id ~si)))])
+                                             si-syms
+                                             sx-syms)
                                    [~k-sym & ks#] ks#]
                               (if (nil? ~k-sym)
-                                (with-meta ~(into {`(id ~pt-sym) `(after ~pt-sym ~pi-sym)}
-                                                  (map (fn [st si]
-                                                         [`(id ~st)
-                                                          `(after ~st ~si)])
-                                                       st-syms
-                                                       si-syms))
+                                (with-meta ~(into {`(id ~pi-sym) `(after ~pi-sym ~px-sym)}
+                                                  (map (fn [si sx]
+                                                         [`(id ~si)
+                                                          `(after ~si ~sx)])
+                                                       si-syms
+                                                       sx-syms))
                                   (meta ~m-sym))
-                                (if-let [~ex-sym (get-by-key ~pt-sym ~pi-sym ~k-sym)]
+                                (if-let [~ex-sym (get-by-key ~pi-sym ~px-sym ~k-sym)]
                                   (recur
-                                   (unindex ~pt-sym ~pi-sym ~k-sym ~ex-sym)
-                                   ~@(map (fn [st si]
-                                            `(let [k# (extract-key ~st ~ex-sym)]
-                                               (unindex ~st ~si k# ~ex-sym)))
-                                          st-syms
-                                          si-syms)
+                                   (unindex ~pi-sym ~px-sym ~k-sym ~ex-sym)
+                                   ~@(map (fn [si sx]
+                                            `(let [k# (extract-key ~si ~ex-sym)]
+                                               (unindex ~si ~sx k# ~ex-sym)))
+                                          si-syms
+                                          sx-syms)
                                    ks#)
                                   (recur
-                                   ~pi-sym
-                                   ~@si-syms
+                                   ~px-sym
+                                   ~@sx-syms
                                    ks#)))))})))))
 
 (defn compound* [indexes]

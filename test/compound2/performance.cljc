@@ -180,64 +180,69 @@
             :id :likes
             :kfn :likes}]))
 
-#?(:clj (defn performance-test []
-          (println "checking equality")
-          (assert (= (c1/indexes-by-id (c1/add-items c1 test-data))
-                     (c2/add-items c2 test-data)
-                     (c2/add-items c2* test-data)))
-          (println "profiling compound 1")
-          (crit/with-progress-reporting
-            (crit/quick-bench
-             (c1/add-items c1 test-data)))
-          (println "profiling compound c2 - macro")
-          (crit/with-progress-reporting
-            (crit/quick-bench
-             (c2/add-items c2 test-data)))
-          (println "profiling compound c2 - function")
-          (crit/with-progress-reporting
-            (crit/quick-bench
-             (c2/add-items c2* test-data)))))
+#?(:clj
+   (defn performance-test []
+     (println "checking equality")
+     (assert (= (c1/indexes-by-id (c1/add-items c1 test-data))
+                (c2/add-items c2 test-data)
+                (c2/add-items c2* test-data)))
+     (println "profiling compound 1")
+     (crit/with-progress-reporting
+       (crit/bench
+        (-> (c1/add-items c1 test-data)
+            (c1/add-items replace-data))))
+     (println "profiling compound c2 - macro")
+     (crit/with-progress-reporting
+       (crit/bench
+        (-> (c2/add-items c2 test-data)
+            (c2/add-items replace-data))))
+     (println "profiling compound c2 - function")
+     (crit/with-progress-reporting
+       (crit/quick-bench
+        (-> (c2/add-items c2* test-data)
+            (c2/add-items replace-data))))))
 
-#?(:cljs (defn performance-test []
-           (let [c1 (c1/compound {:primary-index-def {:key :id}
-                                  :secondary-index-defs [{:key :code
-                                                          :index-type :compound/one-to-one}
-                                                         {:key :name
-                                                          :index-type :compound/one-to-many}
-                                                         {:key :likes
-                                                          :index-type :compound/one-to-many}]})
-                 c2* (c2/compound* [{:index-type :one-to-one
-                                     :kfn :id}
-                                    {:index-type :one-to-one
-                                     :kfn :code}
-                                    {:index-type :one-to-many
-                                     :kfn :name}
-                                    {:index-type :one-to-many
-                                     :kfn :likes}])
-                 c2 (c2/compound [{:index-type :one-to-one
-                                   :kfn :id}
-                                  {:index-type :one-to-one
-                                   :kfn :code}
-                                  {:index-type :one-to-many
-                                   :kfn :name}
-                                  {:index-type :one-to-many
-                                   :kfn :likes}])]
-             (assert (= (-> (c1/add-items c1 test-data)
-                            (c1/add-items replace-data)
-                            (c1/indexes-by-id))
-                        (-> (c2/add-items c2* test-data)
-                            (c2/add-items replace-data))
-                        (-> (c2/add-items c2 test-data)
-                            (c2/add-items replace-data))))
-             (println "Timing compound 2 - function")
-             (simple-benchmark []
-                               (-> (c2/add-items c2* test-data)
-                                   (c2/add-items replace-data)) 100)
-             (println "Timing compound 1")
-             (simple-benchmark []
-                               (-> (c1/add-items c1 test-data)
-                                   (c1/add-items replace-data)) 100)
-             (println "Timing compound 2 - macro")
-             (simple-benchmark []
-                               (-> (c2/add-items c2 test-data)
-                                   (c2/add-items replace-data)) 100))))
+#?(:cljs
+   (defn performance-test []
+     (let [c1 (c1/compound {:primary-index-def {:key :id}
+                            :secondary-index-defs [{:key :code
+                                                    :index-type :compound/one-to-one}
+                                                   {:key :name
+                                                    :index-type :compound/one-to-many}
+                                                   {:key :likes
+                                                    :index-type :compound/one-to-many}]})
+           c2* (c2/compound* [{:index-type :one-to-one
+                               :kfn :id}
+                              {:index-type :one-to-one
+                               :kfn :code}
+                              {:index-type :one-to-many
+                               :kfn :name}
+                              {:index-type :one-to-many
+                               :kfn :likes}])
+           c2 (c2/compound [{:index-type :one-to-one
+                             :kfn :id}
+                            {:index-type :one-to-one
+                             :kfn :code}
+                            {:index-type :one-to-many
+                             :kfn :name}
+                            {:index-type :one-to-many
+                             :kfn :likes}])]
+       (assert (= (-> (c1/add-items c1 test-data)
+                      (c1/add-items replace-data)
+                      (c1/indexes-by-id))
+                  (-> (c2/add-items c2* test-data)
+                      (c2/add-items replace-data))
+                  (-> (c2/add-items c2 test-data)
+                      (c2/add-items replace-data))))
+       (println "Timing compound 2 - function")
+       (simple-benchmark []
+                         (-> (c2/add-items c2* test-data)
+                             (c2/add-items replace-data)) 100)
+       (println "Timing compound 1")
+       (simple-benchmark []
+                         (-> (c1/add-items c1 test-data)
+                             (c1/add-items replace-data)) 100)
+       (println "Timing compound 2 - macro")
+       (simple-benchmark []
+                         (-> (c2/add-items c2 test-data)
+                             (c2/add-items replace-data)) 100))))
