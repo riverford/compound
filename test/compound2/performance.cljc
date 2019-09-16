@@ -134,11 +134,19 @@
    "James"])
 
 (def test-data
-  (for [i (range 5000)]
+  (for [i (range 10000)]
     {:id i
      :code (str "PERSON:" i)
      :name (rand-nth names)
      :likes (rand-nth fruit)}))
+
+(def replace-data
+  (for [i (range 0 10000 3)]
+    {:id i
+     :code (str "PERSON:" i)
+     :name (rand-nth names)
+     :likes (rand-nth fruit)
+     :extended true}))
 
 (def c1 (c1/compound {:primary-index-def {:key :id}
                       :secondary-index-defs [{:key :code
@@ -214,16 +222,22 @@
                                    :kfn :name}
                                   {:index-type :one-to-many
                                    :kfn :likes}])]
-             (js/setTimeout
-              (fn []
-                (println "Timing compound 2 - function")
-                (simple-benchmark []
-                                  (c2/add-items c2* test-data) 1)
-                (println "Timing compound 2 - macro")
-                (simple-benchmark []
-                                  (c2/add-items c2 test-data) 1)
-                (println "Timing compound 1")
-                (simple-benchmark []
-                                  (c1/add-items c1 test-data) 1)
-                )
-              2000))))
+             (assert (= (-> (c1/add-items c1 test-data)
+                            (c1/add-items replace-data)
+                            (c1/indexes-by-id))
+                        (-> (c2/add-items c2* test-data)
+                            (c2/add-items replace-data))
+                        (-> (c2/add-items c2 test-data)
+                            (c2/add-items replace-data))))
+             (println "Timing compound 2 - function")
+             (simple-benchmark []
+                               (-> (c2/add-items c2* test-data)
+                                   (c2/add-items replace-data)) 100)
+             (println "Timing compound 1")
+             (simple-benchmark []
+                               (-> (c1/add-items c1 test-data)
+                                   (c1/add-items replace-data)) 100)
+             (println "Timing compound 2 - macro")
+             (simple-benchmark []
+                               (-> (c2/add-items c2 test-data)
+                                   (c2/add-items replace-data)) 100))))
