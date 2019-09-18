@@ -190,7 +190,7 @@ To list all the items in the compound, without the indexes, use `items`. This is
 
 ## Different types of index
 
-### Index Type: one-to-one
+### Index type: one-to-one
 
 Demonstrated above, the one-to-one index will maintain a hash-map of `key -> item` pairs.
 
