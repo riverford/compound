@@ -190,12 +190,13 @@ To list all the items in the compound, without the indexes, use `items`. This is
 
 ## Different types of index
 
-#### one-to-one
+### one-to-one
 
 Demonstrated above, the one-to-one index will maintain a hash-map of `key -> item` pairs.
 
 #### Required keys
   `kfn` - the function to call to generate the key
+
 #### Optional keys
   `id` - the id for the index in the compound
   `on-conflict` - called for primary indexes only, when an item with the same key is added.
