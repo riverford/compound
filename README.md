@@ -203,14 +203,14 @@ Optional keys:
 
 ### one-to-many
 
+Demonstrated above, the one-to-many index will maintain a hash-map of `key -> set` pairs, where the
+set contains all the items that share the key.
+
 Required keys:
   `kfn` - the function to call to generate the key
 
 Optional keys:
   `id` - the id for the index in the compound
-
-Demonstrated above, the one-to-many index will maintain a hash-map of `key -> set` pairs, where the
-set contains all the items that share the key.
 
 ### nested-to-one
 
@@ -222,6 +222,28 @@ Required keys:
 Optional keys:
 `id` - the id for the index in the compound
 
+```clojure
+(-> (c/compound [{:index-type :one-to-one
+                  :id :delivery-date-product
+                  :kfn (juxt :delivery-date :product)}
+                 {:index-type :nested-to-one
+                  :path [:delivery-date :product]}])
+    (c/add-items [{:delivery-date "2012-03-03" :product :bananas}
+                  {:delivery-date "2012-03-03" :product :apples}
+                  {:delivery-date "2012-03-04" :product :potatoes}
+                  {:delivery-date "2012-03-04" :product :bananas}
+                  {:delivery-date "2012-03-06" :product :potatoes}]))
+;; => {:delivery-date-product
+;;     {["2012-03-03" :bananas] {:delivery-date "2012-03-03", :product :bananas},
+;;      ... },
+;;     [:delivery-date :product]
+;;     {"2012-03-03" {:bananas {:delivery-date "2012-03-03", :product :bananas},
+;;                    :apples {:delivery-date "2012-03-03", :product :apples}},
+;;      "2012-03-04" {:potatoes {:delivery-date "2012-03-04", :product :potatoes},
+;;                    :bananas {:delivery-date "2012-03-04", :product :bananas}},
+;;      "2012-03-06" {:potatoes {:delivery-date "2012-03-06", :product :potatoes}}}}
+```
+
 ### nested-to-many
 
 Like a one-to-many index except that a nested hash-map is `path* -> set` is maintained.
@@ -231,6 +253,18 @@ Required keys:
 
 Optional keys:
 `id` - the id for the index in the compound
+
+(-> (c/compound [{:index-type :one-to-one
+                  :id :delivery-date-product
+                  :kfn (juxt :delivery-date :product)}
+                 {:index-type :nested-to-many
+                  :id :substitutions
+                  :path [:product :substitue]}])
+    (c/add-items [{:delivery-date "2012-03-03" :product :bananas :substitute :pears}
+                  {:delivery-date "2012-03-03" :product :apples :substitute :pomegranate}
+                  {:delivery-date "2012-03-04" :product :potatoes}
+                  {:delivery-date "2012-03-04" :product :bananas}
+                  {:delivery-date "2012-03-06" :product :potatoes}]))
 
 ### many-to-many
 
