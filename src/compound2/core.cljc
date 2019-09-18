@@ -144,16 +144,16 @@
         (kfn x))
       (index [this coll ks x]
         (reduce
-         (fn [acc k]
-           (update acc k (fnil conj #{}) x))
-         coll
-         ks))
+          (fn [acc k]
+            (update acc k (fnil conj #{}) x))
+          coll
+          ks))
       (unindex [this coll ks x]
         (reduce
-         (fn [acc k]
-           (update acc k disj x))
-         coll
-         ks))
+          (fn [acc k]
+            (update acc k disj x))
+          coll
+          ks))
       (after [this coll]
         coll)
       (before [this coll]
@@ -173,9 +173,9 @@
            k-sym (gensym "k")
            ex-sym (gensym "ex")
            new-sym (gensym "new")]
-       `(let [~pi-sym (indexer ~p-opis)
+       `(let [~pi-sym (indexer (merge primary-defaults ~p-opis))
               ~@(mapcat (fn [sym opis]
-                          [sym `(indexer ~opis)])
+                          [sym `(indexer (merge secondary-defaults ~opis))])
                         si-syms
                         s-opis)]
           (assert (satisfies? PrimaryIndex ~pi-sym) "Firsi index musi be a primary index")
@@ -202,22 +202,22 @@
                                 (if ~ex-sym
                                   (let [~new-sym (on-conflict ~pi-sym ~ex-sym ~x-sym)]
                                     (recur
-                                     (index ~pi-sym ~px-sym k# ~new-sym)
-                                     ~@(map (fn [si sx]
-                                              `(let [k1# (extract-key ~si ~ex-sym)
-                                                     k2# (extract-key ~si ~new-sym)]
-                                                 (index ~si (unindex ~si ~sx k1# ~ex-sym) k2# ~new-sym)))
-                                            si-syms
-                                            sx-syms)
-                                     xs#))
+                                      (index ~pi-sym ~px-sym k# ~new-sym)
+                                      ~@(map (fn [si sx]
+                                               `(let [k1# (extract-key ~si ~ex-sym)
+                                                      k2# (extract-key ~si ~new-sym)]
+                                                  (index ~si (unindex ~si ~sx k1# ~ex-sym) k2# ~new-sym)))
+                                             si-syms
+                                             sx-syms)
+                                      xs#))
                                   (recur
-                                   (index ~pi-sym ~px-sym k# ~x-sym)
-                                   ~@(map (fn [si sx]
-                                            `(let [k# (extract-key ~si ~x-sym)]
-                                               (index ~si ~sx k# ~x-sym)))
-                                          si-syms
-                                          sx-syms)
-                                   xs#))))))
+                                    (index ~pi-sym ~px-sym k# ~x-sym)
+                                    ~@(map (fn [si sx]
+                                             `(let [k# (extract-key ~si ~x-sym)]
+                                                (index ~si ~sx k# ~x-sym)))
+                                           si-syms
+                                           sx-syms)
+                                    xs#))))))
              `remove-keys (fn [~m-sym ks#]
                             (loop [~px-sym (before ~pi-sym (get ~m-sym (id ~pi-sym)))
                                    ~@(mapcat (fn [si sx]
@@ -235,20 +235,27 @@
                                   (meta ~m-sym))
                                 (if-let [~ex-sym (get-by-key ~pi-sym ~px-sym ~k-sym)]
                                   (recur
-                                   (unindex ~pi-sym ~px-sym ~k-sym ~ex-sym)
-                                   ~@(map (fn [si sx]
-                                            `(let [k# (extract-key ~si ~ex-sym)]
-                                               (unindex ~si ~sx k# ~ex-sym)))
-                                          si-syms
-                                          sx-syms)
-                                   ks#)
+                                    (unindex ~pi-sym ~px-sym ~k-sym ~ex-sym)
+                                    ~@(map (fn [si sx]
+                                             `(let [k# (extract-key ~si ~ex-sym)]
+                                                (unindex ~si ~sx k# ~ex-sym)))
+                                           si-syms
+                                           sx-syms)
+                                    ks#)
                                   (recur
-                                   ~px-sym
-                                   ~@sx-syms
-                                   ks#)))))})))))
+                                    ~px-sym
+                                    ~@sx-syms
+                                    ks#)))))})))))
+
+(def primary-defaults
+  {:index-type :one-to-one})
+
+(def secondary-defaults
+  {:index-type :one-to-many})
 
 (defn compound* [indexes]
-  (let [[pi & sis] (doall (map indexer indexes))]
+  (let [pi (indexer (merge primary-defaults (first indexes)))
+        sis (map (fn [opts] (indexer (merge secondary-defaults opts))) indexes)]
     (assert (satisfies? PrimaryIndex pi) "First index must be a primary index")
     (with-meta {}
       {`items (fn [c]
@@ -309,3 +316,24 @@
                                               sixs)
                                    ks)
                             (recur px sixs ks)))))})))
+(def fruit
+  (-> (compound [{:kfn :name}
+                 {:kfn :colour}])
+
+      (add-items #{{:name :strawberry
+                    :colour :red}
+
+                   {:name :raspberry
+                    :colour :red}
+
+                   {:name :banana
+                    :colour :yellow}})))
+
+{:name
+ {:banana {:name :banana, :colour :yellow},
+  :raspberry {:name :raspberry, :colour :red},
+  :strawberry {:name :strawberry, :colour :red}},
+ :colour
+ {:yellow #{{:name :banana, :colour :yellow}},
+  :red #{{:name :raspberry, :colour :red}
+         {:name :strawberry, :colour :red}}}}

@@ -166,3 +166,34 @@
                           {:kfn :name
                            :index-type :one-to-one}])
              (c/add-items [{:id 1 :name "Bob"} {:id 2 :name "Terry"} {:id 3 :name "Squirrek"} {:id 3 :color :red}])))))
+
+(-> (c/compound [{:id :by-name ;; defaults to :kfn if :id not provided
+                  :index-type :one-to-one ;; defaults to :one-to-one for primary index
+                  :kfn :name
+                  :on-conflict (fn [a b] (merge a b))}
+                 {:id :by-colour
+                  :index-type :one-to-many ;; defaults to :one-to-many for secondary index
+                  :kfn :colour}
+                 {:id :by-tastiness
+                  :index-type :one-to-many ;; defaults to :one-to-many for secondary index
+                  :kfn :tastiness}])
+
+    (c/add-items [{:name :strawberry
+                   :colour :red
+                   :tastiness 4}
+
+                  {:name :strawberry
+                   :tastiness 5}
+
+                  {:name :banana
+                   :tastiness 3
+                   :colour :yellow}]))
+;; => {:by-name
+;;     {:strawberry {:name :strawberry, :colour :red, :tastiness 5},
+;;      :banana {:name :banana, :tastiness 3, :colour :yellow}},
+;;     :by-colour
+;;     {:red #{{:name :strawberry, :colour :red, :tastiness 5}},
+;;      :yellow #{{:name :banana, :tastiness 3, :colour :yellow}}},
+;;     :by-tastiness
+;;     {5 #{{:name :strawberry, :colour :red, :tastiness 5}},
+;;      3 #{{:name :banana, :tastiness 3, :colour :yellow}}}}
