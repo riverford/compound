@@ -21,13 +21,11 @@ You can have as many indexes as you like. A bunch of useful index types are buil
 
 There is no query engine, the aim instead is to make it possible to pick indexes that make queries trivial.
 
-## Current Version
+## Current Version: Compound2
 
 ```clojure
 [riverford/compound "2019.09.14"]
 ```
-
-Compound2 is the namespace containing the current version of compound.
 
 For previous versions - see [changelog](https://github.com/riverford/compound/blob/master/CHANGELOG.md)
 
@@ -58,6 +56,7 @@ For previous versions - see [changelog](https://github.com/riverford/compound/bl
 ;;      #{{:name :raspberry, :colour :red}
 ;;        {:name :strawberry, :colour :red}},
 ;;      :yellow #{{:name :banana, :colour :yellow}}}}
+```
 
 ## Core api
 
