@@ -60,14 +60,15 @@ For previous versions - see [changelog](https://github.com/riverford/compound/bl
 
 ## Core api
 
-Once you create a compound (using c/compound), it returns a map extended with metadata to provide 3 additional functions.
+Once you create a compound using `compound`, it returns a map extended with metadata to provide 3 additional functions.
 
 ### Add items
 
-To add items to a compound, call `add-items`, which will add items to the primary and secondary indexes.
+To add items, call `add-items`. Items will be added to all the defined indexes.
 
-If you attempt to add an item with the same primary key as an item already in the compound, the `on-conflict` function will be called to get a new item. The old item will be removed from all indexes, and the new item added.
+If you add an item with the same primary key as an item already in the compound, the `on-conflict` function will be called to get a new item. The old item will be removed from all indexes, and the new item added.
 
+```clojure
 (-> (c/compound [{:id :by-name
                   :index-type :one-to-one
                   :kfn :name
@@ -99,11 +100,12 @@ If you attempt to add an item with the same primary key as an item already in th
 ;;     :by-tastiness
 ;;     {5 #{{:name :strawberry, :colour :red, :tastiness 5}},
 ;;      3 #{{:name :banana, :tastiness 3, :colour :yellow}}}}
-
+```
 ### Remove keys
 
 To remove items from a compound, call `remove-keys` with the primary keys of the items you would like to remove.
 
+```clojure
 (-> (c/compound [{:id :by-name ;; defaults to :kfn if :id not provided
                   :index-type :one-to-one ;; defaults to :one-to-one for primary index
                   :kfn :name
@@ -131,11 +133,13 @@ To remove items from a compound, call `remove-keys` with the primary keys of the
 ;;     :by-colour
 ;;     {:yellow #{{:name :banana, :tastiness 3, :colour :yellow}}},
 ;;     :by-tastiness {3 #{{:name :banana, :tastiness 3, :colour :yellow}}}}
+```
 
 ### Items
 
 To list all the items in the compound, without the indexes, use `items`. This is useful for e.g. serialising or storing the compound for later use.
 
+```clojure
 (-> (c/compound [{:id :by-name
                   :index-type :one-to-one
                   :kfn :name
@@ -161,6 +165,7 @@ To list all the items in the compound, without the indexes, use `items`. This is
 
 ;; => ({:name :strawberry, :colour :red, :tastiness 5}
 ;;     {:name :banana, :tastiness 3, :colour :yellow})
+```
 
 ### Different types of index
 
@@ -222,6 +227,7 @@ The default implementation for compound is now a macro. This gives about a 10% s
 
 If you need to use dynamic index definitions, or to store the index definitions in a var rather than passing as a literal map, you can use the function implementation, `compound*`
 
+```clojure
 (def indexes [{:kfn :name} {:kfn :colour}])
 
 ;; Macro implementation only works for literal index definitions
@@ -260,7 +266,7 @@ If you need to use dynamic index definitions, or to store the index definitions 
 ;;      #{{:name :raspberry, :colour :red}
 ;;        {:name :strawberry, :colour :red}},
 ;;      :yellow #{{:name :banana, :colour :yellow}}}}
-
+```
 
 ### Additional indexes
 
