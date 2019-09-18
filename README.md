@@ -194,10 +194,9 @@ To list all the items in the compound, without the indexes, use `items`. This is
 
 Demonstrated above, the one-to-one index will maintain a hash-map of `key -> item` pairs.
 
-Required keys:
+#### Required keys
   `kfn` - the function to call to generate the key
-
-Optional keys:
+#### Optional keys
   `id` - the id for the index in the compound
   `on-conflict` - called for primary indexes only, when an item with the same key is added.
 
@@ -206,20 +205,19 @@ Optional keys:
 Demonstrated above, the one-to-many index will maintain a hash-map of `key -> set` pairs, where the
 set contains all the items that share the key.
 
-Required keys:
+#### Required keys
   `kfn` - the function to call to generate the key
-
-Optional keys:
+#### Optional keys
   `id` - the id for the index in the compound
 
 ### nested-to-one
 
 Like a one-to-one index except that a nested hash-map of `path* -> item` is maintained.
 
-Required keys:
+#### Required keys
 `path` - a seq of functions to call that will generate the path into the nested map for the item
 
-Optional keys:
+#### Optional keys
 `id` - the id for the index in the compound
 
 ```clojure
@@ -248,10 +246,10 @@ Optional keys:
 
 Like a one-to-many index except that a nested hash-map is `path* -> set` is maintained.
 
-Required keys:
+#### Required keys
 `path` - a seq of functions to call that will generate the path into the nested map for the item
 
-Optional keys:
+#### Optional keys:
 `id` - the id for the index in the compound
 
 (-> (c/compound [{:index-type :one-to-one
@@ -270,10 +268,9 @@ Optional keys:
 
 Like a one-to-many index, except the kfn should return a seq of values, and the item will be indexed under each of these.
 
-Required keys:
-`kfn` - a functions to call that will generate a seq of keys for the item
-
-Optional keys:
+#### Required keys:
+  `kfn` - a functions to call that will generate a seq of keys for the item
+#### Optional keys:
   `id` - the id for the index in the compound
 
 ## Macros vs function implementation
