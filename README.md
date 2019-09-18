@@ -188,7 +188,7 @@ To list all the items in the compound, without the indexes, use `items`. This is
 ;;     {:name :banana, :tastiness 3, :colour :yellow})
 ```
 
-### Different types of index
+## Different types of index
 
 #### one-to-one
 
