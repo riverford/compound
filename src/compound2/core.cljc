@@ -159,6 +159,12 @@
       (before [this coll]
         (or coll {})))))
 
+(def primary-defaults
+  {:index-type :one-to-one})
+
+(def secondary-defaults
+  {:index-type :one-to-many})
+
 #?(:clj
    (defmacro compound [indexes]
      (let [[p-opis & s-opis] indexes
@@ -246,12 +252,6 @@
                                     ~px-sym
                                     ~@sx-syms
                                     ks#)))))})))))
-
-(def primary-defaults
-  {:index-type :one-to-one})
-
-(def secondary-defaults
-  {:index-type :one-to-many})
 
 (defn compound* [indexes]
   (let [pi (indexer (merge primary-defaults (first indexes)))

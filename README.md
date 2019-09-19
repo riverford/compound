@@ -77,8 +77,9 @@ Using compound is a possible third option, as close as possible to (1). It adds 
 
 ## API
 
-Once you create a compound using `compound`, it returns a map extended with metadata to provide 3 additional functions.
+Create a compound using `compound`. It will returns a map extended with metadata to implement `add-items`, `remove-keys` and `items`.
 
+ - `compound` [primary-index-opts & secondary-index-opts] => compound
  - `add-items` [compound items-to-add] => new-compound
  - `remove-keys` [compound keys-to-remove] => new-compound
  - `items` [compound] => seq of items in compound
@@ -193,6 +194,7 @@ To list all the items in the compound, without the indexes, use `items`. This is
 ### Index type: one-to-one
 
 Demonstrated above, the one-to-one index will maintain a hash-map of `key -> item` pairs.
+It is the default index type for primary indexes.
 
 #### Required keys
   `kfn` - the function to call to generate the key
@@ -202,6 +204,7 @@ Demonstrated above, the one-to-one index will maintain a hash-map of `key -> ite
   `on-conflict` - called for primary indexes only, when an item with the same key is added.
 
 ### Index type: one-to-many
+
 
 Demonstrated above, the one-to-many index will maintain a hash-map of `key -> set` pairs, where the
 set contains all the items that share the key.
