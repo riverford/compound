@@ -21,7 +21,7 @@ You can have as many indexes as you like. A bunch of useful index types are buil
 
 There is no query engine, the aim instead is to make it possible to pick indexes that make queries trivial.
 
-## Current Version: Compound2
+## Current Version:
 
 ```clojure
 [riverford/compound "2019.09.14"]
@@ -197,11 +197,11 @@ Demonstrated above, the one-to-one index will maintain a hash-map of `key -> ite
 It is the default index type for primary indexes.
 
 #### Required keys
-  `kfn` - the function to call to generate the key
+  - `kfn` - the function to call to generate the key
 
 #### Optional keys
-  `id` - the id for the index in the compound
-  `on-conflict` - called for primary indexes only, when an item with the same key is added.
+  - `id` - the id for the index in the compound
+  - `on-conflict` - called for primary indexes only, when an item with the same key is added.
 
 ### Index type: one-to-many
 
@@ -210,19 +210,20 @@ Demonstrated above, the one-to-many index will maintain a hash-map of `key -> se
 set contains all the items that share the key.
 
 #### Required keys
-  `kfn` - the function to call to generate the key
+  - `kfn` - the function to call to generate the key
+
 #### Optional keys
-  `id` - the id for the index in the compound
+  - `id` - the id for the index in the compound
 
 ### Index type: nested-to-one
 
 Like a one-to-one index except that a nested hash-map of `path* -> item` is maintained.
 
 #### Required keys
-`path` - a seq of functions to call that will generate the path into the nested map for the item
+ - `path` - a seq of functions to call that will generate the path into the nested map for the item
 
 #### Optional keys
-`id` - the id for the index in the compound
+ - `id` - the id for the index in the compound
 
 ```clojure
 (-> (c/compound [{:index-type :one-to-one
@@ -251,19 +252,20 @@ Like a one-to-one index except that a nested hash-map of `path* -> item` is main
 Like a one-to-many index except that a nested hash-map is `path* -> set` is maintained.
 
 #### Required keys
-`path` - a seq of functions to call that will generate the path into the nested map for the item
+ - `path` - a seq of functions to call that will generate the path into the nested map for the item
 
 #### Optional keys:
-`id` - the id for the index in the compound
+ - `id` - the id for the index in the compound
 
 ### Index type: many-to-many
 
 Like a one-to-many index, except the kfn should return a seq of values, and the item will be indexed under each of these.
 
 #### Required keys:
-  `kfn` - a functions to call that will generate a seq of keys for the item
+  - `kfn` - a functions to call that will generate a seq of keys for the item
+
 #### Optional keys:
-  `id` - the id for the index in the compound
+  - `id` - the id for the index in the compound
 
 ## Macros vs function implementation
 
