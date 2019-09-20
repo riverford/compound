@@ -16,5 +16,4 @@
                              :subtitle "api docs"}}}
   :profiles {:dev {:dependencies [[im.chit/lucid.publish "1.3.13"]
                                   [criterium "0.4.5"]
-                                  [orchestra "2017.11.12-1"]
-                                  [cider/cider-nrepl "0.22.0-beta11"]]}})
+                                  [orchestra "2017.11.12-1"]]}})
