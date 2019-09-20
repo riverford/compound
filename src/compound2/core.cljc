@@ -255,7 +255,7 @@
 
 (defn compound* [indexes]
   (let [pi (indexer (merge primary-defaults (first indexes)))
-        sis (map (fn [opts] (indexer (merge secondary-defaults opts))) indexes)]
+        sis (map (fn [opts] (indexer (merge secondary-defaults opts))) (rest indexes))]
     (assert (satisfies? PrimaryIndex pi) "First index must be a primary index")
     (with-meta {}
       {`items (fn [c]
@@ -316,24 +316,3 @@
                                               sixs)
                                    ks)
                             (recur px sixs ks)))))})))
-(def fruit
-  (-> (compound [{:kfn :name}
-                 {:kfn :colour}])
-
-      (add-items #{{:name :strawberry
-                    :colour :red}
-
-                   {:name :raspberry
-                    :colour :red}
-
-                   {:name :banana
-                    :colour :yellow}})))
-
-{:name
- {:banana {:name :banana, :colour :yellow},
-  :raspberry {:name :raspberry, :colour :red},
-  :strawberry {:name :strawberry, :colour :red}},
- :colour
- {:yellow #{{:name :banana, :colour :yellow}},
-  :red #{{:name :raspberry, :colour :red}
-         {:name :strawberry, :colour :red}}}}
