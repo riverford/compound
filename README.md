@@ -318,6 +318,46 @@ If you need to use dynamic index definitions, or to store the index definitions 
 
 To provide additional indexers to, implement `compound2.core/indexer`
 
+### Performance
+
+Compound 2 improves on performance over compound 1 primarily via use of a macro.
+
+The `compound2.performance` namespace contains a performance test that sets up a compound with 4 indexes, and performs 10,000 add operations and ~3,300 replace operations.
+
+The criterium results on a 2015 MBP are as follows
+
+
+Compound 1 performance test results
+
+```
+Compound 1:
+
+Evaluation count : 1320 in 60 samples of 22 calls.
+             Execution time mean : 49.062765 ms
+    Execution time std-deviation : 1.435390 ms
+   Execution time lower quantile : 46.896612 ms ( 2.5%)
+   Execution time upper quantile : 51.598378 ms (97.5%)
+                   Overhead used : 10.219163 ns
+
+Compound 2, macro implementation:
+
+Evaluation count : 1560 in 60 samples of 26 calls.
+             Execution time mean : 38.588245 ms
+    Execution time std-deviation : 681.449051 µs
+   Execution time lower quantile : 37.948861 ms ( 2.5%)
+   Execution time upper quantile : 40.416067 ms (97.5%)
+                   Overhead used : 10.219163 ns
+
+Compound 2: function implementation:
+
+Evaluation count : 18 in 6 samples of 3 calls.
+             Execution time mean : 48.717964 ms
+    Execution time std-deviation : 444.575917 µs
+   Execution time lower quantile : 48.252249 ms ( 2.5%)
+   Execution time upper quantile : 49.262951 ms (97.5%)
+                   Overhead used : 10.219163 ns
+```
+
 ## Influences
 
 It is influenced by Christophe Grand's [indexed set](https://github.com/cgrand/indexed-set).
