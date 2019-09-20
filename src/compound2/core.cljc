@@ -1,6 +1,5 @@
-(ns compound2.core)
-
-#?(:cljs (enable-console-print!))
+(ns compound2.core
+  #?(:cljs (:require-macros [compound2.core])))
 
 (defprotocol Index
   (id [this])
@@ -165,6 +164,70 @@
 (def secondary-defaults
   {:index-type :one-to-many})
 
+(defn compound* [indexes]
+  (let [pi (indexer (merge primary-defaults (first indexes)))
+        sis (map (fn [opts] (indexer (merge secondary-defaults opts))) (rest indexes))]
+    (assert (satisfies? PrimaryIndex pi) "First index must be a primary index")
+    (with-meta {}
+      {`items (fn [c]
+                (get-all pi (get c (id pi))))
+       `add-items (fn [c xs]
+                    (loop [px (before pi (get c (id pi)))
+                           sixs (reduce (fn [acc si]
+                                          (assoc acc si (before si (get c (id si)))))
+                                        {}
+                                        sis)
+                           [x & xs] xs]
+                      (if (nil? x)
+                        (with-meta
+                          (reduce-kv (fn [acc si sx]
+                                       (assoc acc (id si) (after si sx)))
+                                     {(id pi) (after pi px)}
+                                     sixs)
+                          (meta c))
+                        (let [k (extract-key pi x)
+                              ex (get-by-key pi px k)]
+                          (if ex
+                            (let [new (on-conflict pi ex x)]
+                              (recur (index pi px k new)
+                                     (reduce-kv (fn [acc si sx]
+                                                  (assoc acc si (let [k1 (extract-key si ex)
+                                                                      k2 (extract-key si new)]
+                                                                  (index si (unindex si sx k1 ex) k2 new))))
+                                                {}
+                                                sixs)
+                                     xs))
+                            (recur (index pi px k x)
+                                   (reduce-kv (fn [acc si sx]
+                                                (assoc acc si (let [k (extract-key si x)]
+                                                                (index si sx k x))))
+                                              {}
+                                              sixs)
+                                   xs))))))
+       `remove-keys (fn [c ks]
+                      (loop [px (before pi (get c (id pi)))
+                             sixs (reduce (fn [acc si]
+                                            (assoc acc si (before si (get c (id si)))))
+                                          {}
+                                          sis)
+                             [k & ks] ks]
+                        (if (nil? k)
+                          (with-meta
+                            (reduce-kv (fn [acc si sx]
+                                         (assoc acc (id si) (after si sx)))
+                                       {(id pi) (after pi px)}
+                                       sixs)
+                            (meta c))
+                          (if-let [ex (get-by-key pi px k)]
+                            (recur (unindex pi px k ex)
+                                   (reduce-kv (fn [acc si sx]
+                                                (assoc acc si (let [k (extract-key si ex)]
+                                                                (unindex si sx k ex))))
+                                              {}
+                                              sixs)
+                                   ks)
+                            (recur px sixs ks)))))})))
+
 #?(:clj
    (defmacro compound [indexes]
      (let [[p-opis & s-opis] indexes
@@ -252,67 +315,3 @@
                                     ~px-sym
                                     ~@sx-syms
                                     ks#)))))})))))
-
-(defn compound* [indexes]
-  (let [pi (indexer (merge primary-defaults (first indexes)))
-        sis (map (fn [opts] (indexer (merge secondary-defaults opts))) (rest indexes))]
-    (assert (satisfies? PrimaryIndex pi) "First index must be a primary index")
-    (with-meta {}
-      {`items (fn [c]
-                (get-all pi (get c (id pi))))
-       `add-items (fn [c xs]
-                    (loop [px (before pi (get c (id pi)))
-                           sixs (reduce (fn [acc si]
-                                          (assoc acc si (before si (get c (id si)))))
-                                        {}
-                                        sis)
-                           [x & xs] xs]
-                      (if (nil? x)
-                        (with-meta
-                          (reduce-kv (fn [acc si sx]
-                                       (assoc acc (id si) (after si sx)))
-                                     {(id pi) (after pi px)}
-                                     sixs)
-                          (meta c))
-                        (let [k (extract-key pi x)
-                              ex (get-by-key pi px k)]
-                          (if ex
-                            (let [new (on-conflict pi ex x)]
-                              (recur (index pi px k new)
-                                     (reduce-kv (fn [acc si sx]
-                                                  (assoc acc si (let [k1 (extract-key si ex)
-                                                                      k2 (extract-key si new)]
-                                                                  (index si (unindex si sx k1 ex) k2 new))))
-                                                {}
-                                                sixs)
-                                     xs))
-                            (recur (index pi px k x)
-                                   (reduce-kv (fn [acc si sx]
-                                                (assoc acc si (let [k (extract-key si x)]
-                                                                (index si sx k x))))
-                                              {}
-                                              sixs)
-                                   xs))))))
-       `remove-keys (fn [c ks]
-                      (loop [px (before pi (get c (id pi)))
-                             sixs (reduce (fn [acc si]
-                                            (assoc acc si (before si (get c (id si)))))
-                                          {}
-                                          sis)
-                             [k & ks] ks]
-                        (if (nil? k)
-                          (with-meta
-                            (reduce-kv (fn [acc si sx]
-                                         (assoc acc (id si) (after si sx)))
-                                       {(id pi) (after pi px)}
-                                       sixs)
-                            (meta c))
-                          (if-let [ex (get-by-key pi px k)]
-                            (recur (unindex pi px k ex)
-                                   (reduce-kv (fn [acc si sx]
-                                                (assoc acc si (let [k (extract-key si ex)]
-                                                                (unindex si sx k ex))))
-                                              {}
-                                              sixs)
-                                   ks)
-                            (recur px sixs ks)))))})))

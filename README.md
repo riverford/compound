@@ -326,9 +326,6 @@ The `compound2.performance` namespace contains a performance test that sets up a
 
 The criterium results on a 2015 MBP are as follows
 
-
-Compound 1 performance test results
-
 ```
 Compound 1:
 
@@ -356,6 +353,17 @@ Evaluation count : 18 in 6 samples of 3 calls.
    Execution time lower quantile : 48.252249 ms ( 2.5%)
    Execution time upper quantile : 49.262951 ms (97.5%)
                    Overhead used : 10.219163 ns
+```
+
+And the simple benchmark js as follows.
+
+```
+Timing compound 1
+[], (-> (c1/add-items c1 test-data) (c1/add-items replace-data)), 100 runs, 11316 msecs
+Timing compound 2 - macro
+[], (-> (c2/add-items c2 test-data) (c2/add-items replace-data)), 100 runs, 9554 msecs
+Timing compound 2 - function
+[], (-> (c2/add-items c2* test-data) (c2/add-items replace-data)), 100 runs, 10405 msecs
 ```
 
 ## Influences

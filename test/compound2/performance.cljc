@@ -1,7 +1,7 @@
 (ns compound2.performance
   (:require [compound.secondary-indexes :as csi]
             [compound.core :as c1]
-            #?@(:cljs [[compound2.core :as c2 :include-macros true]]
+            #?@(:cljs [[compound2.core :as c2]]
                 :clj [[compound2.core :as c2]
                       [criterium.core :as crit]])))
 
@@ -227,6 +227,7 @@
                              :kfn :name}
                             {:index-type :one-to-many
                              :kfn :likes}])]
+       (println "checking equality")
        (assert (= (-> (c1/add-items c1 test-data)
                       (c1/add-items replace-data)
                       (c1/indexes-by-id))
@@ -234,10 +235,6 @@
                       (c2/add-items replace-data))
                   (-> (c2/add-items c2 test-data)
                       (c2/add-items replace-data))))
-       (println "Timing compound 2 - function")
-       (simple-benchmark []
-                         (-> (c2/add-items c2* test-data)
-                             (c2/add-items replace-data)) 100)
        (println "Timing compound 1")
        (simple-benchmark []
                          (-> (c1/add-items c1 test-data)
@@ -245,4 +242,8 @@
        (println "Timing compound 2 - macro")
        (simple-benchmark []
                          (-> (c2/add-items c2 test-data)
+                             (c2/add-items replace-data)) 100)
+       (println "Timing compound 2 - function")
+       (simple-benchmark []
+                         (-> (c2/add-items c2* test-data)
                              (c2/add-items replace-data)) 100))))
