@@ -205,7 +205,6 @@ It is the default index type for primary indexes.
 
 ### Index type: one-to-many
 
-
 Demonstrated above, the one-to-many index will maintain a hash-map of `key -> set` pairs, where the
 set contains all the items that share the key.
 
@@ -226,25 +225,82 @@ Like a one-to-one index except that a nested hash-map of `path* -> item` is main
  - `id` - the id for the index in the compound
 
 ```clojure
-(-> (c/compound [{:index-type :one-to-one
-                  :id :delivery-date-product
-                  :kfn (juxt :delivery-date :product)}
-                 {:index-type :nested-to-one
-                  :path [:delivery-date :product]}])
-    (c/add-items [{:delivery-date "2012-03-03" :product :bananas}
-                  {:delivery-date "2012-03-03" :product :apples}
-                  {:delivery-date "2012-03-04" :product :potatoes}
-                  {:delivery-date "2012-03-04" :product :bananas}
-                  {:delivery-date "2012-03-06" :product :potatoes}]))
-;; => {:delivery-date-product
-;;     {["2012-03-03" :bananas] {:delivery-date "2012-03-03", :product :bananas},
-;;      ... },
-;;     [:delivery-date :product]
-;;     {"2012-03-03" {:bananas {:delivery-date "2012-03-03", :product :bananas},
-;;                    :apples {:delivery-date "2012-03-03", :product :apples}},
-;;      "2012-03-04" {:potatoes {:delivery-date "2012-03-04", :product :potatoes},
-;;                    :bananas {:delivery-date "2012-03-04", :product :bananas}},
-;;      "2012-03-06" {:potatoes {:delivery-date "2012-03-06", :product :potatoes}}}}
+(-> (compound [{:index-type :one-to-one
+                :id :delivery
+                :kfn (juxt :customer :delivery-date :product)}
+               {:index-type :nested-to-one
+                :path [:customer :delivery-date :product]}])
+    (add-items [{:customer 1 :delivery-date "2012-03-03" :product :bananas}
+                {:customer 1 :delivery-date "2012-03-03" :product :apples}
+                {:customer 1 :delivery-date "2012-03-10" :product :potatoes}
+                {:customer 2 :delivery-date "2012-03-04" :product :bananas}
+                {:customer 2 :delivery-date "2012-03-11" :product :potatoes}]))
+;; => {:delivery
+;;     {[1 "2012-03-03" :bananas]
+;;      {:customer 1, :delivery-date "2012-03-03", :product :bananas},
+;;      [1 "2012-03-03" :apples]
+;;      {:customer 1, :delivery-date "2012-03-03", :product :apples},
+;;      [1 "2012-03-10" :potatoes]
+;;      {:customer 1, :delivery-date "2012-03-10", :product :potatoes},
+;;      [2 "2012-03-04" :bananas]
+;;      {:customer 2, :delivery-date "2012-03-04", :product :bananas},
+;;      [2 "2012-03-11" :potatoes]
+;;      {:customer 2, :delivery-date "2012-03-11", :product :potatoes}},
+;;     [:customer :delivery-date :product]
+;;     {1
+;;      {"2012-03-03"
+;;       {:bananas
+;;        {:customer 1, :delivery-date "2012-03-03", :product :bananas},
+;;        :apples
+;;        {:customer 1, :delivery-date "2012-03-03", :product :apples}},
+;;       "2012-03-10"
+;;       {:potatoes
+;;        {:customer 1, :delivery-date "2012-03-10", :product :potatoes}}},
+;;      2
+;;      {"2012-03-04"
+;;       {:bananas
+;;        {:customer 2, :delivery-date "2012-03-04", :product :bananas}},
+;;       "2012-03-11"
+;;       {:potatoes
+;;        {:customer 2, :delivery-date "2012-03-11", :product :potatoes}}}}};; => {:delivery-date-product
+;;     {[1 "2012-03-03" :bananas]
+;;      {:customer 1, :delivery-date "2012-03-03", :product :bananas},
+;;      [1 "2012-03-03" :apples]
+;;      {:customer 1, :delivery-date "2012-03-03", :product :apples},
+;;      [1 "2012-03-10" :potatoes]
+;;      {:customer 1, :delivery-date "2012-03-10", :product :potatoes},
+;;      [2 "2012-03-04" :bananas]
+;;      {:customer 2, :delivery-date "2012-03-04", :product :bananas},
+;;      [2 "2012-03-11" :potatoes]
+;;      {:customer 2, :delivery-date "2012-03-11", :product :potatoes}},
+;;     [:customer :delivery-date :product]
+;;     {1
+;;      {"2012-03-03"
+;;       {:bananas
+;;        {:customer 1, :delivery-date "2012-03-03", :product :bananas},
+;;        :apples
+;;        {:customer 1, :delivery-date "2012-03-03", :product :apples}},
+;;       "2012-03-10"
+;;       {:potatoes
+;;        {:customer 1, :delivery-date "2012-03-10", :product :potatoes}}},
+;;      2
+;;      {"2012-03-04"
+;;       {:bananas
+;;        {:customer 2, :delivery-date "2012-03-04", :product :bananas}},
+;;       "2012-03-11"
+;;       {:potatoes
+;;        {:customer 2, :delivery-date "2012-03-11", :product :potatoes}}}}};; =>
+
+(-> (compound [{:index-type :one-to-one
+                :id :delivery
+                :kfn (juxt :customer :delivery-date :product)}
+               {:index-type :nested-to-many
+                :path [:customer :delivery-date]}])
+    (add-items [{:customer 1 :delivery-date "2012-03-03" :product :bananas}
+                {:customer 1 :delivery-date "2012-03-03" :product :apples}
+                {:customer 1 :delivery-date "2012-03-10" :product :potatoes}
+                {:customer 2 :delivery-date "2012-03-04" :product :bananas}
+                {:customer 2 :delivery-date "2012-03-11" :product :potatoes}]))
 ```
 
 ### Index type: nested-to-many
@@ -257,6 +313,46 @@ Like a one-to-many index except that a nested hash-map is `path* -> set` is main
 #### Optional keys:
  - `id` - the id for the index in the compound
 
+``` clojure
+(-> (compound [{:index-type :one-to-one
+                :id :delivery
+                :kfn (juxt :customer :delivery-date :product)}
+               {:index-type :nested-to-many
+                :path [:customer :delivery-date]}])
+    (add-items [{:customer 1 :delivery-date "2012-03-03" :product :bananas}
+                {:customer 1 :delivery-date "2012-03-03" :product :apples}
+                {:customer 1 :delivery-date "2012-03-10" :product :potatoes}
+                {:customer 2 :delivery-date "2012-03-04" :product :bananas}
+                {:customer 2 :delivery-date "2012-03-11" :product :potatoes}]))
+;; => {:delivery
+;;     {[1 "2012-03-03" :bananas]
+;;      {:customer 1, :delivery-date "2012-03-03", :product :bananas},
+;;      [1 "2012-03-03" :apples]
+;;      {:customer 1, :delivery-date "2012-03-03", :product :apples},
+;;      [1 "2012-03-10" :potatoes]
+;;      {:customer 1, :delivery-date "2012-03-10", :product :potatoes},
+;;      [2 "2012-03-04" :bananas]
+;;      {:customer 2, :delivery-date "2012-03-04", :product :bananas},
+;;      [2 "2012-03-11" :potatoes]
+;;      {:customer 2, :delivery-date "2012-03-11", :product :potatoes}},
+;;     [:customer :delivery-date]
+;;     {1
+;;      {"2012-03-03"
+;;       #{{:customer 1, :delivery-date "2012-03-03", :product :bananas}
+;;         {:customer 1, :delivery-date "2012-03-03", :product :apples}},
+;;       "2012-03-10"
+;;       #{{:customer 1,
+;;          :delivery-date "2012-03-10",
+;;          :product :potatoes}}},
+;;      2
+;;      {"2012-03-04"
+;;       #{{:customer 2, :delivery-date "2012-03-04", :product :bananas}},
+;;       "2012-03-11"
+;;       #{{:customer 2,
+;;          :delivery-date "2012-03-11",
+;;          :product :potatoes}}}}}
+```
+
 ### Index type: many-to-many
 
 Like a one-to-many index, except the kfn should return a seq of values, and the item will be indexed under each of these.
@@ -266,6 +362,43 @@ Like a one-to-many index, except the kfn should return a seq of values, and the 
 
 #### Optional keys:
   - `id` - the id for the index in the compound
+
+```clojure
+(-> (c/compound [{:kfn :id}
+                 {:kfn :tags
+                  :index-type :many-to-many}])
+    (c/add-items [{:id 1
+                   :name "Peanuts"
+                   :tags ["Nut" "New" "Yellow"]}
+                  {:id 2
+                   :name "Bananas"
+                   :tags ["Fruit" "Yellow"]}
+                  {:id 3
+                   :name "Plums"
+                   :tags ["Purple" "Fruit" "New"]}
+                  {:id 4
+                   :name "Kiwi"
+                   :tags ["Green" "Fruit"]}]))
+;; => {:id
+;;     {1 {:id 1, :name "Peanuts", :tags ["Nut" "New" "Yellow"]},
+;;      2 {:id 2, :name "Bananas", :tags ["Fruit" "Yellow"]},
+;;      3 {:id 3, :name "Plums", :tags ["Purple" "Fruit" "New"]},
+;;      4 {:id 4, :name "Kiwi", :tags ["Green" "Fruit"]}},
+;;     :tags
+;;     {"Nut" #{{:id 1, :name "Peanuts", :tags ["Nut" "New" "Yellow"]}},
+;;      "New"
+;;      #{{:id 3, :name "Plums", :tags ["Purple" "Fruit" "New"]}
+;;        {:id 1, :name "Peanuts", :tags ["Nut" "New" "Yellow"]}},
+;;      "Yellow"
+;;      #{{:id 1, :name "Peanuts", :tags ["Nut" "New" "Yellow"]}
+;;        {:id 2, :name "Bananas", :tags ["Fruit" "Yellow"]}},
+;;      "Fruit"
+;;      #{{:id 3, :name "Plums", :tags ["Purple" "Fruit" "New"]}
+;;        {:id 4, :name "Kiwi", :tags ["Green" "Fruit"]}
+;;        {:id 2, :name "Bananas", :tags ["Fruit" "Yellow"]}},
+;;      "Purple" #{{:id 3, :name "Plums", :tags ["Purple" "Fruit" "New"]}},
+;;      "Green" #{{:id 4, :name "Kiwi", :tags ["Green" "Fruit"]}}}}
+```
 
 ## Macros vs function implementation
 
