@@ -225,16 +225,16 @@ Like a one-to-one index except that a nested hash-map of `path* -> item` is main
  - `id` - the id for the index in the compound
 
 ```clojure
-(-> (compound [{:index-type :one-to-one
-                :id :delivery
-                :kfn (juxt :customer :delivery-date :product)}
-               {:index-type :nested-to-one
-                :path [:customer :delivery-date :product]}])
-    (add-items [{:customer 1 :delivery-date "2012-03-03" :product :bananas}
-                {:customer 1 :delivery-date "2012-03-03" :product :apples}
-                {:customer 1 :delivery-date "2012-03-10" :product :potatoes}
-                {:customer 2 :delivery-date "2012-03-04" :product :bananas}
-                {:customer 2 :delivery-date "2012-03-11" :product :potatoes}]))
+(-> (c/compound [{:index-type :one-to-one
+                  :id :delivery
+                  :kfn (juxt :customer :delivery-date :product)}
+                 {:index-type :nested-to-one
+                  :path [:customer :delivery-date :product]}])
+    (c/add-items [{:customer 1 :delivery-date "2012-03-03" :product :bananas}
+                  {:customer 1 :delivery-date "2012-03-03" :product :apples}
+                  {:customer 1 :delivery-date "2012-03-10" :product :potatoes}
+                  {:customer 2 :delivery-date "2012-03-04" :product :bananas}
+                  {:customer 2 :delivery-date "2012-03-11" :product :potatoes}]))
 ;; => {:delivery
 ;;     {[1 "2012-03-03" :bananas]
 ;;      {:customer 1, :delivery-date "2012-03-03", :product :bananas},
@@ -291,16 +291,16 @@ Like a one-to-one index except that a nested hash-map of `path* -> item` is main
 ;;       {:potatoes
 ;;        {:customer 2, :delivery-date "2012-03-11", :product :potatoes}}}}};; =>
 
-(-> (compound [{:index-type :one-to-one
-                :id :delivery
-                :kfn (juxt :customer :delivery-date :product)}
-               {:index-type :nested-to-many
-                :path [:customer :delivery-date]}])
-    (add-items [{:customer 1 :delivery-date "2012-03-03" :product :bananas}
-                {:customer 1 :delivery-date "2012-03-03" :product :apples}
-                {:customer 1 :delivery-date "2012-03-10" :product :potatoes}
-                {:customer 2 :delivery-date "2012-03-04" :product :bananas}
-                {:customer 2 :delivery-date "2012-03-11" :product :potatoes}]))
+(-> (c/compound [{:index-type :one-to-one
+                  :id :delivery
+                  :kfn (juxt :customer :delivery-date :product)}
+                 {:index-type :nested-to-many
+                  :path [:customer :delivery-date]}])
+    (c/add-items [{:customer 1 :delivery-date "2012-03-03" :product :bananas}
+                  {:customer 1 :delivery-date "2012-03-03" :product :apples}
+                  {:customer 1 :delivery-date "2012-03-10" :product :potatoes}
+                  {:customer 2 :delivery-date "2012-03-04" :product :bananas}
+                  {:customer 2 :delivery-date "2012-03-11" :product :potatoes}]))
 ```
 
 ### Index type: nested-to-many
@@ -314,16 +314,16 @@ Like a one-to-many index except that a nested hash-map is `path* -> set` is main
  - `id` - the id for the index in the compound
 
 ``` clojure
-(-> (compound [{:index-type :one-to-one
-                :id :delivery
-                :kfn (juxt :customer :delivery-date :product)}
-               {:index-type :nested-to-many
-                :path [:customer :delivery-date]}])
-    (add-items [{:customer 1 :delivery-date "2012-03-03" :product :bananas}
-                {:customer 1 :delivery-date "2012-03-03" :product :apples}
-                {:customer 1 :delivery-date "2012-03-10" :product :potatoes}
-                {:customer 2 :delivery-date "2012-03-04" :product :bananas}
-                {:customer 2 :delivery-date "2012-03-11" :product :potatoes}]))
+(-> (c/compound [{:index-type :one-to-one
+                  :id :delivery
+                  :kfn (juxt :customer :delivery-date :product)}
+                 {:index-type :nested-to-many
+                  :path [:customer :delivery-date]}])
+    (c/add-items [{:customer 1 :delivery-date "2012-03-03" :product :bananas}
+                  {:customer 1 :delivery-date "2012-03-03" :product :apples}
+                  {:customer 1 :delivery-date "2012-03-10" :product :potatoes}
+                  {:customer 2 :delivery-date "2012-03-04" :product :bananas}
+                  {:customer 2 :delivery-date "2012-03-11" :product :potatoes}]))
 ;; => {:delivery
 ;;     {[1 "2012-03-03" :bananas]
 ;;      {:customer 1, :delivery-date "2012-03-03", :product :bananas},

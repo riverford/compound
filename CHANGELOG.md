@@ -1,4 +1,8 @@
 # Change Log
+## [2019.10.04]
+### Fixed
+- Don't terminate loops early if there's a nil in a sequence
+
 ## [2019.09.14]
 
 ### New Major Version

@@ -177,14 +177,8 @@
                                           (assoc acc si (before si (get c (id si)))))
                                         {}
                                         sis)
-                           [x & xs] xs]
-                      (if (nil? x)
-                        (with-meta
-                          (reduce-kv (fn [acc si sx]
-                                       (assoc acc (id si) (after si sx)))
-                                     {(id pi) (after pi px)}
-                                     sixs)
-                          (meta c))
+                           [x & more :as xs] xs]
+                      (if (seq xs)
                         (let [k (extract-key pi x)
                               ex (get-by-key pi px k)]
                           (if ex
@@ -196,28 +190,28 @@
                                                                   (index si (unindex si sx k1 ex) k2 new))))
                                                 {}
                                                 sixs)
-                                     xs))
+                                     more))
                             (recur (index pi px k x)
                                    (reduce-kv (fn [acc si sx]
                                                 (assoc acc si (let [k (extract-key si x)]
                                                                 (index si sx k x))))
                                               {}
                                               sixs)
-                                   xs))))))
+                                   more)))
+                        (with-meta
+                          (reduce-kv (fn [acc si sx]
+                                       (assoc acc (id si) (after si sx)))
+                                     {(id pi) (after pi px)}
+                                     sixs)
+                          (meta c)))))
        `remove-keys (fn [c ks]
                       (loop [px (before pi (get c (id pi)))
                              sixs (reduce (fn [acc si]
                                             (assoc acc si (before si (get c (id si)))))
                                           {}
                                           sis)
-                             [k & ks] ks]
-                        (if (nil? k)
-                          (with-meta
-                            (reduce-kv (fn [acc si sx]
-                                         (assoc acc (id si) (after si sx)))
-                                       {(id pi) (after pi px)}
-                                       sixs)
-                            (meta c))
+                             [k & more :as ks] ks]
+                        (if (seq ks)
                           (if-let [ex (get-by-key pi px k)]
                             (recur (unindex pi px k ex)
                                    (reduce-kv (fn [acc si sx]
@@ -225,8 +219,14 @@
                                                                 (unindex si sx k ex))))
                                               {}
                                               sixs)
-                                   ks)
-                            (recur px sixs ks)))))})))
+                                   more)
+                            (recur px sixs more))
+                          (with-meta
+                            (reduce-kv (fn [acc si sx]
+                                         (assoc acc (id si) (after si sx)))
+                                       {(id pi) (after pi px)}
+                                       sixs)
+                            (meta c)))))})))
 
 #?(:clj
    (defmacro compound [indexes]
@@ -257,15 +257,8 @@
                                              [sx `(before ~si (get ~m-sym (id ~si)))])
                                            si-syms
                                            sx-syms)
-                                 [~x-sym & xs#] xs#]
-                            (if (nil? ~x-sym)
-                              (with-meta ~(into {`(id ~pi-sym) `(after ~pi-sym ~px-sym)}
-                                                (map (fn [si sx]
-                                                       [`(id ~si)
-                                                        `(after ~si ~sx)])
-                                                     si-syms
-                                                     sx-syms))
-                                (meta ~m-sym))
+                                 [~x-sym & more# :as xs#] xs#]
+                            (if (seq xs#)
                               (let [k# (extract-key ~pi-sym ~x-sym)
                                     ~ex-sym (get-by-key ~pi-sym ~px-sym k#)]
                                 (if ~ex-sym
@@ -278,7 +271,7 @@
                                                   (index ~si (unindex ~si ~sx k1# ~ex-sym) k2# ~new-sym)))
                                              si-syms
                                              sx-syms)
-                                      xs#))
+                                      more#))
                                   (recur
                                     (index ~pi-sym ~px-sym k# ~x-sym)
                                     ~@(map (fn [si sx]
@@ -286,22 +279,22 @@
                                                 (index ~si ~sx k# ~x-sym)))
                                            si-syms
                                            sx-syms)
-                                    xs#))))))
+                                    more#)))
+                              (with-meta ~(into {`(id ~pi-sym) `(after ~pi-sym ~px-sym)}
+                                                (map (fn [si sx]
+                                                       [`(id ~si)
+                                                        `(after ~si ~sx)])
+                                                     si-syms
+                                                     sx-syms))
+                                (meta ~m-sym)))))
              `remove-keys (fn [~m-sym ks#]
                             (loop [~px-sym (before ~pi-sym (get ~m-sym (id ~pi-sym)))
                                    ~@(mapcat (fn [si sx]
                                                [sx `(before ~si (get ~m-sym (id ~si)))])
                                              si-syms
                                              sx-syms)
-                                   [~k-sym & ks#] ks#]
-                              (if (nil? ~k-sym)
-                                (with-meta ~(into {`(id ~pi-sym) `(after ~pi-sym ~px-sym)}
-                                                  (map (fn [si sx]
-                                                         [`(id ~si)
-                                                          `(after ~si ~sx)])
-                                                       si-syms
-                                                       sx-syms))
-                                  (meta ~m-sym))
+                                   [~k-sym & more# :as ks#] ks#]
+                              (if (seq ks#)
                                 (if-let [~ex-sym (get-by-key ~pi-sym ~px-sym ~k-sym)]
                                   (recur
                                     (unindex ~pi-sym ~px-sym ~k-sym ~ex-sym)
@@ -310,8 +303,15 @@
                                                 (unindex ~si ~sx k# ~ex-sym)))
                                            si-syms
                                            sx-syms)
-                                    ks#)
+                                    more#)
                                   (recur
                                     ~px-sym
                                     ~@sx-syms
-                                    ks#)))))})))))
+                                    more#))
+                                (with-meta ~(into {`(id ~pi-sym) `(after ~pi-sym ~px-sym)}
+                                                  (map (fn [si sx]
+                                                         [`(id ~si)
+                                                          `(after ~si ~sx)])
+                                                       si-syms
+                                                       sx-syms))
+                                  (meta ~m-sym)))))})))))
