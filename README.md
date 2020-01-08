@@ -28,20 +28,7 @@ There is no query engine, the aim instead is to make it possible to pick indexes
 ```
 
 For previous versions - see [changelog](https://github.com/riverford/compound/blob/master/CHANGELOG.md)
-
-## Legacy version
-
-Compound2 is a rewrite of compound, optimized for size and speed.
-It is different from the legacy version in the following ways:
-
-- Macro implementation for faster performance
-- Use of metadata extension gives a less noisy api
-- Fewer extension points, but extension is easier
-- Spec is no longer used, which can (if spec not used elsewhere) reduce the js bundle size by ~100k in cljs.
-
-This readme documentation applies to the `compound2` namespace.
-The old namespace `compound` has been left in this repo for backwards compatability purposes.
-For legacy docs, see https://riverford.github.io/compound/
+Note the current version is the second major version (see [legacy version](#legacy-version) for information about the previous version).
 
 ## Basic Usage
 
@@ -516,6 +503,20 @@ Timing compound 2 - function
 ## Influences
 
 It is influenced by Christophe Grand's [indexed set](https://github.com/cgrand/indexed-set).
+
+## Legacy version
+
+Compound2 is a rewrite of compound, optimized for size and speed.
+It is different from the legacy version in the following ways:
+
+- Macro implementation for faster performance
+- Use of metadata extension gives a less noisy api
+- Fewer extension points, but extension is easier
+- Spec is no longer used, which can (if spec not used elsewhere) reduce the js bundle size by ~100k in cljs.
+
+This readme documentation applies to the `compound2` namespace.
+The old namespace `compound` has been left in this repo for backwards compatability purposes.
+For legacy docs, see https://riverford.github.io/compound/
 
 ## License
 
