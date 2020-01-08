@@ -24,7 +24,7 @@ There is no query engine, the aim instead is to make it possible to pick indexes
 ## Current Version:
 
 ```clojure
-[riverford/compound "2019.09.14"]
+[riverford/compound "2019.10.04"]
 ```
 
 For previous versions - see [changelog](https://github.com/riverford/compound/blob/master/CHANGELOG.md)
