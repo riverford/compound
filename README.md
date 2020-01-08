@@ -27,8 +27,8 @@ There is no query engine, the aim instead is to make it possible to pick indexes
 [riverford/compound "2019.10.04"]
 ```
 
-For previous versions - see [changelog](https://github.com/riverford/compound/blob/master/CHANGELOG.md)
-Note the current version is the second major version (see [legacy version](#legacy-version) for information about the previous version).
+For previous versions - see [changelog](https://github.com/riverford/compound/blob/master/CHANGELOG.md).
+Note the current version is the *second* major version (see [legacy version](#legacy-version) for information about the previous version).
 
 ## Basic Usage
 
