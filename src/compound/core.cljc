@@ -333,7 +333,7 @@
 (def primary-index-defaults
   {:on-conflict :compound/replace})
 
-(defn compound [opts]
+(defn ^:deprecated compound [opts]
   (let [{:keys [primary-index-def secondary-index-defs]} opts
         primary-index-def (merge primary-index-defaults primary-index-def)]
     (s/assert ::primary-index-def primary-index-def)
