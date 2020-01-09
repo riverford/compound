@@ -403,7 +403,7 @@ Like a one-to-many index, except the kfn should return a seq of values, and the 
 
 ## Macros vs function implementation
 
-The default implementation for compound is now a macro. This gives about a 10% speedup over the function implementation (by splicing all the indexes into the loop variables of a single loop/recur).
+The default implementation for compound now uses a macro to construct the implementation. This gives about a 10% speedup over the function implementation (by splicing all the indexes into the loop variables of a single loop/recur). However it relies on the index definitions being compile time literals (which is true most of the time).
 
 If you need to use dynamic index definitions, or to store the index definitions in a var rather than passing as a literal map, you can use the function implementation, `compound*`
 
