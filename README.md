@@ -21,7 +21,7 @@ You can have as many indexes as you like. A bunch of useful index types are buil
 
 There is no query engine, the aim instead is to make it possible to pick indexes that make queries trivial.
 
-## Current Version:
+## Current Version: Compound2
 
 ```clojure
 [riverford/compound "2020.01.09"]
