@@ -1,4 +1,7 @@
 # Change Log
+## [2020.01.09]
+- Remove db.cljc from repo
+
 ## [2019.10.04]
 ### Fixed
 - Don't terminate loops early if there's a nil in a sequence
