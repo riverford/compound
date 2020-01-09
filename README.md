@@ -30,6 +30,11 @@ There is no query engine, the aim instead is to make it possible to pick indexes
 For previous versions - see [changelog](https://github.com/riverford/compound/blob/master/CHANGELOG.md).
 Note the current version is the *second* major version (see [legacy version](#legacy-version) for information about the previous version).
 
+## Requirements
+
+Clojure or ClojureScript 1.10 and upwards (implementation relies on extension via metadata).
+If using a pre-1.10 version, the [legacy version](#legacy-version) is compatible.
+
 ## Basic Usage
 
 
