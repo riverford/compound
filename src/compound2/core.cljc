@@ -247,7 +247,7 @@
                           [sym `(indexer (merge secondary-defaults ~opis))])
                         si-syms
                         s-opis)]
-          (assert (satisfies? PrimaryIndex ~pi-sym) "First index musi be a primary index")
+          (assert (satisfies? PrimaryIndex ~pi-sym) "First index must be a primary index")
           (with-meta {}
             {`items (fn [~m-sym]
                       (get-all ~pi-sym (get ~m-sym (id ~pi-sym))))
